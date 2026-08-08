@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/models/tourist_profile.dart';
+import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -22,6 +24,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   int _selectedRoleIndex = 0;
   bool _agreedToTerms = false;
 
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+
   late final TapGestureRecognizer _termsOfServiceRecognizer =
       TapGestureRecognizer()..onTap = () {};
   late final TapGestureRecognizer _privacyPolicyRecognizer =
@@ -33,6 +39,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
     _termsOfServiceRecognizer.dispose();
     _privacyPolicyRecognizer.dispose();
     super.dispose();
@@ -85,18 +94,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     LabeledTextField(
                       label: AppStrings.registerNameLabel,
                       hintText: AppStrings.registerNamePlaceholder,
+                      controller: _nameController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.emailLabel,
                       hintText: AppStrings.emailPlaceholder,
                       keyboardType: TextInputType.emailAddress,
+                      controller: _emailController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.registerPhoneLabel,
                       hintText: AppStrings.registerPhonePlaceholder,
                       keyboardType: TextInputType.phone,
+                      controller: _phoneController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
@@ -166,9 +178,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: AppStrings.registerSubmitButton,
                       onPressed: _canSubmit
                           ? () {
+                              final profile = TouristProfile(
+                                fullName: _nameController.text,
+                                email: _emailController.text,
+                                phone: _phoneController.text,
+                                role: _selectedRoleIndex == 0
+                                    ? UserRole.buyer
+                                    : UserRole.owner,
+                              );
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => const TermsPrivacyScreen(),
+                                  builder: (_) =>
+                                      TermsPrivacyScreen(profile: profile),
                                 ),
                               );
                             }

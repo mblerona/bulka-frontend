@@ -62,6 +62,14 @@ class AppColors {
   // EMAIL VERIFICATION SCREEN ONLY
   static const Color agroGold100 = Color(0xFFD1BFA7);
 
+  // PROFILE SCREEN ONLY
+  // Avatar circle background; Role Badge background
+  static const Color profileSoftMint = Color(0xFFE8F4EC);
+  // Email under name; stat card labels
+  static const Color profileSecondaryText = Color(0xFF707070);
+  static const Color profileStatCardBackground = Color(0xFFF5FAF6);
+  static const Color profileStatCardBorder = Color(0xFFCFE2D5);
+
   // ALIASES
   static const Color background = roleScreenBackground;
   static const Color grey = lightGrey;

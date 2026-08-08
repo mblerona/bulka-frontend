@@ -3,10 +3,18 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({super.key, required this.label, required this.onPressed});
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.disabledBackgroundColor = AppColors.agroBorder300,
+    this.disabledForegroundColor = AppColors.agroInk500,
+  });
 
   final String label;
   final VoidCallback? onPressed;
+  final Color disabledBackgroundColor;
+  final Color disabledForegroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +25,8 @@ class PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.agroGreen700,
           foregroundColor: AppColors.white,
-          disabledBackgroundColor: AppColors.agroBorder300,
-          disabledForegroundColor: AppColors.agroInk500,
+          disabledBackgroundColor: disabledBackgroundColor,
+          disabledForegroundColor: disabledForegroundColor,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.dsButtonHorizontalPadding,

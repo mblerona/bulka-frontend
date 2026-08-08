@@ -166,4 +166,30 @@ class AppDimensions {
 
   static const double emailVerificationSpacerHeight = 30;
   static const double emailVerificationChangeEmailFontSize = 12;
+
+  // PROFILE SCREEN ONLY
+  static const double profileBodyGap = 28;
+  static const double profileBodyBottomPadding = 40;
+
+  static const double profileAvatarRowGap = 14;
+  static const double profileAvatarSize = 72;
+  static const double profileAvatarInitialsFontSize = 22;
+
+  static const double profileNameColGap = 6;
+  static const double profileNameFontSize = 16;
+  static const double profileEmailFontSize = 12;
+
+  static const double profileRoleBadgeHorizontalPadding = 10;
+  static const double profileRoleBadgeVerticalPadding = 4;
+  static const double profileRoleBadgeFontSize = 10;
+
+  static const double profileSectionHeadingFontSize = 14;
+  static const double profileFieldsGap = 16;
+
+  static const double profileStatsRowGap = 12;
+  static const double profileStatCardWidth = 163;
+  static const double profileStatCardPadding = 16;
+  static const double profileStatCardGap = 4;
+  static const double profileStatNumberFontSize = 20;
+  static const double profileStatLabelFontSize = 11;
 }

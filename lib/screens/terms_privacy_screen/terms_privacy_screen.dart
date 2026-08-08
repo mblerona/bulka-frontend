@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/models/tourist_profile.dart';
 import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
 class TermsPrivacyScreen extends StatefulWidget {
-  const TermsPrivacyScreen({super.key});
+  const TermsPrivacyScreen({super.key, required this.profile});
+
+  final TouristProfile profile;
 
   @override
   State<TermsPrivacyScreen> createState() => _TermsPrivacyScreenState();
@@ -77,8 +80,9 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
                           ? () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const EmailVerificationScreen(),
+                                  builder: (_) => EmailVerificationScreen(
+                                    profile: widget.profile,
+                                  ),
                                 ),
                               );
                             }

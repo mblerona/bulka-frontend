@@ -95,6 +95,16 @@ class AppStrings {
   static const String emailVerificationResendButton = 'ИСПРАТИ ПОВТОРНО';
   static const String emailVerificationChangeEmail = 'Промени е-пошта';
 
+  //PROFILE SCREEN
+  static const String profileTitle = 'Мојот профил';
+  static const String profilePersonalDataHeading = 'Лични податоци';
+  static const String profilePhoneLabel = 'Телефонски број';
+  static const String profileCityLabel = 'Град / Локација';
+  static const String profileCityPlaceholder = 'Охрид, Северна Македонија';
+  static const String profileReservationsLabel = 'Резервации';
+  static const String profileFavoritePlacesLabel = 'Омилени места';
+  static const String profileSaveButton = 'Зачувај промени';
+
   //ROLE SCREEN
   static const welcomeToBulka = 'Добредојде во Булка';
 
