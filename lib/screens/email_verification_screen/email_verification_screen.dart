@@ -2,23 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/models/tourist_profile.dart';
+import 'package:bulka_frontend/models/registration_profile.dart';
+import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/profile_screen/profile_screen.dart';
+import 'package:bulka_frontend/screens/provider_profile_screen/provider_profile_screen.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
-import 'package:bulka_frontend/widgets/gold_badge.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
+import 'package:bulka_frontend/widgets/status_badge.dart';
 
 class EmailVerificationScreen extends StatelessWidget {
   const EmailVerificationScreen({
     super.key,
-    this.profile = const TouristProfile(
+    this.profile = const RegistrationProfile(
       fullName: 'Јован Јовановски',
       email: AppStrings.emailVerificationExampleEmail,
       phone: '070 123 456',
     ),
   });
 
-  final TouristProfile profile;
+  final RegistrationProfile profile;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +93,11 @@ class EmailVerificationScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppDimensions.emailVerificationGap),
-              const GoldBadge(label: AppStrings.emailVerificationBadge),
+              const StatusBadge(
+                label: AppStrings.emailVerificationBadge,
+                backgroundColor: AppColors.agroGold100,
+                textColor: AppColors.agroForest950,
+              ),
               const SizedBox(
                 height: AppDimensions.emailVerificationSpacerHeight,
               ),
@@ -125,7 +131,9 @@ class EmailVerificationScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => ProfileScreen(profile: profile),
+                      builder: (_) => profile.role == UserRole.owner
+                          ? ProviderProfileScreen(profile: profile)
+                          : ProfileScreen(profile: profile),
                     ),
                   );
                 },

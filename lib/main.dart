@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/theme/app_theme.dart';
+import 'package:bulka_frontend/dev/dev_launcher_screen.dart';
 import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
 
 void main() {
@@ -15,7 +17,12 @@ class BulkaApp extends StatelessWidget {
       title: 'Bulka',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home:  SplashScreen(),
+      // Debug builds boot straight into the dev screen launcher so any
+      // screen can be opened directly, without ever touching this file.
+      // kDebugMode is false in release/profile builds, where the app
+      // always starts at SplashScreen exactly as before — the production
+      // flow is untouched.
+      home: kDebugMode ? const DevLauncherScreen() : const SplashScreen(),
     );
   }
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/models/tourist_profile.dart';
+import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
@@ -178,7 +178,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: AppStrings.registerSubmitButton,
                       onPressed: _canSubmit
                           ? () {
-                              final profile = TouristProfile(
+                              final profile = RegistrationProfile(
                                 fullName: _nameController.text,
                                 email: _emailController.text,
                                 phone: _phoneController.text,

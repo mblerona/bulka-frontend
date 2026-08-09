@@ -105,6 +105,155 @@ class AppStrings {
   static const String profileFavoritePlacesLabel = 'Омилени места';
   static const String profileSaveButton = 'Зачувај промени';
 
+  //PROVIDER PROFILE SCREEN
+  static const String providerSubjectTypeLabel = 'Тип на субјект';
+  static const String providerSubjectTypeIndividual = 'Физичко лице';
+  static const String providerSubjectTypeLegal = 'Правно лице';
+  static const String providerLegalEntityComingSoon =
+      'Полињата за правни лица ќе бидат достапни наскоро.';
+  static const String providerOfferInfoHeading = 'Информации за понудата';
+  static const String providerOfferNameLabel = 'Име на понуда / искуство';
+  static const String providerOfferNamePlaceholder =
+      'Гостинска соба со појадок';
+  static const String providerCategoryHeading = 'Категорија на понуда';
+  static const String providerCategoryAccommodation = 'Сместување';
+  static const String providerCategoryGastronomy = 'Гастрономија';
+  static const String providerCategoryFarmParticipation =
+      'Активно учество на фарма';
+  static const String providerCategoryDirectSales = 'Директна продажба';
+  static const String providerCategoryFarmEducation = 'Едукација на фарма';
+  static const String providerCategoryFarmRecreation =
+      'Рекреација и релаксација на фарма';
+  static const String providerCategoryOffFarmTours =
+      'Тури и активности надвор од фарма';
+  static const String providerLocationLabel = 'Локација';
+  static const String providerLocationPlaceholder = 'Крушево';
+  static const String providerActiveOffersLabel = 'Активни понуди';
+  static const String providerAverageRatingLabel = 'Просечна оценка';
+  static const String providerNotVerifiedBadge = 'НЕ Е ВЕРИФИКУВАН';
+  static const String providerVerifiedBadge = 'ВЕРИФИКУВАН';
+  static const String providerExampleName = 'Ана Трајковска';
+  static const String providerExampleEmail = 'ana.trajkovska@example.com';
+  static const String providerExamplePhone = '070 987 654';
+
+  //PROVIDER PROFILE SETUP SCREEN (Правно лице / legal entity)
+  static const String providerSetupTitle = 'Поставување профил';
+  static const String providerSetupSubtitle =
+      'Внесете ги основните податоци за вашиот профил';
+  static const String providerAddLogoLabel = 'Додади лого';
+  static const String providerLegalCompanyNameLabel =
+      'Име на компанија / носител на дејност';
+  static const String providerLegalCompanyNamePlaceholder =
+      'Villa Zdravkovski DOOEL';
+  static const String providerLegalResponsiblePersonLabel = 'Одговорно лице';
+  static const String providerLegalResponsiblePersonPlaceholder =
+      'Владимир Здравковски';
+  static const String providerLegalEmailPlaceholder =
+      'На пример: контакт@company.mk';
+  static const String providerLegalBusinessDetailsHeading =
+      'Деловни податоци';
+  static const String providerLegalTaxIdLabel = 'ЕДБ / Даночен број';
+  static const String providerLegalTaxIdPlaceholder = '4021998123456';
+  static const String providerLegalCategoryHeading = 'Категорија на дејност';
+  static const String providerLegalAddressLabel = 'Адреса на бизнисот';
+  static const String providerLegalAddressPlaceholder = 'Брајчино, Преспа';
+  static const String providerAdditionalContactsHeading =
+      'Дополнителни контакти';
+  static const String providerAdditionalContactLabel =
+      'Контакт (телефон или е-пошта)';
+  static const String providerAdditionalContactPlaceholder =
+      'Внесете телефон или е-пошта';
+  static const String providerAddContactButton = '+ Додади контакт';
+  static const String providerPhotosHeading = 'Фотографии';
+  static const String providerSaveAndContinueButton = 'Зачувај и продолжи';
+
+  //SHARED (Provider Profile Setup, New Support Ticket) — attachment/image
+  //picker action-sheet labels
+  static const String imageSourceGallery = 'Галерија';
+  static const String imageSourceCamera = 'Камера';
+
+  //BOTTOM NAV (DS/Nav/Tourist, DS/Nav/Provider)
+  static const String navTouristHome = 'Дома';
+  static const String navTouristSearch = 'Пребарај';
+  static const String navTouristBookings = 'Резервации';
+  static const String navProviderDashboard = 'Табла';
+  static const String navProviderOffers = 'Понуди';
+  static const String navProviderCalendar = 'Календар';
+  static const String navMessages = 'Пораки';
+  static const String navProfile = 'Профил';
+
+  //SETTINGS SCREEN
+  static const String settingsTitle = 'Поставки';
+  static const String settingsLanguageHeading = 'Јазик на апликацијата';
+  static const String settingsLanguageRowLabel = 'Изберете јазик';
+  static const String settingsNotificationsLabel = 'Известувања';
+  static const String settingsPrivacyHeading = 'Приватност и податоци';
+  static const String settingsPrivacyDescription =
+      'Во согласност со GDPR можете да ги преземете или избришете вашите '
+      'лични податоци.';
+  static const String settingsDownloadDataButton =
+      'Преземи ги моите податоци';
+  static const String settingsDeleteAccountButton =
+      'Побарај бришење на сметката';
+  static const String settingsLogoutButton = 'Одјава';
+
+  //NOTIFICATIONS SCREEN
+  static const String notificationsTitle = 'Известувања';
+  static const String notificationsUnreadSuffix = 'непрочитани известувања';
+
+  //SHARED (Notifications, Chat List) — relative timestamp formatting
+  static const String timeJustNow = 'сега';
+  static const String timeMinutesSuffix = 'мин';
+  static const String timeHoursSuffix = 'ч';
+  static const String timeDaysSuffix = 'ден';
+
+  //CHAT LIST / CHAT THREAD SCREENS
+  static const String chatToday = 'Денес';
+  static const String chatInputPlaceholder = 'Напишете порака...';
+  static const String chatSendButtonGlyph = '>';
+
+  //MY TICKETS SCREEN
+  static const String myTicketsTitle = 'Мои тикети';
+  static const String createTicketButton = 'Креирај нов тикет';
+
+  static const String ticketStatusOpen = 'ОТВОРЕН';
+  static const String ticketStatusInProgress = 'ВО ТЕК';
+  static const String ticketStatusResolved = 'РЕШЕН';
+
+  static const String ticketLastChangedLabel = 'Последна промена';
+  static const String ticketAgoPrefix = 'пред';
+  static const String ticketMinuteSingular = 'минута';
+  static const String ticketMinutesPlural = 'минути';
+  static const String ticketHourSingular = 'час';
+  static const String ticketHoursPlural = 'часа';
+  static const String ticketDaySingular = 'ден';
+  static const String ticketDaysPlural = 'дена';
+
+  //NEW SUPPORT TICKET SCREEN
+  static const String newTicketTitle = 'Нов тикет за поддршка';
+  static const String newTicketSubtitle =
+      'Опишете го проблемот и ќе ви одговориме наскоро';
+  static const String newTicketCategoryLabel = 'Категорија';
+  static const String newTicketTitleLabel = 'Наслов';
+  static const String newTicketTitlePlaceholder = 'На пр. Проблем со плаќање';
+  static const String newTicketDescriptionLabel = 'Опис на проблемот';
+  static const String newTicketDescriptionPlaceholder =
+      'Опишете детално што се случи, кога и на кој оглас или резервација '
+      'се однесува...';
+  static const String newTicketAttachmentLabel =
+      'Прикачи слика или документ';
+  static const String newTicketAttachmentOptional = '(опционално)';
+  static const String newTicketSubmitButton = 'Испрати барање';
+
+  static const String newTicketCategoryReservations = 'Резервации';
+  static const String newTicketCategoryListings = 'Огласи';
+  static const String newTicketCategoryPayments = 'Плаќање';
+  static const String newTicketCategoryProfile = 'Профил';
+  static const String newTicketCategoryOther = 'Друго';
+
+  // Camera/Gallery labels re-use AppStrings.imageSourceCamera/Gallery.
+  static const String attachmentSourceDocument = 'Документ';
+
   //ROLE SCREEN
   static const welcomeToBulka = 'Добредојде во Булка';
 

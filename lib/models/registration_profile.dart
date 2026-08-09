@@ -1,12 +1,13 @@
 import 'package:bulka_frontend/models/user_role.dart';
 
 /// Carries the data collected at registration forward through the
-/// post-registration flow (Terms & Privacy -> Email Verification -> Profile).
+/// post-registration flow (Terms & Privacy -> Email Verification -> the
+/// role-specific Profile screen), regardless of which role was chosen.
 ///
-/// [city] is not collected at registration; it's filled in by the user on
-/// the Profile screen itself.
-class TouristProfile {
-  const TouristProfile({
+/// [city] only applies to the Tourist profile; it's not collected at
+/// registration and is filled in by the user on that screen itself.
+class RegistrationProfile {
+  const RegistrationProfile({
     required this.fullName,
     required this.email,
     required this.phone,
@@ -20,13 +21,13 @@ class TouristProfile {
   final String city;
   final UserRole role;
 
-  TouristProfile copyWith({
+  RegistrationProfile copyWith({
     String? fullName,
     String? email,
     String? phone,
     String? city,
   }) {
-    return TouristProfile(
+    return RegistrationProfile(
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
       phone: phone ?? this.phone,

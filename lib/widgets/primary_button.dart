@@ -7,12 +7,14 @@ class PrimaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.backgroundColor = AppColors.agroGreen700,
     this.disabledBackgroundColor = AppColors.agroBorder300,
     this.disabledForegroundColor = AppColors.agroInk500,
   });
 
   final String label;
   final VoidCallback? onPressed;
+  final Color backgroundColor;
   final Color disabledBackgroundColor;
   final Color disabledForegroundColor;
 
@@ -23,7 +25,7 @@ class PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.agroGreen700,
+          backgroundColor: backgroundColor,
           foregroundColor: AppColors.white,
           disabledBackgroundColor: disabledBackgroundColor,
           disabledForegroundColor: disabledForegroundColor,

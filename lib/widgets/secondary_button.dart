@@ -3,10 +3,20 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 
 class SecondaryButton extends StatelessWidget {
-  const SecondaryButton({super.key, required this.label, required this.onPressed});
+  const SecondaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.backgroundColor = AppColors.agroGreen100,
+    this.borderColor = AppColors.agroBorder300,
+    this.textColor = AppColors.agroGreen700,
+  });
 
   final String label;
   final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color borderColor;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -15,10 +25,10 @@ class SecondaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.agroGreen100,
-          foregroundColor: AppColors.agroGreen700,
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
           elevation: 0,
-          side: const BorderSide(color: AppColors.agroBorder300),
+          side: BorderSide(color: borderColor),
           padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.dsButtonHorizontalPadding,
             vertical: AppDimensions.dsButtonVerticalPadding,

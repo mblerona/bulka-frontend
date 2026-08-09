@@ -18,12 +18,10 @@ class RoleToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.registerRoleTogglePadding),
+      padding: const EdgeInsets.all(AppDimensions.dsToggleContainerPadding),
       decoration: BoxDecoration(
         color: AppColors.registerRoleToggleTrack,
-        borderRadius: BorderRadius.circular(
-          AppDimensions.registerRoleToggleRadius,
-        ),
+        borderRadius: BorderRadius.circular(AppDimensions.dsRadiusMd),
       ),
       child: Row(
         children: [
@@ -36,7 +34,7 @@ class RoleToggle extends StatelessWidget {
               ),
             ),
             if (i != options.length - 1)
-              const SizedBox(width: AppDimensions.registerRoleToggleGap),
+              const SizedBox(width: AppDimensions.dsToggleOptionGap),
           ],
         ],
       ),
@@ -74,7 +72,7 @@ class _RoleOption extends StatelessWidget {
           label,
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: AppDimensions.registerRoleToggleFontSize,
+            fontSize: AppDimensions.dsToggleFontSize,
             color: isSelected ? AppColors.white : AppColors.agroInk500,
           ),
         ),

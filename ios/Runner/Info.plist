@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Bulka користи камера за да додадете лого и фотографии на вашиот профил.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Bulka пристапува до вашата галерија за да изберете лого и фотографии за вашиот профил.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

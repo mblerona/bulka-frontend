@@ -14,6 +14,7 @@ class ScreenHeader extends StatelessWidget {
     this.selectedLanguageCode,
     this.onLanguageChanged,
     this.subtitle,
+    this.subtitleFontSize = AppDimensions.termsPrivacySubtitleFontSize,
   }) : assert(
          (selectedLanguageCode == null) == (onLanguageChanged == null),
          'selectedLanguageCode and onLanguageChanged must be provided together',
@@ -27,6 +28,7 @@ class ScreenHeader extends StatelessWidget {
   final String? selectedLanguageCode;
   final ValueChanged<String>? onLanguageChanged;
   final String? subtitle;
+  final double subtitleFontSize;
 
   bool get _showLanguageSwitch => selectedLanguageCode != null;
 
@@ -115,9 +117,9 @@ class ScreenHeader extends StatelessWidget {
             SizedBox(height: contentGap),
             Text(
               subtitle!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w400,
-                fontSize: AppDimensions.termsPrivacySubtitleFontSize,
+                fontSize: subtitleFontSize,
                 color: AppColors.languageLabelText,
               ),
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/models/tourist_profile.dart';
+import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -11,7 +11,7 @@ import 'package:bulka_frontend/widgets/screen_header.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
-    this.profile = const TouristProfile(
+    this.profile = const RegistrationProfile(
       fullName: 'Јована Јованова',
       email: 'jovana@example.com',
       phone: '070 123 456',
@@ -19,7 +19,7 @@ class ProfileScreen extends StatefulWidget {
     ),
   });
 
-  final TouristProfile profile;
+  final RegistrationProfile profile;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();

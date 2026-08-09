@@ -70,6 +70,15 @@ class AppColors {
   static const Color profileStatCardBackground = Color(0xFFF5FAF6);
   static const Color profileStatCardBorder = Color(0xFFCFE2D5);
 
+  // SETTINGS SCREEN ONLY
+  // Language row — selected pill text, on the "Light" surface variant of
+  // DS/LanguageSwitch (distinct one-off value in Figma, not the shared
+  // agro-green-800 token used by the dark-surface variant elsewhere).
+  static const Color settingsLanguageSelectedText = Color(0xFF166028);
+  // Delete-account button border/text; DS/Toggle "on" track re-uses
+  // agroForest950.
+  static const Color settingsDangerColor = Color(0xFFD82830);
+
   // ALIASES
   static const Color background = roleScreenBackground;
   static const Color grey = lightGrey;
