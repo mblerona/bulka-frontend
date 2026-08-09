@@ -10,13 +10,17 @@ class SecondaryButton extends StatelessWidget {
     this.backgroundColor = AppColors.agroGreen100,
     this.borderColor = AppColors.agroBorder300,
     this.textColor = AppColors.agroGreen700,
+    this.disabledBackgroundColor = AppColors.agroBorder300,
+    this.disabledForegroundColor = AppColors.agroInk500,
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color backgroundColor;
   final Color borderColor;
   final Color textColor;
+  final Color disabledBackgroundColor;
+  final Color disabledForegroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +31,8 @@ class SecondaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
+          disabledBackgroundColor: disabledBackgroundColor,
+          disabledForegroundColor: disabledForegroundColor,
           elevation: 0,
           side: BorderSide(color: borderColor),
           padding: const EdgeInsets.symmetric(

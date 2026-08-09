@@ -6,15 +6,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
+import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/collapsible_checklist.dart';
-import 'package:bulka_frontend/widgets/dashed_border_box.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
+import 'package:bulka_frontend/widgets/photo_grid.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
 import 'package:bulka_frontend/widgets/subject_type_toggle.dart';
+import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({
@@ -48,10 +51,20 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   // rather than the Figma mock's literal "ВЕРИФИКУВАН" state.
   static const bool _isVerified = false;
 
-  // Real providers start with none of either; these update once the
-  // offers/reviews systems exist.
-  static const int _activeOffersCount = 0;
-  static const double _averageRating = 0;
+  final ProviderListingController _listingController =
+      ProviderListingController.instance;
+
+  int get _activeOffersCount => _listingController.activeListingsCount;
+
+  // Average of active listings' own ratings — 0 if none are rated yet.
+  double get _averageRating {
+    final ratings = _listingController.listings
+        .where((l) => l.status == ListingStatus.active && l.rating != null)
+        .map((l) => l.rating!)
+        .toList();
+    if (ratings.isEmpty) return 0;
+    return ratings.reduce((a, b) => a + b) / ratings.length;
+  }
 
   // ── Физичко лице (individual) fields ──
   late final TextEditingController _nameController;
@@ -102,6 +115,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _listingController.addListener(_handleListingsChanged);
     _savedName = widget.profile.fullName;
     _savedPhone = widget.profile.phone;
     _savedOfferName = '';
@@ -148,8 +162,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     _savedContacts = _contactValues;
   }
 
+  void _handleListingsChanged() => setState(() {});
+
   @override
   void dispose() {
+    _listingController.removeListener(_handleListingsChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _offerNameController.dispose();
@@ -552,7 +569,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         const SizedBox(height: AppDimensions.providerSetupSectionGap),
         _sectionHeading(AppStrings.providerPhotosHeading),
         const SizedBox(height: AppDimensions.providerContactsSectionGap),
-        _PhotoGrid(
+        PhotoGrid(
           photos: _photos,
           onAdd: _pickPhotos,
           onRemove: _removePhoto,
@@ -737,7 +754,7 @@ class _LogoUploadAvatar extends StatelessWidget {
                     shape: BoxShape.circle,
                     image: imageFile != null
                         ? DecorationImage(
-                            image: FileImage(imageFile!),
+                            image: xfileImageProvider(imageFile!.path),
                             fit: BoxFit.cover,
                           )
                         : null,
@@ -816,107 +833,3 @@ class _ContactRow extends StatelessWidget {
   }
 }
 
-class _PhotoGrid extends StatelessWidget {
-  const _PhotoGrid({
-    required this.photos,
-    required this.onAdd,
-    required this.onRemove,
-  });
-
-  final List<XFile> photos;
-  final VoidCallback onAdd;
-  final ValueChanged<int> onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppDimensions.providerPhotoGridGap,
-      runSpacing: AppDimensions.providerPhotoGridGap,
-      children: [
-        for (var i = 0; i < photos.length; i++)
-          _PhotoTile(file: photos[i], onRemove: () => onRemove(i)),
-        _AddPhotoTile(onTap: onAdd),
-      ],
-    );
-  }
-}
-
-class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.file, required this.onRemove});
-
-  final XFile file;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: AppDimensions.providerPhotoTileSize,
-      height: AppDimensions.providerPhotoTileSize,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppDimensions.dsRadiusSm),
-            child: Image.file(
-              File(file.path),
-              width: AppDimensions.providerPhotoTileSize,
-              height: AppDimensions.providerPhotoTileSize,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned(
-            top: -6,
-            right: -6,
-            child: GestureDetector(
-              onTap: onRemove,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: AppColors.agroForest950,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.close,
-                  size: 14,
-                  color: AppColors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddPhotoTile extends StatelessWidget {
-  const _AddPhotoTile({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: DashedBorderBox(
-        radius: AppDimensions.dsRadiusSm,
-        child: SizedBox(
-          width: AppDimensions.providerPhotoTileSize,
-          height: AppDimensions.providerPhotoTileSize,
-          child: const Center(
-            child: Text(
-              '+',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: AppDimensions.providerAddPhotoPlusFontSize,
-                color: AppColors.agroInk500,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

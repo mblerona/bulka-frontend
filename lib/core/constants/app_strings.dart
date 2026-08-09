@@ -221,13 +221,15 @@ class AppStrings {
   static const String ticketStatusResolved = 'РЕШЕН';
 
   static const String ticketLastChangedLabel = 'Последна промена';
-  static const String ticketAgoPrefix = 'пред';
-  static const String ticketMinuteSingular = 'минута';
-  static const String ticketMinutesPlural = 'минути';
-  static const String ticketHourSingular = 'час';
-  static const String ticketHoursPlural = 'часа';
-  static const String ticketDaySingular = 'ден';
-  static const String ticketDaysPlural = 'дена';
+
+  //SHARED (My Tickets, Provider Offers) — "пред X..." relative-time phrasing
+  static const String agoPrefix = 'пред';
+  static const String agoMinuteSingular = 'минута';
+  static const String agoMinutesPlural = 'минути';
+  static const String agoHourSingular = 'час';
+  static const String agoHoursPlural = 'часа';
+  static const String agoDaySingular = 'ден';
+  static const String agoDaysPlural = 'дена';
 
   //NEW SUPPORT TICKET SCREEN
   static const String newTicketTitle = 'Нов тикет за поддршка';
@@ -253,6 +255,199 @@ class AppStrings {
 
   // Camera/Gallery labels re-use AppStrings.imageSourceCamera/Gallery.
   static const String attachmentSourceDocument = 'Документ';
+
+  //PROVIDER DASHBOARD SCREEN
+  static const String dashboardTitle = 'Контролна табла';
+  static const String dashboardGreetingPrefix = 'Добредојдовте, ';
+  static const String dashboardAddListingButton = '+ Додади нова понуда';
+
+  static const String dashboardListingsSummaryHeading = 'Преглед на понуди';
+  static const String dashboardActiveListingsLabel = 'Активни понуди';
+  static const String dashboardPendingReviewListingsLabel = 'На преглед';
+  static const String dashboardMonthlyReservationsLabel =
+      'Резервации овој месец';
+
+  static const String dashboardPendingReservationsHeading =
+      'Резервации кои чекаат';
+  static const String dashboardCompletedReservationsHeading =
+      'Завршени резервации';
+
+  static const String reservationStatusPending = 'НА ЧЕКАЊЕ';
+  static const String reservationStatusAccepted = 'ПРИФАТЕНА';
+  static const String reservationStatusRejected = 'ОДБИЕНА';
+  static const String reservationStatusCompleted = 'ЗАВРШЕНА';
+  static const String reservationStatusCancelled = 'ОТКАЖАНА';
+
+  static const String reservationGuestSingular = 'гостин';
+  static const String reservationGuestsPlural = 'гости';
+
+  static const String acceptReservationButton = 'Прифати';
+  static const String rejectReservationButton = 'Одбиј';
+  static const String rateGuestButton = 'Оцени гостин';
+
+  //PROVIDER OFFERS SCREEN
+  static const String offersTitle = 'Моите понуди';
+  static const String offersSubtitle =
+      'Управувајте со вашите понуди и нивниот статус';
+
+  static const String offersFilterAll = 'Сите';
+  static const String offersFilterActive = 'Активни';
+  static const String offersFilterPendingReview = 'На преглед';
+  static const String offersFilterRejected = 'Одбиени';
+
+  static const String listingStatusActive = 'АКТИВНА';
+  static const String listingStatusPendingReview = 'НА ПРЕГЛЕД';
+  static const String listingStatusRejected = 'ОДБИЕНО';
+  static const String listingStatusArchived = 'АРХИВИРАНО';
+
+  static const String listingReservationsThisMonthLabel =
+      'резервации овој месец';
+  static const String listingSubmittedForReviewLabel = 'Испратено на преглед';
+  static const String listingRejectedReasonPrefix = 'Одбиено: ';
+  static const String listingArchivedOnLabel = 'Архивирано на';
+
+  static const String editListingButton = 'Уреди';
+  static const String editAndResubmitListingButton =
+      'Уреди и поднеси повторно';
+  static const String reactivateListingButton = 'Активирај повторно';
+
+  //PROVIDER AVAILABILITY CALENDAR SCREEN
+  static const String calendarTitle = 'Календар на достапност';
+
+  static const String availabilityStatusAvailable = 'Слободно';
+  static const String availabilityStatusOccupied = 'Зафатено';
+  static const String availabilityStatusBlocked = 'Блокирано';
+
+  static const String weekdayMon = 'Пон';
+  static const String weekdayTue = 'Вт';
+  static const String weekdayWed = 'Ср';
+  static const String weekdayThu = 'Чет';
+  static const String weekdayFri = 'Пет';
+  static const String weekdaySat = 'Саб';
+  static const String weekdaySun = 'Нед';
+
+  static const String blockSelectedDatesButton = 'Блокирај избрани датуми';
+  static const String unblockSelectedDatesButton = 'Отклучи избрани датуми';
+
+  //CREATE OFFER WIZARD
+  static const String wizardHeaderTitle = 'Нова понуда';
+  static const String wizardStepLabel = 'Чекор'; // "Чекор 1 од 7"
+  static const String wizardStepOfLabel = 'од';
+  static const String wizardCloseGlyph = '✕';
+  static const String wizardBackButton = 'Назад';
+  static const String wizardNextButton = 'Понатаму';
+  static const String wizardPublishButton = 'Објави';
+
+  // Step 1 — category chips reuse the 5 unchanged provider category
+  // strings above; these 2 are the shorter labels this wizard's chips use
+  // for "Рекреација и релаксација на фарма"/"Тури и активности надвор од
+  // фарма" — same categories, shorter display text, not a second taxonomy.
+  static const String wizardCategoryFarmRecreation = 'Рекреација и релаксација';
+  static const String wizardCategoryOffFarmTours = 'Тури надвор од фарма';
+
+  static const String wizardStep1Heading = 'Кажете ни за вашата понуда';
+  static const String wizardStep1Subtitle =
+      'Изберете категорија и дадете наслов на вашата понуда.';
+  static const String wizardCategoryLabel = 'Категорија';
+  static const String wizardTitleLabel = 'Наслов на понудата';
+  static const String wizardTitlePlaceholder = 'На пр. Гостинска соба со појадок';
+
+  static const String wizardStep2Heading = 'Каде се наоѓа вашата понуда?';
+  static const String wizardStep2Subtitle =
+      'Вашата адреса ќе биде споделена со гостите дури откако ќе '
+      'резервираат.';
+  static const String wizardLocationLabel = 'Адреса / населено место';
+  static const String wizardLocationPlaceholder = 'Брајчино, Преспа';
+  static const String wizardMapPinGlyph = '📍';
+
+  static const String wizardStep3Heading = 'Колку гости може да прифатите?';
+  static const String wizardStep3Subtitle = 'Ова подоцна може да го промените.';
+  static const String wizardGuestsLabel = 'Гости';
+  static const String wizardRoomsLabel = 'Соби';
+  static const String wizardBedsLabel = 'Кревети';
+
+  static const String wizardStep4Heading = 'Кажете им на гостите што нудите';
+  static const String wizardStep4Subtitle =
+      'Изберете ги сите нешта кои ги нудите.';
+
+  static const String wizardStep5Heading = 'Додадете фотографии';
+  static const String wizardStep5Subtitle =
+      'Најмалку 5 фотографии се потребни за да ја објавите понудата.';
+
+  static const String wizardStep6Heading = 'Опишете ја вашата понуда';
+  static const String wizardStep6Subtitle =
+      'Кратко опишете што нудите и одредете цена.';
+  static const String wizardDescriptionLabel = 'Опис';
+  static const String wizardDescriptionPlaceholder =
+      'Пространа традиционална куќа во срцето на Преспа...';
+  static const String wizardPriceLabel =
+      'Цена (по ноќ, доколку се работи за сместување)';
+  static const String wizardPricePlaceholder = '2.770 ден.';
+  static const String wizardPriceSuffix = 'ден.';
+  static const String wizardPricePerNightSuffix = 'ден. / ноќ';
+
+  static const String wizardReviewHeading = 'Преглед';
+  static const String wizardReviewSubtitle =
+      'Проверете ги деталите пред да ја објавите понудата.';
+  static const String wizardReviewTitleRow = 'Наслов';
+  static const String wizardReviewCategoryRow = 'Категорија';
+  static const String wizardReviewLocationRow = 'Локација';
+  static const String wizardReviewCapacityRow = 'Капацитет';
+  static const String wizardReviewAmenitiesRow = 'Опрема';
+  static const String wizardReviewPhotosRow = 'Фотографии';
+  static const String wizardReviewPriceRow = 'Цена';
+
+  static const String wizardRoomSingular = 'соба';
+  static const String wizardRoomsPlural = 'соби';
+  static const String wizardBedSingular = 'кревет';
+  static const String wizardBedsPlural = 'кревети';
+  static const String wizardAmenitySingular = 'нешто';
+  static const String wizardAmenitiesPlural = 'нешта';
+  static const String wizardPhotoSingular = 'фотографија';
+  static const String wizardPhotosPlural = 'фотографии';
+
+  static const String wizardDiscardDialogTitle = 'Да ја напуштите понудата?';
+  static const String wizardDiscardDialogMessage =
+      'Внесените информации нема да бидат зачувани.';
+  static const String wizardDiscardDialogCancel = 'Откажи';
+  static const String wizardDiscardDialogConfirm = 'Напушти';
+
+  //LISTING AMENITIES (Create Offer Wizard, Step 4)
+  static const String amenityWifi = 'Wi-Fi';
+  static const String amenityParking = 'Бесплатен паркинг';
+  static const String amenityKitchen = 'Опремена кујна';
+  static const String amenityAirConditioning = 'Клима уред';
+  static const String amenityTv = 'ТВ';
+  static const String amenityFireplace = 'Огниште';
+  static const String amenityFarmAccess = 'Пристап до фарма';
+  static const String amenityHotWater = 'Топла вода';
+  static const String amenityPetsAllowed = 'Домашни миленици дозволени';
+
+  //CREATE OFFER SUCCESS SCREEN
+  static const String offerPublishedTitle = 'Понуда објавена';
+  static const String offerPublishedCheckGlyph = '✓';
+  static const String offerPublishedHeading = 'Понудата е објавена!';
+  static const String offerPublishedSubtitle =
+      'Вашата понуда сега е видлива за гостите на платформата.';
+  static const String offerPublishedViewOffersButton =
+      'Прегледај ги моите понуди';
+  static const String offerPublishedGoToDashboardButton =
+      'Оди на контролна табла';
+
+  //RATE GUEST SCREEN
+  static const String rateGuestTitle = 'Оцени гостин';
+  static const String rateGuestQuestion = 'Како беше престојот на гостинот?';
+  static const String rateGuestNoteLabel = 'Белешка (опционално)';
+  static const String rateGuestNotePlaceholder =
+      'На пр. Одличен гостин, ја остави куќата уредна.';
+  static const String rateGuestHelperText =
+      'Согласно правилата на платформата, гостинот може да биде оценет само '
+      'по завршена услуга каде постоела резервација.';
+  static const String submitRatingButton = 'Испрати оцена';
+
+  //RATING SAVED SCREEN
+  static const String ratingSavedTitle = 'Оценка';
+  static const String ratingSavedHeading = 'Оценката е зачувана!';
 
   //ROLE SCREEN
   static const welcomeToBulka = 'Добредојде во Булка';

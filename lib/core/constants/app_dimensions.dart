@@ -110,9 +110,22 @@ class AppDimensions {
   static const double dsToggleOptionGap = 4;
   static const double dsToggleFontSize = 13;
 
+  // My Tickets Screen, Provider Dashboard Screen — small pill status badge
+  // (white bg, colored text) used for ticket/reservation status
+  static const double dsStatusPillHorizontalPadding = 10;
+  static const double dsStatusPillVerticalPadding = 4;
+  static const double dsStatusPillFontSize = 10;
+
   // Provider Profile Setup Screen, Notifications Screen — Header Band gap
   // used by the "compact header with a subtitle line" variant
   static const double dsHeaderSubtitleGap = 10;
+
+  // Provider Dashboard Screen, Provider Offers Screen — Header Band gap for
+  // the "nav-bar root screen" header variant (no back button)
+  static const double dsRootHeaderGap = 6;
+  // ...and that same variant's Body top padding (24, not the 28 most
+  // other screens' Body uses)
+  static const double dsRootBodyTopPadding = 24;
 
   // Provider Profile Setup Screen, New Support Ticket Screen — the same
   // "compact header with a subtitle line" variant's (smaller) title size
@@ -328,10 +341,6 @@ class AppDimensions {
 
   static const double myTicketsTicketNumberFontSize = 11;
 
-  static const double myTicketsStatusPillHorizontalPadding = 10;
-  static const double myTicketsStatusPillVerticalPadding = 4;
-  static const double myTicketsStatusPillFontSize = 10;
-
   static const double myTicketsTitleFontSize = 14;
   static const double myTicketsLastChangedFontSize = 11;
 
@@ -347,4 +356,155 @@ class AppDimensions {
 
   static const double newTicketAttachmentRowIconSize = 20;
   static const double newTicketAttachmentRowGap = 10;
+
+  // ── PROVIDER DASHBOARD SCREEN ──
+  static const double dashboardBodyGap = 24;
+  static const double dashboardSectionGap = 12;
+
+  static const double dashboardCounterCardGap = 10;
+  static const double dashboardCounterCardPadding = 14;
+  static const double dashboardCounterCardContentGap = 2;
+  static const double dashboardCounterValueFontSize = 18;
+  static const double dashboardCounterLabelFontSize = 10;
+
+  static const double dashboardReservationCardPadding = 14;
+  static const double dashboardReservationCardGap = 10;
+  static const double dashboardReservationTitleFontSize = 14;
+  static const double dashboardReservationMetaFontSize = 12;
+  static const double dashboardReservationListingFontSize = 11;
+
+  static const double dashboardActionButtonRadius = 10;
+  static const double dashboardActionButtonVerticalPadding = 9;
+  static const double dashboardActionButtonFontSize = 11;
+  static const double dashboardActionButtonGap = 10;
+
+  // ── PROVIDER OFFERS SCREEN ──
+  static const double offersBodyGap = 20;
+
+  static const double offersFilterChipHorizontalPadding = 12;
+  static const double offersFilterChipVerticalPadding = 7;
+  static const double offersFilterChipFontSize = 11;
+  static const double offersFilterChipGap = 8;
+
+  static const double offersCardImageHeight = 120;
+  static const double offersCardInfoPadding = 14;
+  static const double offersCardInfoGap = 8;
+  static const double offersCardTitleFontSize = 14;
+  static const double offersCardMetaFontSize = 11;
+
+  // Reuses dashboard's action-button radius/padding/font (identical spec)
+  // for "Уреди"/"Активирај повторно"/etc.
+
+  // ── PROVIDER AVAILABILITY CALENDAR SCREEN ──
+  static const double calendarListingContextGap = 12;
+  static const double calendarListingContextTopPadding = 20;
+  static const double calendarListingContextBottomPadding = 12;
+  static const double calendarListingThumbSize = 48;
+  static const double calendarListingNameColGap = 2;
+  static const double calendarListingLocationFontSize = 11;
+
+  static const double calendarLegendRowGap = 16;
+  static const double calendarLegendItemGap = 6;
+  static const double calendarLegendSwatchSize = 12;
+  static const double calendarLegendSwatchRadius = 4;
+  static const double calendarLegendFontSize = 12;
+  static const double calendarLegendTopPadding = 4;
+  static const double calendarLegendBottomPadding = 16;
+
+  static const double calendarMonthNavHeight = 100;
+  static const double calendarMonthNavTopPadding = 8;
+  static const double calendarMonthNavBottomPadding = 16;
+  static const double calendarNavArrowSize = 32;
+  static const double calendarNavArrowFontSize = 18;
+  static const double calendarMonthTitleFontSize = 16;
+
+  static const double calendarGridBottomPadding = 12;
+  static const double calendarGridRowGap = 6;
+  static const double calendarCellGap = 4;
+  static const double calendarWeekdayCellHeight = 20;
+  static const double calendarWeekdayFontSize = 11;
+  static const double calendarCellHeight = 40;
+  static const double calendarCellRadius = 8;
+  static const double calendarCellFontSize = 13;
+  static const double calendarSelectedBorderWidth = 2;
+
+  static const double calendarActionsTopPadding = 12;
+  static const double calendarActionsBottomPadding = 32;
+  static const double calendarActionsGap = 12;
+
+  // ── CREATE OFFER WIZARD ──
+  static const double wizardTopBarTopPadding = 20;
+  static const double wizardTopBarBottomPadding = 12;
+  static const double wizardCloseFontSize = 16;
+
+  static const double wizardProgressBottomPadding = 20;
+  static const double wizardProgressTrackHeight = 6;
+
+  static const double wizardContentTopPadding = 8;
+  static const double wizardContentBottomPadding = 24;
+  static const double wizardContentGap = 16;
+  static const double wizardHeadingFontSize = 24;
+  static const double wizardSubtitleFontSize = 14;
+
+  static const double wizardChipGap = 8;
+  static const double wizardChipHorizontalPadding = 12;
+  static const double wizardChipVerticalPadding = 8;
+  static const double wizardChipFontSize = 11;
+
+  static const double wizardStepperRowVerticalPadding = 12;
+  static const double wizardStepperLabelFontSize = 16;
+  static const double wizardStepperGap = 18;
+  static const double wizardStepperButtonSize = 32;
+  static const double wizardStepperButtonFontSize = 16;
+  static const double wizardStepperValueFontSize = 16;
+
+  static const double wizardAmenityRowGap = 12;
+  static const double wizardAmenityRowVerticalPadding = 8;
+  static const double wizardAmenityEmojiFontSize = 18;
+  static const double wizardAmenityLabelFontSize = 15;
+
+  static const double wizardPhotoTileSize = 108;
+  static const double wizardPhotoGridGap = 10;
+
+  static const double wizardMapHeight = 160;
+  static const double wizardMapPinFontSize = 26;
+
+  static const double wizardFooterTopPadding = 16;
+  static const double wizardFooterBottomPadding = 32;
+  static const double wizardFooterBackFontSize = 15;
+
+  static const double wizardReviewRowVerticalPadding = 8;
+  static const double wizardReviewLabelFontSize = 14;
+  static const double wizardReviewImageHeight = 160;
+
+  // ── CREATE OFFER SUCCESS SCREEN ──
+  static const double successTopPadding = 100;
+  static const double successBottomPadding = 32;
+  static const double successBlockGap = 12;
+  static const double successCircleSize = 72;
+  static const double successCheckFontSize = 32;
+  static const double successHeadingFontSize = 20;
+  static const double successSubtitleFontSize = 14;
+  static const double successActionsTopPadding = 12;
+  static const double successActionsBottomPadding = 32;
+  static const double successActionsGap = 12;
+
+  // ── RATE GUEST SCREEN ──
+  // Guest Row reuses the Availability Calendar's identical "Listing
+  // Context" row spec (calendarListingContext*/calendarListingThumbSize);
+  // Content padding reuses the wizard's wizardContent*; Footer reuses
+  // wizardFooterTopPadding/wizardFooterBottomPadding — all pixel-identical
+  // in Figma. Only the star rating and helper text need new tokens.
+  static const double rateGuestAvatarInitialsFontSize = 16;
+  static const double rateGuestStarFontSize = 32;
+  static const double rateGuestStarGap = 10;
+  static const double rateGuestHelperTextFontSize = 12;
+
+  // ── RATING SAVED SCREEN ──
+  // Reuses the Create Offer Success screen's successCircleSize/
+  // successCheckFontSize/successHeadingFontSize/successBlockGap/
+  // successBottomPadding/successActionsTopPadding/
+  // successActionsBottomPadding — everything is pixel-identical except
+  // the top padding.
+  static const double ratingSavedTopPadding = 60;
 }

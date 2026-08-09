@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/utils/ago_label.dart';
 import 'package:bulka_frontend/models/support_ticket.dart';
 import 'package:bulka_frontend/screens/new_support_ticket_screen/new_support_ticket_screen.dart';
 import 'package:bulka_frontend/services/support_ticket_controller.dart';
@@ -119,9 +120,9 @@ class _TicketCard extends StatelessWidget {
                 label: ticket.status.label,
                 backgroundColor: AppColors.white,
                 textColor: ticket.status.pillTextColor,
-                horizontalPadding: AppDimensions.myTicketsStatusPillHorizontalPadding,
-                verticalPadding: AppDimensions.myTicketsStatusPillVerticalPadding,
-                fontSize: AppDimensions.myTicketsStatusPillFontSize,
+                horizontalPadding: AppDimensions.dsStatusPillHorizontalPadding,
+                verticalPadding: AppDimensions.dsStatusPillVerticalPadding,
+                fontSize: AppDimensions.dsStatusPillFontSize,
               ),
             ],
           ),
@@ -136,7 +137,7 @@ class _TicketCard extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.myTicketsCardRowGap),
           Text(
-            '${AppStrings.ticketLastChangedLabel}: ${_agoLabel(ticket.updatedAt)}',
+            '${AppStrings.ticketLastChangedLabel}: ${agoLabel(ticket.updatedAt)}',
             style: const TextStyle(
               fontWeight: FontWeight.w400,
               fontSize: AppDimensions.myTicketsLastChangedFontSize,
@@ -147,23 +148,4 @@ class _TicketCard extends StatelessWidget {
       ),
     );
   }
-}
-
-String _agoLabel(DateTime updatedAt) {
-  final diff = DateTime.now().difference(updatedAt);
-  final String amount;
-  if (diff.inMinutes < 60) {
-    amount = diff.inMinutes == 1
-        ? '1 ${AppStrings.ticketMinuteSingular}'
-        : '${diff.inMinutes} ${AppStrings.ticketMinutesPlural}';
-  } else if (diff.inHours < 24) {
-    amount = diff.inHours == 1
-        ? '1 ${AppStrings.ticketHourSingular}'
-        : '${diff.inHours} ${AppStrings.ticketHoursPlural}';
-  } else {
-    amount = diff.inDays == 1
-        ? '1 ${AppStrings.ticketDaySingular}'
-        : '${diff.inDays} ${AppStrings.ticketDaysPlural}';
-  }
-  return '${AppStrings.ticketAgoPrefix} $amount';
 }

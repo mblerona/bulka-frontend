@@ -79,6 +79,24 @@ class AppColors {
   // agroForest950.
   static const Color settingsDangerColor = Color(0xFFD82830);
 
+  // PROVIDER DASHBOARD SCREEN ONLY
+  // "На преглед" (pending review) counter value — a distinct amber, not
+  // the same as agroGold100 above (no shared Figma variable for it).
+  static const Color dashboardPendingReviewAccent = Color(0xFFF0B828);
+
+  // PROVIDER OFFERS SCREEN ONLY
+  // Status pill backgrounds — pendingReview pairs with
+  // dashboardPendingReviewAccent above for its text; rejected pairs with
+  // settingsDangerColor.
+  static const Color listingPendingReviewBadgeBackground = Color(0xFFFFF0D0);
+  static const Color listingRejectedBadgeBackground = Color(0xFFFAE3E3);
+
+  // PROVIDER AVAILABILITY CALENDAR SCREEN ONLY
+  // "Блокирано" (blocked) cell/legend swatch — plain grey, no shared
+  // Figma variable for it. Screen background reuses beigeBackground
+  // (exact hex match for Figma's agro-cream-50).
+  static const Color calendarBlockedGrey = Color(0xFF999999);
+
   // ALIASES
   static const Color background = roleScreenBackground;
   static const Color grey = lightGrey;
