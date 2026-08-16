@@ -26,10 +26,12 @@ class ListingSearchFilter {
   /// From the Figma "Оценка" chips (Сите/3+★/4+★/4.5+★) — null = "Сите".
   double? minRating;
 
-  /// "Број на гости" (Сите/2+/3+/4+/5+) — null = "Сите" (no restriction).
-  /// Checked against `ProviderListing.guestCapacity`; a separate concept
-  /// from a real booking's exact `Reservation.guestCount`, so this is a
-  /// *minimum threshold*, not an exact headcount.
+  /// "Број на гости" (1/2/3/4/5+) — null = unset (no restriction; "1" is
+  /// already functionally unrestrictive since every real listing has
+  /// `guestCapacity >= 1`). Checked against `ProviderListing.guestCapacity`;
+  /// a separate concept from a real booking's exact
+  /// `Reservation.guestCount`, so this is a *minimum threshold*, not an
+  /// exact headcount.
   int? minimumGuests;
 
   /// Values are the same canonical strings as `ProviderListing.category`/
