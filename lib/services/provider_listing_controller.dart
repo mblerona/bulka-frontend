@@ -117,6 +117,10 @@ class ProviderListingController extends ChangeNotifier {
           return false;
         }
       }
+      if (filter.minimumGuests != null &&
+          listing.guestCapacity < filter.minimumGuests!) {
+        return false;
+      }
       if (filter.categories.isNotEmpty &&
           !filter.categories.contains(listing.category)) {
         return false;

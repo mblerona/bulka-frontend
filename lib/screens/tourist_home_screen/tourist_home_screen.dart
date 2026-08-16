@@ -474,7 +474,8 @@ class _ListingCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ListingDetailsScreen(listing: listing),
+          builder: (_) =>
+              ListingDetailsScreen(listing: listing, originTabIndex: 0),
         ),
       ),
       child: Container(

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
+import 'package:bulka_frontend/screens/profile_screen/profile_screen.dart';
 import 'package:bulka_frontend/screens/provider_availability_calendar_screen/provider_availability_calendar_screen.dart';
 import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
 import 'package:bulka_frontend/screens/provider_offers_screen/provider_offers_screen.dart';
 import 'package:bulka_frontend/screens/provider_profile_screen/provider_profile_screen.dart';
+import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
+import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
 import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
 import 'package:bulka_frontend/services/chat_controller.dart';
 import 'package:bulka_frontend/widgets/bottom_nav_bar.dart';
@@ -14,10 +17,6 @@ import 'package:bulka_frontend/widgets/bottom_nav_bar.dart';
 /// [ChatController.instance] unread-messages badge. (It previously opened
 /// the Notifications screen — that was a mistake; Notifications is a
 /// separate feature with its own screen/controller/badge, untouched here.)
-/// Everything else about the Tourist/Provider nav bars (styling, other
-/// tabs) is untouched; tapping any other tab just forwards to [onOtherTap]
-/// — a TODO for the caller until the Home/Search destination screens
-/// exist.
 class TouristBottomNav extends StatelessWidget {
   const TouristBottomNav({
     super.key,
@@ -28,20 +27,57 @@ class TouristBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int>? onOtherTap;
 
+  static const int _homeTabIndex = 0;
+  static const int _searchTabIndex = 1;
   static const int _reservationsTabIndex = 2;
+  static const int _profileTabIndex = 4;
 
+  /// Resolves every Tourist tab that has a real destination today,
+  /// centralized here (same architecture `ProviderBottomNav` already
+  /// uses for its own tabs) rather than copied into every caller. Each
+  /// case is guarded against re-pushing a duplicate copy of the screen
+  /// the user is already on. [onOtherTap] remains the escape hatch for
+  /// any future tab that doesn't have one yet — none do currently.
   void _handleOtherTap(BuildContext context, int index) {
-    if (index == _reservationsTabIndex) {
-      if (selectedIndex != _reservationsTabIndex) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const TouristMyReservationsScreen(),
-          ),
-        );
-      }
-      return;
+    switch (index) {
+      case _homeTabIndex:
+        if (selectedIndex != _homeTabIndex) {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const TouristHomeScreen()));
+        }
+        break;
+      case _searchTabIndex:
+        // Lands on the existing Search Results screen against whatever
+        // `SearchController` currently holds (an unset filter shows every
+        // active listing) — the full Search Filters sheet is still one
+        // tap away from there, so this doesn't need a second search
+        // entry point invented just for this tab.
+        if (selectedIndex != _searchTabIndex) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SearchResultsScreen()),
+          );
+        }
+        break;
+      case _reservationsTabIndex:
+        if (selectedIndex != _reservationsTabIndex) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const TouristMyReservationsScreen(),
+            ),
+          );
+        }
+        break;
+      case _profileTabIndex:
+        if (selectedIndex != _profileTabIndex) {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+        }
+        break;
+      default:
+        onOtherTap?.call(index);
     }
-    onOtherTap?.call(index);
   }
 
   @override

@@ -482,6 +482,8 @@ class AppStrings {
   static const String filtersDatePlaceholder = 'Изберете датуми';
   static const String filtersRatingLabel = 'Оценка';
   static const String filtersRatingAllOption = 'Сите';
+  // "Сите" reuses filtersRatingAllOption — same word, same meaning.
+  static const String filtersGuestCountLabel = 'Број на гости';
   static const String filtersAmenityHeading = 'Опрема';
   static const String filtersClearButton = 'Избриши филтри';
   static const String filtersShowResultsButton = 'Прикажи резултати';

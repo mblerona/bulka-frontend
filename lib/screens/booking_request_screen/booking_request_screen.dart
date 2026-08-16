@@ -32,9 +32,19 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// check-in/check-out + nightly-price model doesn't apply to non-nightly
 /// categories.
 class BookingRequestScreen extends StatefulWidget {
-  const BookingRequestScreen({super.key, required this.listing});
+  const BookingRequestScreen({
+    super.key,
+    required this.listing,
+    this.originTabIndex = 0,
+  });
 
   final ProviderListing listing;
+
+  /// Inherited from `ListingDetailsScreen` — the user is still mid-browse
+  /// here, so the navbar keeps showing whichever section (Дома/Пребарај)
+  /// they actually started from; only `ReservationConfirmationScreen`
+  /// onward switches to Резервации, once a reservation actually exists.
+  final int originTabIndex;
 
   @override
   State<BookingRequestScreen> createState() => _BookingRequestScreenState();
@@ -134,7 +144,9 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
     final listing = widget.listing;
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 0),
+      bottomNavigationBar: TouristBottomNav(
+        selectedIndex: widget.originTabIndex,
+      ),
       body: Column(
         children: [
           const ScreenHeader(

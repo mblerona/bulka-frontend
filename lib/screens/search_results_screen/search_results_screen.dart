@@ -89,7 +89,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 0),
+      bottomNavigationBar: const TouristBottomNav(selectedIndex: 1),
       body: Column(
         children: [
           const ScreenHeader(
@@ -144,10 +144,13 @@ class _TopBar extends StatelessWidget {
       if (filter.location != null) filter.location!,
       if (filter.startDate != null && filter.endDate != null)
         formatMkDateRangeShort(filter.startDate!, filter.endDate!),
-      // TODO: no guest-count field exists in ListingSearchFilter yet
-      // (the filter sheet uses a rating field instead, per Figma's own
-      // "Оценка" chips) — once one exists, it belongs here as a 3rd
-      // segment, matching Figma's "· N гости" example exactly.
+      // A minimum threshold, not a real booking's exact guest count, so
+      // "N+" rather than claiming an exact headcount like Figma's "N
+      // гости" example (that's `Reservation.guestCount`, a different
+      // concept — already used correctly on the Confirmation/My
+      // Reservations screens).
+      if (filter.minimumGuests != null)
+        '${filter.minimumGuests}+ ${AppStrings.reservationGuestsPlural}',
     ];
     return parts.isEmpty ? AppStrings.homeSearchPlaceholder : parts.join(' · ');
   }
@@ -535,7 +538,10 @@ class _ResultListingCard extends StatelessWidget {
 
   void _openDetails(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ListingDetailsScreen(listing: listing)),
+      MaterialPageRoute(
+        builder: (_) =>
+            ListingDetailsScreen(listing: listing, originTabIndex: 1),
+      ),
     );
   }
 

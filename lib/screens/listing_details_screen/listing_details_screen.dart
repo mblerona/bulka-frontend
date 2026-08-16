@@ -27,9 +27,23 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// in the list), so this never holds a second, potentially-stale copy of
 /// the listing's data.
 class ListingDetailsScreen extends StatefulWidget {
-  const ListingDetailsScreen({super.key, required this.listing});
+  const ListingDetailsScreen({
+    super.key,
+    required this.listing,
+    this.originTabIndex = 0,
+  });
 
   final ProviderListing listing;
+
+  /// Which Tourist navbar tab actually led here — `TouristHomeScreen`'s
+  /// cards pass 0, `SearchResultsScreen`'s cards pass 1 — so the navbar
+  /// below highlights the section the user is really in rather than
+  /// always defaulting to "Дома" regardless of entry point. Threaded
+  /// through to `BookingRequestScreen` too, since the user is still
+  /// mid-browse there (only `ReservationConfirmationScreen` onward
+  /// switches to the Reservations section, once a reservation actually
+  /// exists).
+  final int originTabIndex;
 
   @override
   State<ListingDetailsScreen> createState() => _ListingDetailsScreenState();
@@ -80,7 +94,9 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 0),
+      bottomNavigationBar: TouristBottomNav(
+        selectedIndex: widget.originTabIndex,
+      ),
       body: Column(
         children: [
           const ScreenHeader(
@@ -125,7 +141,10 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
                       ),
                     ),
                   ),
-                  _BookingFooter(listing: listing),
+                  _BookingFooter(
+                    listing: listing,
+                    originTabIndex: widget.originTabIndex,
+                  ),
                 ],
               ),
             ),
@@ -629,9 +648,10 @@ class _ReviewCard extends StatelessWidget {
 }
 
 class _BookingFooter extends StatelessWidget {
-  const _BookingFooter({required this.listing});
+  const _BookingFooter({required this.listing, required this.originTabIndex});
 
   final ProviderListing listing;
+  final int originTabIndex;
 
   String get _priceLabel {
     final suffix = categoryRequiresPrice(listing.category)
@@ -692,7 +712,10 @@ class _BookingFooter extends StatelessWidget {
             onTap: _bookable
                 ? () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => BookingRequestScreen(listing: listing),
+                      builder: (_) => BookingRequestScreen(
+                        listing: listing,
+                        originTabIndex: originTabIndex,
+                      ),
                     ),
                   )
                 // TODO: this category has no booking flow/design yet —

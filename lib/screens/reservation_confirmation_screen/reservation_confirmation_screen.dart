@@ -76,7 +76,7 @@ class ReservationConfirmationScreen extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.beigeBackground,
-        bottomNavigationBar: const TouristBottomNav(selectedIndex: 0),
+        bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
         body: Column(
           children: [
             ScreenHeader(

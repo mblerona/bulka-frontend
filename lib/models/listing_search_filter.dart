@@ -26,6 +26,12 @@ class ListingSearchFilter {
   /// From the Figma "Оценка" chips (Сите/3+★/4+★/4.5+★) — null = "Сите".
   double? minRating;
 
+  /// "Број на гости" (Сите/2+/3+/4+/5+) — null = "Сите" (no restriction).
+  /// Checked against `ProviderListing.guestCapacity`; a separate concept
+  /// from a real booking's exact `Reservation.guestCount`, so this is a
+  /// *minimum threshold*, not an exact headcount.
+  int? minimumGuests;
+
   /// Values are the same canonical strings as `ProviderListing.category`/
   /// `createOfferCategories` — not a second taxonomy.
   Set<String> categories = {};
@@ -39,6 +45,7 @@ class ListingSearchFilter {
       startDate != null ||
       endDate != null ||
       minRating != null ||
+      minimumGuests != null ||
       categories.isNotEmpty ||
       amenities.isNotEmpty;
 
@@ -51,6 +58,7 @@ class ListingSearchFilter {
       ..startDate = startDate
       ..endDate = endDate
       ..minRating = minRating
+      ..minimumGuests = minimumGuests
       ..categories = Set.of(categories)
       ..amenities = Set.of(amenities);
   }
@@ -63,6 +71,7 @@ class ListingSearchFilter {
     startDate = null;
     endDate = null;
     minRating = null;
+    minimumGuests = null;
     categories = {};
     amenities = {};
   }
