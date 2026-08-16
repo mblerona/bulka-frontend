@@ -28,6 +28,14 @@ enum ReservationStatus {
     }
   }
 
+  /// The Tourist-facing label — identical to [label] except `accepted`,
+  /// which Figma's My Reservations screen shows as "ПОТВРДЕНА" ("confirmed",
+  /// the guest's perspective) rather than [label]'s "ПРИФАТЕНА" ("accepted",
+  /// the Provider Dashboard's own perspective on the exact same status).
+  String get touristLabel => this == ReservationStatus.accepted
+      ? AppStrings.reservationStatusAcceptedTourist
+      : label;
+
   Color get pillTextColor {
     switch (this) {
       case ReservationStatus.pending:
@@ -49,6 +57,25 @@ enum ReservationStatus {
 /// map directly onto a future reservations API response so the mock data
 /// in `ReservationController` can be swapped for real fetched records
 /// without changing this model or anything that reads it.
+///
+/// `listingId` — added alongside the Tourist booking flow, which is the
+/// first place a `Reservation` is ever created directly from a real
+/// `ProviderListing` in hand. Nullable/optional: older mock reservations
+/// (and anything a future backend response might omit) still work with
+/// only `listingName`, which remains the field every existing screen
+/// (Provider Dashboard, `AvailabilityController`) actually reads — this
+/// doesn't replace that, just finally gives new reservations a proper
+/// foreign key for when something needs one.
+///
+/// `bookingReference`/`nightlyPriceAtBooking`/`serviceFee`/`totalAmount`
+/// are a price/reference *snapshot* taken at booking time — deliberately
+/// separate from `id` (`bookingReference` is the human-readable display
+/// value shown in the UI; `id` stays the internal domain identity) and
+/// deliberately not re-derived from the listing's *current* price later,
+/// so a provider editing a listing's price after the fact can never
+/// retroactively change what an already-confirmed reservation shows.
+/// `numberOfNights` isn't stored — it's trivially `endDate.difference(
+/// startDate).inDays` and storing it would risk drifting from the dates.
 class Reservation {
   const Reservation({
     required this.id,
@@ -60,6 +87,11 @@ class Reservation {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.listingId,
+    this.bookingReference,
+    this.nightlyPriceAtBooking,
+    this.serviceFee,
+    this.totalAmount,
   });
 
   final String id;
@@ -72,6 +104,12 @@ class Reservation {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  final String? listingId;
+  final String? bookingReference;
+  final double? nightlyPriceAtBooking;
+  final double? serviceFee;
+  final double? totalAmount;
+
   Reservation copyWith({ReservationStatus? status, DateTime? updatedAt}) {
     return Reservation(
       id: id,
@@ -83,6 +121,11 @@ class Reservation {
       status: status ?? this.status,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      listingId: listingId,
+      bookingReference: bookingReference,
+      nightlyPriceAtBooking: nightlyPriceAtBooking,
+      serviceFee: serviceFee,
+      totalAmount: totalAmount,
     );
   }
 }

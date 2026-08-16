@@ -500,6 +500,58 @@ class AppDimensions {
   static const double rateGuestStarGap = 10;
   static const double rateGuestHelperTextFontSize = 12;
 
+  // ── TOURIST HOME SCREEN ──
+  // Header Band reuses dsHeaderHorizontalPadding/dsHeaderTopPadding/
+  // dsCompactHeaderBottomPadding/dsRadiusSm/dsHeaderLogoSize/
+  // dsHeaderLogoMarkSize/dsHeaderLogoMarkOffset/dsHeaderTitleRowGap/
+  // dsRootHeaderGap/dsSubheadingFontSize — all pixel-identical to this
+  // frame's Header Band in Figma; only the greeting's own font size is new.
+  static const double homeHeaderGreetingFontSize = 22;
+
+  // Body reuses dsRootBodyTopPadding/profileBodyBottomPadding/
+  // dsBodyHorizontalPadding (Figma's Body top/bottom padding and each
+  // section's horizontal padding match those exactly); this is the gap
+  // between the Body's own sections (Search/Banners/Categories/Featured).
+  static const double homeBodyGap = 24;
+
+  static const double homeSearchHorizontalPadding = 16;
+  static const double homeSearchVerticalPadding = 13;
+  static const double homeSearchIconFontSize = 14;
+  static const double homeSearchFontSize = 13;
+  static const double homeSearchGap = 8;
+
+  static const double homeBannerWidth = 300;
+  static const double homeBannerHeight = 120;
+  static const double homeBannerPadding = 20;
+  static const double homeBannerGap = 12;
+  static const double homeBannerContentGap = 6;
+  static const double homeBannerRadius = 16;
+  static const double homeBannerTitleFontSize = 16;
+  static const double homeBannerTitleMaxWidth = 260;
+  static const double homeBannerActionFontSize = 12;
+
+  // Section heading -> content gap (Categories/Featured) reuses
+  // dashboardSectionGap (12, pixel-identical).
+  static const double homeSectionHeadingFontSize = 16;
+
+  static const double homeCategoryCardWidth = 92;
+  static const double homeCategoryCardHorizontalPadding = 8;
+  static const double homeCategoryCardVerticalPadding = 12;
+  static const double homeCategoryCardGap = 8;
+  static const double homeCategoryRowGap = 10;
+  static const double homeCategoryIconAreaWidth = 18;
+  static const double homeCategoryIconAreaHeight = 26;
+  static const double homeCategoryEmojiFontSize = 18;
+  static const double homeCategoryLabelFontSize = 10;
+
+  static const double homeListingCardImageHeight = 130;
+  static const double homeListingCardPadding = 14;
+  static const double homeListingCardContentGap = 4;
+  static const double homeListingCardGap = 12;
+  static const double homeListingTitleFontSize = 14;
+  static const double homeListingLocationFontSize = 11;
+  static const double homeListingPriceFontSize = 13;
+
   // ── RATING SAVED SCREEN ──
   // Reuses the Create Offer Success screen's successCircleSize/
   // successCheckFontSize/successHeadingFontSize/successBlockGap/
@@ -507,4 +559,180 @@ class AppDimensions {
   // successActionsBottomPadding — everything is pixel-identical except
   // the top padding.
   static const double ratingSavedTopPadding = 60;
+
+  // ── SEARCH FILTERS SHEET ──
+  // Keyword field reuses `LabeledTextField` as-is (dsFieldGap/dsInputFont
+  // Size/dsRadiusMd all pixel-identical in Figma). Select Box (Location/
+  // Date) reuses dsInputHorizontalPadding/dsInputVerticalPadding/dsRadiusMd
+  // /dsInputFontSize too. Rating/Category chips reuse the wizard's
+  // wizardChipHorizontalPadding/VerticalPadding/FontSize/Gap (12/8/11/8,
+  // pixel-identical). Amenity rows reuse AppCheckbox plus the wizard's
+  // wizardAmenityRowGap/EmojiFontSize/LabelFontSize. Only the values below
+  // have no existing equivalent token.
+  static const double filtersSheetRadius = 24;
+  static const double filtersSheetTopPadding = 16;
+  static const double filtersSheetBottomPadding = 28;
+  static const double filtersSheetContentGap = 20;
+
+  static const double filtersHandleWidth = 40;
+  static const double filtersHandleHeight = 4;
+
+  static const double filtersTitleFontSize = 20;
+  static const double filtersCloseFontSize = 16;
+
+  static const double filtersFieldHeadingGap = 8;
+  static const double filtersChevronIconSize = 18;
+
+  static const double filtersPriceLabelRowGap = 10;
+  static const double filtersPriceValueFontSize = 13;
+  static const double filtersSliderHeight = 20;
+  static const double filtersSliderTrackHeight = 6;
+  static const double filtersSliderThumbRadius = 9;
+
+  static const double filtersAmenitySectionGap = 12;
+
+  static const double filtersActionsGap = 16;
+  static const double filtersClearButtonFontSize = 13;
+
+  // ── SEARCH RESULTS SCREEN ──
+  // Header Band reuses ScreenHeader as-is (dsCompactHeaderTitleFontSize/
+  // dsCompactHeaderBottomPadding/dsCompactHeaderGap — all pixel-identical
+  // in Figma). Search Summary pill reuses homeSearchHorizontalPadding/
+  // VerticalPadding/homeSearchGap/IconFontSize/homeSearchFontSize (same
+  // spec as Home's search bar). Quick-filter chips and the listing cards
+  // reuse wizardChip*/offersCard*/dashboardActionButton*/
+  // profileRoleBadge* tokens — see search_results_screen.dart. Only the
+  // values below have no existing equivalent.
+  static const double resultsTopBarGap = 12;
+  static const double resultsTopBarTopPadding = 20;
+  static const double resultsTopBarBottomPadding = 12;
+
+  static const double resultsFilterIconButtonSize = 42;
+  static const double resultsFilterIconGlyphFontSize = 18;
+
+  static const double resultsQuickFiltersBottomPadding = 8;
+  static const double resultsFiltersChipGap = 4;
+  static const double resultsFiltersChipGlyphFontSize = 13;
+
+  static const double resultsHeaderTopPadding = 16;
+  static const double resultsHeaderBottomPadding = 8;
+  static const double resultsHeaderTextGap = 2;
+  static const double resultsSortLabelFontSize = 11;
+
+  static const double resultsMapButtonHorizontalPadding = 20;
+  static const double resultsMapButtonVerticalPadding = 12;
+  static const double resultsMapButtonFontSize = 15;
+
+  static const double resultsListingsSectionVerticalPadding = 8;
+  static const double resultsCardGap = 28;
+
+  // ── LISTING DETAILS SCREEN ──
+  // Header Band reuses ScreenHeader (dsCompactHeaderTitleFontSize/
+  // BottomPadding/Gap, same as Results/Map). Category badge reuses
+  // wizardChip*. Host avatar reuses chatListAvatarSize/
+  // rateGuestAvatarInitialsFontSize/chatListContentGap. Amenity rows reuse
+  // wizardAmenityRowGap/EmojiFontSize. Mini Map reuses dsRadiusMd/
+  // wizardMapPinGlyph/wizardMapPinFontSize. The Reserve button reuses
+  // dsButtonHorizontalPadding/VerticalPadding/dsRadiusMd/dsButtonFontSize.
+  // Only the values below have no existing equivalent.
+  static const double detailsHeroImageHeight = 300;
+  static const double detailsHeartButtonSize = 38;
+  static const double detailsHeartGlyphFontSize = 16;
+  static const double detailsHeroOverlayInset = 16;
+  static const double detailsPhotoCounterHorizontalPadding = 10;
+  static const double detailsPhotoCounterVerticalPadding = 5;
+  static const double detailsPhotoCounterFontSize = 12;
+
+  // Shared by every section below the Hero Image (Title Block, Host Row,
+  // Description, Amenities, Location, Reviews, Footer) — all py-[20px] in
+  // Figma.
+  static const double detailsSectionVerticalPadding = 20;
+
+  static const double detailsTitleBlockGap = 8;
+  static const double detailsTitleFontSize = 22;
+  static const double detailsLocationFontSize = 14;
+  static const double detailsRatingLineFontSize = 14;
+
+  static const double detailsHostNameFontSize = 15;
+  static const double detailsHostSinceFontSize = 11;
+
+  // Shared "За понудата"/"Што нуди?"/"Каде се наоѓа?" section-heading size.
+  static const double detailsSectionHeadingFontSize = 17;
+
+  static const double detailsDescriptionGap = 10;
+  static const double detailsBodyFontSize = 14;
+  static const double detailsBodyLineHeight = 1.5;
+
+  static const double detailsAmenityListGap = 14;
+  static const double detailsAmenityLabelFontSize = 14;
+
+  static const double detailsAddressFontSize = 13;
+
+  static const double detailsReviewCardGap = 16;
+  static const double detailsReviewCardInternalGap = 6;
+  static const double detailsReviewAuthorFontSize = 14;
+  static const double detailsReviewCommentFontSize = 13;
+
+  static const double detailsFooterVerticalPadding = 16;
+  static const double detailsFooterPriceFontSize = 17;
+  static const double detailsFooterMetaFontSize = 12;
+
+  // ── TOURIST BOOKING FLOW (Booking Request + Reservation Confirmation) ──
+  // BookingRequestScreen reuses ScreenHeader, the Availability Calendar's
+  // "Listing Context" row spec (calendarListingContext*/
+  // calendarListingThumbSize/calendarListingNameColGap/profileNameFontSize
+  // /calendarListingLocationFontSize), the Search Filters sheet's Select
+  // Box spec (dsInputHorizontalPadding/VerticalPadding/dsRadiusMd/
+  // dsInputFontSize/filtersFieldHeadingGap/filtersChevronIconSize), the
+  // wizard's capacity-stepper spec (wizardStepperRowVerticalPadding/
+  // LabelFontSize/Gap/ButtonSize/ButtonFontSize/ValueFontSize), and
+  // wizardContentGap for section spacing — no screen-specific tokens of
+  // its own beyond dsFieldLabelFontSize (reused) for its error text.
+  //
+  // ReservationConfirmationScreen reuses ScreenHeader, successCircleSize/
+  // CheckFontSize/HeadingFontSize/SubtitleFontSize/BlockGap/BottomPadding/
+  // ActionsTopPadding/ActionsBottomPadding/ActionsGap (from the Create
+  // Offer Success screen — pixel-identical here), detailsSectionVerticalPadding/
+  // HeadingFontSize/BodyFontSize (from Listing Details), chatListContentGap,
+  // and PrimaryButton/SecondaryButton as-is. Only the values below have no
+  // existing equivalent.
+  static const double confirmationSuccessTopPadding = 40;
+  static const double confirmationThumbSize = 64;
+  static const double confirmationTotalFontSize = 16;
+
+  // ── TOURIST MY RESERVATIONS SCREEN ──
+  // Header Band reuses ScreenHeader as-is. The Upcoming/Past toggle reuses
+  // the shared DS/Toggle spec (dsToggleContainerPadding/OptionGap/FontSize)
+  // plus providerSubjectToggleHeight/OptionRadius and
+  // profileStatCardBackground/Border/dsRadiusMd — pixel-identical to this
+  // frame's "Booking Tabs" component. Reservation cards reuse
+  // offersCardImageHeight/InfoPadding/InfoGap/TitleFontSize/MetaFontSize,
+  // profileRoleBadgeHorizontalPadding/VerticalPadding/FontSize (status
+  // pill), pillBorderRadius/dsRadiusMd, and
+  // dashboardActionButtonRadius/VerticalPadding/FontSize (action button) —
+  // all pixel-identical to Search Results' listing cards. Only the values
+  // below have no existing equivalent.
+  static const double myReservationsTabsTopPadding = 20;
+  static const double myReservationsTabsBottomPadding = 8;
+  static const double myReservationsListVerticalPadding = 12;
+  static const double myReservationsCardGap = 20;
+
+  // ── LEAVE REVIEW SCREEN + REVIEW SUBMITTED SCREEN ──
+  // Both screens reuse `RateGuestScreen`'s own tokens almost entirely —
+  // that screen is this feature's exact mirror image (a completed
+  // reservation, a 5-star selector, an optional text field, one footer
+  // button): Listing Row reuses calendarListingContextTopPadding/
+  // BottomPadding/Gap/NameColGap; the star row reuses rateGuestStarFontSize/
+  // Gap and the agroGold100/agroBorder300 colors; the question heading
+  // reuses successHeadingFontSize; the text field reuses dsFieldLabelFontSize/
+  // Gap/dsInputHorizontalPadding/VerticalPadding/dsRadiusMd/dsInputFontSize;
+  // the disclaimer reuses rateGuestHelperTextFontSize; the footer reuses
+  // wizardFooterTopPadding/BottomPadding + PrimaryButton as-is. Review
+  // Submitted reuses every successCircleSize/CheckFontSize/HeadingFontSize/
+  // BottomPadding/ActionsTopPadding/BottomPadding token from
+  // `RatingSavedScreen`/`CreateOfferSuccessScreen`, plus
+  // ratingSavedTopPadding for its own top padding. Only the values below
+  // have no existing equivalent.
+  static const double leaveReviewThumbSize = 56;
+  static const double leaveReviewListingTitleFontSize = 16;
 }

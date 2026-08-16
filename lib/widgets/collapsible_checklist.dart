@@ -85,7 +85,9 @@ class _CollapsibleChecklistState extends State<CollapsibleChecklist> {
                     onChanged: (_) => _toggleItem(widget.items[i]),
                   ),
                   if (i != widget.items.length - 1)
-                    const SizedBox(height: AppDimensions.providerChecklistRowGap),
+                    const SizedBox(
+                      height: AppDimensions.providerChecklistRowGap,
+                    ),
                 ],
               ],
             ),

@@ -44,9 +44,9 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
       rating: _rating,
       note: _noteController.text,
     );
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const RatingSavedScreen()));
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const RatingSavedScreen()),
+    );
   }
 
   @override
@@ -115,7 +115,8 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
                         contextLine,
                         style: const TextStyle(
                           fontWeight: FontWeight.w400,
-                          fontSize: AppDimensions.calendarListingLocationFontSize,
+                          fontSize:
+                              AppDimensions.calendarListingLocationFontSize,
                           color: AppColors.profileSecondaryText,
                         ),
                       ),
@@ -210,7 +211,9 @@ class _StarRow extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: AppDimensions.rateGuestStarFontSize,
-                color: i <= rating ? AppColors.agroGold100 : AppColors.agroBorder300,
+                color: i <= rating
+                    ? AppColors.agroGold100
+                    : AppColors.agroBorder300,
               ),
             ),
           ),
@@ -280,7 +283,11 @@ class _NoteField extends StatelessWidget {
 }
 
 String _initialsFor(String name) {
-  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
   if (parts.isEmpty) return '';
   final first = parts.first.characters.first;
   final second = parts.length > 1 ? parts[1].characters.first : '';

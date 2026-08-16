@@ -33,7 +33,9 @@ class LanguageSwitch extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.languageSwitchPadding),
       decoration: BoxDecoration(
-        color: isLight ? AppColors.agroBorder300 : AppColors.languageSwitchTrack,
+        color: isLight
+            ? AppColors.agroBorder300
+            : AppColors.languageSwitchTrack,
         borderRadius: BorderRadius.circular(AppDimensions.pillBorderRadius),
       ),
       child: Row(

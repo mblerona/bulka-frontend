@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
@@ -58,8 +59,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
       );
     _descriptionController = TextEditingController()
       ..addListener(
-        () =>
-            setState(() => _draft.description = _descriptionController.text),
+        () => setState(() => _draft.description = _descriptionController.text),
       );
     _priceController = TextEditingController()
       ..addListener(
@@ -153,9 +153,9 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
 
   void _handlePublish() {
     _listingController.createListing(_draft);
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const CreateOfferSuccessScreen()));
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const CreateOfferSuccessScreen()),
+    );
   }
 
   /// Navbar taps mid-wizard are treated as leaving the creation flow
@@ -182,7 +182,9 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
       default:
         target = const ProviderProfileScreen();
     }
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => target));
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => target));
   }
 
   Future<ImageSource?> _showImageSourceSheet() {
@@ -466,10 +468,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
 
   Widget _buildReview() {
     final rows = <Widget>[
-      _ReviewRow(
-        label: AppStrings.wizardReviewTitleRow,
-        value: _draft.title,
-      ),
+      _ReviewRow(label: AppStrings.wizardReviewTitleRow, value: _draft.title),
       _ReviewRow(
         label: AppStrings.wizardReviewCategoryRow,
         value: _draft.category,
@@ -502,7 +501,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
         _ReviewRow(
           label: AppStrings.wizardReviewPriceRow,
           value: _draft.price != null
-              ? '${_formatPrice(_draft.price!)} ${AppStrings.wizardPricePerNightSuffix}'
+              ? '${formatMkPrice(_draft.price!)} ${AppStrings.wizardPricePerNightSuffix}'
               : '',
         ),
     ];
@@ -559,17 +558,6 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
 
 String _countSummary(int count, String singular, String plural) {
   return '$count ${count == 1 ? singular : plural}';
-}
-
-String _formatPrice(double price) {
-  final rounded = price.round();
-  final digits = rounded.toString();
-  final buffer = StringBuffer();
-  for (var i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write('.');
-    buffer.write(digits[i]);
-  }
-  return buffer.toString();
 }
 
 Widget _stepColumn(List<Widget> children) {
@@ -861,10 +849,7 @@ class _CapacityStepperRow extends StatelessWidget {
           ),
           Row(
             children: [
-              _StepperButton(
-                glyph: '–',
-                onTap: value > 1 ? onDecrement : null,
-              ),
+              _StepperButton(glyph: '–', onTap: value > 1 ? onDecrement : null),
               SizedBox(width: AppDimensions.wizardStepperGap),
               Text(
                 '$value',

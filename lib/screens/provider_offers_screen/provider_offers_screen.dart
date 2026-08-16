@@ -5,6 +5,7 @@ import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/ago_label.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/screens/create_offer_wizard_screen/create_offer_wizard_screen.dart';
+import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -36,7 +37,10 @@ class ProviderOffersScreen extends StatefulWidget {
 }
 
 class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
-  final ProviderListingController _controller = ProviderListingController.instance;
+  final ProviderListingController _controller =
+      ProviderListingController.instance;
+  final ListingReviewController _reviewController =
+      ListingReviewController.instance;
 
   // null == "Сите" (all) — local UI state, since only this screen cares
   // which filter is currently selected.
@@ -46,11 +50,13 @@ class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
   void initState() {
     super.initState();
     _controller.addListener(_handleControllerChanged);
+    _reviewController.addListener(_handleControllerChanged);
   }
 
   @override
   void dispose() {
     _controller.removeListener(_handleControllerChanged);
+    _reviewController.removeListener(_handleControllerChanged);
     super.dispose();
   }
 
@@ -183,7 +189,9 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
             fontSize: AppDimensions.offersFilterChipFontSize,
-            color: isSelected ? AppColors.white : AppColors.profileSecondaryText,
+            color: isSelected
+                ? AppColors.white
+                : AppColors.profileSecondaryText,
           ),
         ),
       ),
@@ -200,8 +208,11 @@ class _ListingCard extends StatelessWidget {
   String? get _infoLine {
     switch (listing.status) {
       case ListingStatus.active:
-        final ratingText = listing.rating != null
-            ? ' · ${listing.rating!.toStringAsFixed(1)} ★'
+        final rating = ListingReviewController.instance.effectiveRating(
+          listing,
+        );
+        final ratingText = rating != null
+            ? ' · ${rating.toStringAsFixed(1)} ★'
             : '';
         return '${listing.reservationCount} '
             '${AppStrings.listingReservationsThisMonthLabel}$ratingText';
@@ -292,7 +303,8 @@ class _ListingCard extends StatelessWidget {
                       textColor: listing.status.badgeTextColor,
                       horizontalPadding:
                           AppDimensions.dsStatusPillHorizontalPadding,
-                      verticalPadding: AppDimensions.dsStatusPillVerticalPadding,
+                      verticalPadding:
+                          AppDimensions.dsStatusPillVerticalPadding,
                       fontSize: AppDimensions.dsStatusPillFontSize,
                     ),
                   ],

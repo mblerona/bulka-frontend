@@ -215,8 +215,9 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment:
-          message.isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment: message.isMine
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
       children: [
         ConstrainedBox(
           constraints: const BoxConstraints(
@@ -243,7 +244,9 @@ class _MessageBubble extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w400,
                 fontSize: AppDimensions.chatThreadBubbleFontSize,
-                color: message.isMine ? AppColors.white : AppColors.agroForest950,
+                color: message.isMine
+                    ? AppColors.white
+                    : AppColors.agroForest950,
               ),
             ),
           ),
@@ -337,7 +340,8 @@ class _ChatInputBar extends StatelessWidget {
 
 String _dateDividerLabel(DateTime timestamp) {
   final now = DateTime.now();
-  final isToday = timestamp.year == now.year &&
+  final isToday =
+      timestamp.year == now.year &&
       timestamp.month == now.month &&
       timestamp.day == now.day;
   final time =

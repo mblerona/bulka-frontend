@@ -118,7 +118,8 @@ class EmailVerificationScreen extends StatelessWidget {
                   AppStrings.emailVerificationChangeEmail,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: AppDimensions.emailVerificationChangeEmailFontSize,
+                    fontSize:
+                        AppDimensions.emailVerificationChangeEmailFontSize,
                     color: AppColors.agroInk500,
                   ),
                 ),

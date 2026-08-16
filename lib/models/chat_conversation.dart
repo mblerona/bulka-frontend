@@ -27,8 +27,7 @@ class ChatConversation {
 
   ChatMessage? get latestMessage => messages.isEmpty ? null : messages.last;
 
-  int get unreadCount =>
-      messages.where((m) => !m.isMine && !m.isRead).length;
+  int get unreadCount => messages.where((m) => !m.isMine && !m.isRead).length;
 
   ChatConversation copyWith({List<ChatMessage>? messages}) {
     return ChatConversation(

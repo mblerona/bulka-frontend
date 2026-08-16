@@ -304,7 +304,8 @@ class _MonthNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final monthName = mkMonthNames[month.month - 1];
-    final title = '${monthName[0].toUpperCase()}${monthName.substring(1)} '
+    final title =
+        '${monthName[0].toUpperCase()}${monthName.substring(1)} '
         '${month.year}';
     return Container(
       width: double.infinity,
@@ -431,7 +432,9 @@ class _CalendarGrid extends StatelessWidget {
                 for (var i = 0; i < week.length; i++) ...[
                   Expanded(
                     child: week[i] == null
-                        ? const SizedBox(height: AppDimensions.calendarCellHeight)
+                        ? const SizedBox(
+                            height: AppDimensions.calendarCellHeight,
+                          )
                         : _DayCell(
                             date: DateTime(month.year, month.month, week[i]!),
                             day: week[i]!,

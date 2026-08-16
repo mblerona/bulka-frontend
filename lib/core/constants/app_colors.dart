@@ -49,8 +49,7 @@ class AppColors {
   static const Color black = Color(0xFF1A1A1A);
   static const Color lightGrey = Color(0xFF8C8C8C);
 
-
-//FORGOT PASSWORD SCREEN BACKGROUND
+  //FORGOT PASSWORD SCREEN BACKGROUND
   static const Color beigeBackground = Color(0xFFFAF6F0);
 
   // REGISTER SCREEN ONLY
@@ -96,6 +95,17 @@ class AppColors {
   // Figma variable for it. Screen background reuses beigeBackground
   // (exact hex match for Figma's agro-cream-50).
   static const Color calendarBlockedGrey = Color(0xFF999999);
+
+  // TOURIST HOME SCREEN ONLY
+  // Promo Banner 1 background — one-off gold, no shared Figma variable
+  // (Banners 2/3 reuse agroInk500/agroGreen700 above).
+  static const Color homeBannerGold = Color(0xFFF8C040);
+
+  // LISTING DETAILS SCREEN ONLY
+  // Hero image overlay chrome — semi-transparent white/black, no shared
+  // Figma variable for either.
+  static const Color detailsHeartButtonBackground = Color(0xE6FFFFFF);
+  static const Color detailsPhotoCounterBackground = Color(0x8C000000);
 
   // ALIASES
   static const Color background = roleScreenBackground;

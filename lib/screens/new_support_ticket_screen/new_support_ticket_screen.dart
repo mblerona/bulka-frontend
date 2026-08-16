@@ -17,8 +17,7 @@ class NewSupportTicketScreen extends StatefulWidget {
   const NewSupportTicketScreen({super.key});
 
   @override
-  State<NewSupportTicketScreen> createState() =>
-      _NewSupportTicketScreenState();
+  State<NewSupportTicketScreen> createState() => _NewSupportTicketScreenState();
 }
 
 class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
@@ -52,7 +51,8 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
   }
 
   void _updateValidity() {
-    final isValid = _titleController.text.trim().isNotEmpty &&
+    final isValid =
+        _titleController.text.trim().isNotEmpty &&
         _descriptionController.text.trim().isNotEmpty;
     if (isValid != _isValid) {
       setState(() => _isValid = isValid);
@@ -446,7 +446,8 @@ class _AttachmentField extends StatelessWidget {
                       _formatSize(current.sizeBytes),
                       style: const TextStyle(
                         fontWeight: FontWeight.w400,
-                        fontSize: AppDimensions.newTicketAttachmentSubtextFontSize,
+                        fontSize:
+                            AppDimensions.newTicketAttachmentSubtextFontSize,
                         color: AppColors.profileSecondaryText,
                       ),
                     ),

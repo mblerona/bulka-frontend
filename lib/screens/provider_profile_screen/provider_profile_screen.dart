@@ -8,6 +8,7 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
+import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/collapsible_checklist.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
@@ -53,14 +54,19 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
   final ProviderListingController _listingController =
       ProviderListingController.instance;
+  final ListingReviewController _reviewController =
+      ListingReviewController.instance;
 
   int get _activeOffersCount => _listingController.activeListingsCount;
 
-  // Average of active listings' own ratings — 0 if none are rated yet.
+  // Average of active listings' own *effective* ratings (the real review
+  // average where reviews exist, same as everywhere else in the app) — 0
+  // if none are rated yet.
   double get _averageRating {
     final ratings = _listingController.listings
-        .where((l) => l.status == ListingStatus.active && l.rating != null)
-        .map((l) => l.rating!)
+        .where((l) => l.status == ListingStatus.active)
+        .map((l) => _reviewController.effectiveRating(l))
+        .whereType<double>()
         .toList();
     if (ratings.isEmpty) return 0;
     return ratings.reduce((a, b) => a + b) / ratings.length;
@@ -116,6 +122,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   void initState() {
     super.initState();
     _listingController.addListener(_handleListingsChanged);
+    _reviewController.addListener(_handleListingsChanged);
     _savedName = widget.profile.fullName;
     _savedPhone = widget.profile.phone;
     _savedOfferName = '';
@@ -145,20 +152,22 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
     _companyNameController = TextEditingController(text: _savedCompanyName)
       ..addListener(_handleFieldChanged);
-    _responsiblePersonController =
-        TextEditingController(text: _savedResponsiblePerson)
-          ..addListener(_handleFieldChanged);
+    _responsiblePersonController = TextEditingController(
+      text: _savedResponsiblePerson,
+    )..addListener(_handleFieldChanged);
     _legalPhoneController = TextEditingController(text: _savedLegalPhone)
       ..addListener(_handleFieldChanged);
     _legalEmailController = TextEditingController(text: _savedLegalEmail)
       ..addListener(_handleFieldChanged);
     _taxIdController = TextEditingController(text: _savedTaxId)
       ..addListener(_handleFieldChanged);
-    _businessAddressController =
-        TextEditingController(text: _savedBusinessAddress)
-          ..addListener(_handleFieldChanged);
+    _businessAddressController = TextEditingController(
+      text: _savedBusinessAddress,
+    )..addListener(_handleFieldChanged);
 
-    _contactControllers.add(TextEditingController()..addListener(_handleFieldChanged));
+    _contactControllers.add(
+      TextEditingController()..addListener(_handleFieldChanged),
+    );
     _savedContacts = _contactValues;
   }
 
@@ -167,6 +176,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   @override
   void dispose() {
     _listingController.removeListener(_handleListingsChanged);
+    _reviewController.removeListener(_handleListingsChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _offerNameController.dispose();
@@ -192,7 +202,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
   void _recomputeHasChanges() {
     final subjectChanged = _subjectTypeIndex != _savedSubjectTypeIndex;
-    final changed = subjectChanged ||
+    final changed =
+        subjectChanged ||
         (_subjectTypeIndex == 1 ? _hasLegalChanges : _hasIndividualChanges);
     if (changed != _hasChanges) {
       setState(() => _hasChanges = changed);
@@ -569,11 +580,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         const SizedBox(height: AppDimensions.providerSetupSectionGap),
         _sectionHeading(AppStrings.providerPhotosHeading),
         const SizedBox(height: AppDimensions.providerContactsSectionGap),
-        PhotoGrid(
-          photos: _photos,
-          onAdd: _pickPhotos,
-          onRemove: _removePhoto,
-        ),
+        PhotoGrid(photos: _photos, onAdd: _pickPhotos, onRemove: _removePhoto),
         const SizedBox(height: AppDimensions.providerSetupSectionGap),
         PrimaryButton(
           label: AppStrings.providerSaveAndContinueButton,
@@ -820,11 +827,7 @@ class _ContactRow extends StatelessWidget {
         Expanded(child: field),
         IconButton(
           onPressed: onRemove,
-          icon: const Icon(
-            Icons.close,
-            size: 18,
-            color: AppColors.agroInk500,
-          ),
+          icon: const Icon(Icons.close, size: 18, color: AppColors.agroInk500),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
@@ -832,4 +835,3 @@ class _ContactRow extends StatelessWidget {
     );
   }
 }
-

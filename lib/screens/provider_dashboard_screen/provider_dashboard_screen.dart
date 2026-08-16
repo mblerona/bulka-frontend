@@ -27,7 +27,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ProviderListingController.instance;
   final ReservationController _reservationController =
       ReservationController.instance;
-  final GuestRatingController _ratingController = GuestRatingController.instance;
+  final GuestRatingController _ratingController =
+      GuestRatingController.instance;
 
   @override
   void initState() {
@@ -53,7 +54,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   void _handleRateGuest(Reservation reservation) {
     if (_ratingController.hasRating(reservation.id)) return;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => RateGuestScreen(reservation: reservation)),
+      MaterialPageRoute(
+        builder: (_) => RateGuestScreen(reservation: reservation),
+      ),
     );
   }
 
@@ -103,9 +106,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.dashboardBodyGap),
-                    _sectionHeading(
-                      AppStrings.dashboardListingsSummaryHeading,
-                    ),
+                    _sectionHeading(AppStrings.dashboardListingsSummaryHeading),
                     const SizedBox(height: AppDimensions.dashboardSectionGap),
                     Row(
                       children: [
@@ -236,7 +237,9 @@ class _CounterCard extends StatelessWidget {
                 color: valueColor,
               ),
             ),
-            const SizedBox(height: AppDimensions.dashboardCounterCardContentGap),
+            const SizedBox(
+              height: AppDimensions.dashboardCounterCardContentGap,
+            ),
             Text(
               label,
               style: const TextStyle(

@@ -155,9 +155,9 @@ class _SplashContent extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.agroGreen100,

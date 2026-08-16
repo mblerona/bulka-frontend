@@ -156,7 +156,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppDimensions.profileAvatarRowGap),
+                        const SizedBox(
+                          width: AppDimensions.profileAvatarRowGap,
+                        ),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

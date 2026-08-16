@@ -150,8 +150,7 @@ class AppStrings {
       'Владимир Здравковски';
   static const String providerLegalEmailPlaceholder =
       'На пример: контакт@company.mk';
-  static const String providerLegalBusinessDetailsHeading =
-      'Деловни податоци';
+  static const String providerLegalBusinessDetailsHeading = 'Деловни податоци';
   static const String providerLegalTaxIdLabel = 'ЕДБ / Даночен број';
   static const String providerLegalTaxIdPlaceholder = '4021998123456';
   static const String providerLegalCategoryHeading = 'Категорија на дејност';
@@ -191,8 +190,7 @@ class AppStrings {
   static const String settingsPrivacyDescription =
       'Во согласност со GDPR можете да ги преземете или избришете вашите '
       'лични податоци.';
-  static const String settingsDownloadDataButton =
-      'Преземи ги моите податоци';
+  static const String settingsDownloadDataButton = 'Преземи ги моите податоци';
   static const String settingsDeleteAccountButton =
       'Побарај бришење на сметката';
   static const String settingsLogoutButton = 'Одјава';
@@ -242,8 +240,7 @@ class AppStrings {
   static const String newTicketDescriptionPlaceholder =
       'Опишете детално што се случи, кога и на кој оглас или резервација '
       'се однесува...';
-  static const String newTicketAttachmentLabel =
-      'Прикачи слика или документ';
+  static const String newTicketAttachmentLabel = 'Прикачи слика или документ';
   static const String newTicketAttachmentOptional = '(опционално)';
   static const String newTicketSubmitButton = 'Испрати барање';
 
@@ -274,6 +271,9 @@ class AppStrings {
 
   static const String reservationStatusPending = 'НА ЧЕКАЊЕ';
   static const String reservationStatusAccepted = 'ПРИФАТЕНА';
+  // Tourist-facing label for the exact same `accepted` status — see
+  // `ReservationStatus.touristLabel`.
+  static const String reservationStatusAcceptedTourist = 'ПОТВРДЕНА';
   static const String reservationStatusRejected = 'ОДБИЕНА';
   static const String reservationStatusCompleted = 'ЗАВРШЕНА';
   static const String reservationStatusCancelled = 'ОТКАЖАНА';
@@ -307,8 +307,7 @@ class AppStrings {
   static const String listingArchivedOnLabel = 'Архивирано на';
 
   static const String editListingButton = 'Уреди';
-  static const String editAndResubmitListingButton =
-      'Уреди и поднеси повторно';
+  static const String editAndResubmitListingButton = 'Уреди и поднеси повторно';
   static const String reactivateListingButton = 'Активирај повторно';
 
   //PROVIDER AVAILABILITY CALENDAR SCREEN
@@ -350,7 +349,8 @@ class AppStrings {
       'Изберете категорија и дадете наслов на вашата понуда.';
   static const String wizardCategoryLabel = 'Категорија';
   static const String wizardTitleLabel = 'Наслов на понудата';
-  static const String wizardTitlePlaceholder = 'На пр. Гостинска соба со појадок';
+  static const String wizardTitlePlaceholder =
+      'На пр. Гостинска соба со појадок';
 
   static const String wizardStep2Heading = 'Каде се наоѓа вашата понуда?';
   static const String wizardStep2Subtitle =
@@ -449,27 +449,144 @@ class AppStrings {
   static const String ratingSavedTitle = 'Оценка';
   static const String ratingSavedHeading = 'Оценката е зачувана!';
 
+  //TOURIST HOME SCREEN
+  static const String homeGreetingPrefix = 'Здраво, ';
+  static const String homeGreetingEmoji = '👋';
+  static const String homeSubtitle =
+      'Пронајдете го вашето следно рурално доживување';
+  static const String homeSearchPlaceholder = 'Пребарај дестинации, понуди...';
+  static const String homeSearchIconGlyph = '🔍';
+  static const String homeCategoriesHeading = 'Категории';
+  static const String homeRecommendedHeading = 'Препорачано за вас';
+  static const String homePricePrefix = 'од ';
+
+  static const String homeBanner1Title = 'До 20% попуст на избрани понуди';
+  static const String homeBanner1Action = 'Погледни ги →';
+  static const String homeBanner2Title = 'Нови понуди оваа недела';
+  static const String homeBanner2Action = 'Истражи ги →';
+  static const String homeBanner3Title =
+      'Омилено на гостите: Villa Zdravkovski';
+  static const String homeBanner3Action = 'Резервирај →';
+
+  //SEARCH FILTERS SHEET (Tourist Home's Search Bar -> Filter Bottom Sheet)
+  // Close glyph reuses wizardCloseGlyph; "Категорија" label reuses
+  // wizardCategoryLabel — same exact text/concept, not a second constant.
+  static const String filtersSheetTitle = 'Филтри';
+  static const String filtersKeywordLabel = 'Клучен збор';
+  static const String filtersKeywordPlaceholder = 'На пр. куќа со базен';
+  static const String filtersLocationLabel = 'Локација';
+  static const String filtersAllLocationsOption = 'Сите локации';
+  static const String filtersPriceRangeLabel = 'Ценовен опсег';
+  static const String filtersPriceRangeUnit = 'ден.';
+  static const String filtersDateLabel = 'Датум на престој';
+  static const String filtersDatePlaceholder = 'Изберете датуми';
+  static const String filtersRatingLabel = 'Оценка';
+  static const String filtersRatingAllOption = 'Сите';
+  static const String filtersAmenityHeading = 'Опрема';
+  static const String filtersClearButton = 'Избриши филтри';
+  static const String filtersShowResultsButton = 'Прикажи резултати';
+
+  //SEARCH RESULTS SCREEN
+  static const String resultsTitle = 'Резултати';
+  static const String filterIconGlyph = '⚙';
+  static const String resultsFiltersChipGlyph = '☰';
+  static const String resultsFiltersChipLabel = 'Филтри';
+  // A specific quick-filter chip label (not generated from minRating), per
+  // the Figma "Резултати" frame — distinct from the filter sheet's own
+  // Сите/3+★/4+★/4.5+★ group.
+  static const String resultsRatingChipLabel = 'Оценка 4+';
+  static const String resultsPriceChipLabel = 'Цена';
+  static const String resultsCountSuffix = 'понуди';
+  static const String resultsCountLocationPrefix = 'во';
+  static const String resultsSortLabel = 'Прикажани по релевантност';
+  static const String resultsMapButtonGlyph = '🗺';
+  static const String resultsMapButtonLabel = 'Карта';
+  static const String resultsShowDetailsButton = 'Прикажи детали';
+  static const String resultsReservationsSuffix = 'резервации';
+  // Distinct spacing from wizardPricePerNightSuffix ("ден. / ноќ") — this
+  // frame's price pill uses "ден./ноќ" with no surrounding spaces.
+  static const String resultsPricePerNightSuffix = 'ден./ноќ';
+
+  //LISTING DETAILS SCREEN
+  static const String detailsTitle = 'Детали';
+  static const String detailsHeartOutlineGlyph = '♡';
+  static const String detailsHeartFilledGlyph = '♥';
+  static const String detailsHostPrefix = 'Домаќин: ';
+  static const String detailsHostSincePrefix = 'Тука од ';
+  static const String detailsAboutHeading = 'За понудата';
+  static const String detailsAmenitiesHeading = 'Што нуди?';
+  static const String detailsLocationHeading = 'Каде се наоѓа?';
+  static const String detailsReserveButton = 'Резервирај';
+
+  //TOURIST BOOKING FLOW (Booking Request + Reservation Confirmation)
+  static const String reservationFlowTitle = 'Резервација';
+
+  // BookingRequestScreen — reuses filtersDateLabel/filtersDatePlaceholder/
+  // wizardGuestsLabel/detailsReserveButton for its own fields/submit
+  // button, so only the availability error message is new here.
+  static const String bookingDatesUnavailableError =
+      'Избраните датуми не се достапни за оваа понуда.';
+
+  // ReservationConfirmationScreen
+  static const String bookingRequestSentHeading =
+      'Барањето за резервација е испратено!';
+  static const String bookingRequestSentSubtitle =
+      'Ќе добиете е-пошта штом понудувачот ја потврди вашата резервација.';
+  static const String tripDetailsHeading = 'Детали за престојот';
+  static const String checkInLabel = 'Пристигнување';
+  static const String checkOutLabel = 'Заминување';
+  static const String paymentDetailsHeading = 'Детали за плаќањето';
+  static const String serviceFeeLabel = 'Такса за услуга';
+  static const String totalLabel = 'Вкупно';
+  static const String reservationNumberLabel = 'Број на резервација';
+  static const String nightSingular = 'ноќ';
+  static const String nightsPlural = 'ноќи';
+  static const String viewMyReservationsButton =
+      'Прегледај ги моите резервации';
+  static const String backToHomeButton = 'Назад кон почетна';
+
+  //TOURIST MY RESERVATIONS SCREEN
+  static const String myReservationsTitle = 'Мои резервации';
+  static const String upcomingTabLabel = 'Претстојни';
+  static const String pastTabLabel = 'Минати';
+  static const String myReservationsDetailsButton = 'Прегледај детали';
+  static const String leaveReviewButton = 'Остави рецензија';
+  static const String myReservationsEmptyUpcoming =
+      'Нема претстојни резервации.';
+  static const String myReservationsEmptyPast = 'Нема минати резервации.';
+
+  //LEAVE REVIEW SCREEN + REVIEW SUBMITTED SCREEN
+  // Header title reuses leaveReviewButton above — same phrase, same
+  // concept, not a coincidental match.
+  static const String leaveReviewQuestion = 'Каков беше вашиот престој?';
+  static const String leaveReviewTextLabel = 'Вашата рецензија';
+  static const String leaveReviewTextPlaceholder =
+      'Споделете го вашето искуство со идните гости...';
+  static const String leaveReviewDisclaimer =
+      'Рецензија може да оставите само по валидна завршена резервација, '
+      'преку мобилна или веб апликација.';
+  static const String submitReviewButton = 'Испрати рецензија';
+
+  static const String reviewSubmittedTitle = 'Рецензија';
+  static const String reviewSubmittedHeading = 'Ви благодариме за рецензијата!';
+  static const String backToReservationsButton = 'Назад кон резервации';
+
   //ROLE SCREEN
   static const welcomeToBulka = 'Добредојде во Булка';
 
   static const whoAreYou = 'Вие сте?';
 
-  static const chooseProfile =
-      'Изберете го вашиот тип на профил';
+  static const chooseProfile = 'Изберете го вашиот тип на профил';
 
   static const tourist = 'Турист';
 
-  static const touristDescription =
-      'Пребарувај и резервирај уникатни искуства';
+  static const touristDescription = 'Пребарувај и резервирај уникатни искуства';
 
-  static const owner =
-      'Сопственик на имот/услуги';
+  static const owner = 'Сопственик на имот/услуги';
 
-  static const ownerDescription =
-      'Огласи и управувај со своите понуди';
+  static const ownerDescription = 'Огласи и управувај со своите понуди';
 
   static const continueText = 'ПРОДОЛЖИ';
 
-  static const alreadyAccount =
-      'Веќе имате сметка? Најавете се';
+  static const alreadyAccount = 'Веќе имате сметка? Најавете се';
 }

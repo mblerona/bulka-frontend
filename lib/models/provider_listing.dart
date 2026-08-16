@@ -68,6 +68,15 @@ enum ListingStatus {
 /// needs to represent, not speculative fields. `photoPaths` are local
 /// file-system paths only (no upload yet); easy to swap for remote URLs
 /// once real media upload exists.
+///
+/// `hostSinceYear` — added for the Buyer Listing Details screen's host
+/// row ("Тука од 2021"). There's no provider-account model anywhere in
+/// this app yet (a listing has no relation back to a provider's profile
+/// at all), so this is deliberately nullable and NOT collected by the
+/// Create Offer wizard — a freshly published listing has no host-tenure
+/// data to show yet, which is honest; only the mock seed data below sets
+/// it, standing in for what a real provider-account "joined" date would
+/// eventually supply.
 class ProviderListing {
   const ProviderListing({
     required this.id,
@@ -86,6 +95,7 @@ class ProviderListing {
     this.bedCount = 0,
     this.amenities = const {},
     this.photoPaths = const [],
+    this.hostSinceYear,
   });
 
   final String id;
@@ -105,6 +115,7 @@ class ProviderListing {
   final int bedCount;
   final Set<ListingAmenity> amenities;
   final List<String> photoPaths;
+  final int? hostSinceYear;
 
   ProviderListing copyWith({
     ListingStatus? status,
@@ -128,6 +139,7 @@ class ProviderListing {
       bedCount: bedCount,
       amenities: amenities,
       photoPaths: photoPaths,
+      hostSinceYear: hostSinceYear,
     );
   }
 }

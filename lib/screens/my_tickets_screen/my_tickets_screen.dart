@@ -35,9 +35,9 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
   void _handleControllerChanged() => setState(() {});
 
   void _openNewTicket() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NewSupportTicketScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NewSupportTicketScreen()));
   }
 
   @override

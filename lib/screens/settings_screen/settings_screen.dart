@@ -78,8 +78,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             AppStrings.settingsLanguageRowLabel,
                             style: TextStyle(
                               fontWeight: FontWeight.w400,
-                              fontSize:
-                                  AppDimensions.settingsLanguageRowLabelFontSize,
+                              fontSize: AppDimensions
+                                  .settingsLanguageRowLabelFontSize,
                               color: AppColors.agroForest950,
                             ),
                           ),
