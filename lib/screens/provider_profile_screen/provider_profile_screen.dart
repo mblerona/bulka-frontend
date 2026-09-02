@@ -12,7 +12,6 @@ import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/collapsible_checklist.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
-import 'package:bulka_frontend/widgets/photo_grid.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
@@ -109,9 +108,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
   File? _logoFile;
   String? _savedLogoPath;
-
-  final List<XFile> _photos = [];
-  List<String> _savedPhotoPaths = [];
 
   int _subjectTypeIndex = 0;
   int _savedSubjectTypeIndex = 0;
@@ -226,8 +222,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       _businessAddressController.text != _savedBusinessAddress ||
       !setEquals(_selectedLegalCategories, _savedLegalCategories) ||
       !listEquals(_contactValues, _savedContacts) ||
-      _logoFile?.path != _savedLogoPath ||
-      !listEquals(_photos.map((f) => f.path).toList(), _savedPhotoPaths);
+      _logoFile?.path != _savedLogoPath;
 
   void _handleCategoriesChanged(Set<String> updated) {
     setState(() => _selectedCategories = updated);
@@ -302,29 +297,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     _recomputeHasChanges();
   }
 
-  Future<void> _pickPhotos() async {
-    final source = await _showImageSourceSheet();
-    if (source == null) return;
-    if (source == ImageSource.gallery) {
-      final picked = await ImagePicker().pickMultiImage(imageQuality: 85);
-      if (picked.isEmpty) return;
-      setState(() => _photos.addAll(picked));
-    } else {
-      final picked = await ImagePicker().pickImage(
-        source: source,
-        imageQuality: 85,
-      );
-      if (picked == null) return;
-      setState(() => _photos.add(picked));
-    }
-    _recomputeHasChanges();
-  }
-
-  void _removePhoto(int index) {
-    setState(() => _photos.removeAt(index));
-    _recomputeHasChanges();
-  }
-
   void _handleSave() {
     setState(() {
       _savedName = _nameController.text;
@@ -342,14 +314,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       _savedLegalCategories = Set.of(_selectedLegalCategories);
       _savedContacts = _contactValues;
       _savedLogoPath = _logoFile?.path;
-      _savedPhotoPaths = _photos.map((f) => f.path).toList();
 
       _savedSubjectTypeIndex = _subjectTypeIndex;
       _hasChanges = false;
     });
     // TODO: persist these fields (subject type, all Физичко/Правно лице
-    // fields above, logo and photo uploads) to the backend/database once it
-    // exists — same save pathway as the rest of the registration data.
+    // fields above, logo upload) to the backend/database once it exists —
+    // same save pathway as the rest of the registration data.
   }
 
   String get _initials {
@@ -577,10 +548,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           label: AppStrings.providerAddContactButton,
           onPressed: _addContact,
         ),
-        const SizedBox(height: AppDimensions.providerSetupSectionGap),
-        _sectionHeading(AppStrings.providerPhotosHeading),
-        const SizedBox(height: AppDimensions.providerContactsSectionGap),
-        PhotoGrid(photos: _photos, onAdd: _pickPhotos, onRemove: _removePhoto),
         const SizedBox(height: AppDimensions.providerSetupSectionGap),
         PrimaryButton(
           label: AppStrings.providerSaveAndContinueButton,

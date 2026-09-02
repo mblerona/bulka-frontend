@@ -42,6 +42,7 @@ dependencies:
   # Arbitrary document/file picking (PDF, docx, etc.) for the New Support
   # Ticket screen's attachment box — image_picker only covers images.
   file_picker: ^8.1.2
+  dio: ^5.11.0
 
 dev_dependencies:
   flutter_test:

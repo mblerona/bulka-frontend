@@ -163,7 +163,6 @@ class AppStrings {
   static const String providerAdditionalContactPlaceholder =
       'Внесете телефон или е-пошта';
   static const String providerAddContactButton = '+ Додади контакт';
-  static const String providerPhotosHeading = 'Фотографии';
   static const String providerSaveAndContinueButton = 'Зачувај и продолжи';
 
   //SHARED (Provider Profile Setup, New Support Ticket) — attachment/image
