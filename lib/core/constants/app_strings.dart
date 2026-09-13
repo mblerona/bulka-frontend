@@ -45,6 +45,14 @@ class AppStrings {
   static const String registerRoleProvider = 'Понудувач';
   static const String registerNameLabel = 'Име и презиме';
   static const String registerNamePlaceholder = 'Јован Јовановски';
+  static const String registerFirstNameLabel = 'Име';
+  static const String registerFirstNamePlaceholder = 'Јован';
+  static const String registerLastNameLabel = 'Презиме';
+  static const String registerLastNamePlaceholder = 'Јовановски';
+  static const String registerDisplayNameLabel = 'Име за прикажување';
+  static const String registerDisplayNamePlaceholder = 'Јован Ј.';
+  static const String registerBusinessNameLabel = 'Име на бизнисот';
+  static const String registerBusinessNamePlaceholder = 'Агро Еко Фарма ДООЕЛ';
   static const String registerPhoneLabel = 'Телефон';
   static const String registerPhonePlaceholder = '070 123 456';
   static const String registerConfirmPasswordLabel = 'Потврди лозинка';
@@ -82,6 +90,14 @@ class AppStrings {
   static const String termsPrivacyConsentResponsibilities =
       'Ги прифаќам одговорностите на корисникот при резервација и плаќање.';
   static const String termsPrivacySubmitButton = 'ПРИФАТИ И ПРОДОЛЖИ';
+
+  // TEMPORARY, integration-inspection only: the backend's registration
+  // response schema isn't documented anywhere, so this dialog surfaces the
+  // raw envelope after a successful call instead of silently assuming a
+  // shape. Remove once the real response is confirmed and handled properly.
+  static const String registerDebugResponseTitle =
+      'Одговор од регистрацијата (за инспекција)';
+  static const String registerDebugResponseContinueButton = 'Продолжи';
 
   //EMAIL VERIFICATION SCREEN
   static const String emailVerificationTitle = 'Потврдете ја вашата е-пошта';
@@ -590,4 +606,29 @@ class AppStrings {
   static const continueText = 'ПРОДОЛЖИ';
 
   static const alreadyAccount = 'Веќе имате сметка? Најавете се';
+
+  //API / NETWORK ERRORS (ApiErrorMapper fallback messages — shown only when
+  //the backend itself doesn't supply a message for the failure)
+  static const String apiErrorValidation = 'Внесените податоци не се валидни.';
+  static const String apiErrorUnauthorized =
+      'Не сте најавени или сесијата истече.';
+  static const String apiErrorForbidden = 'Немате пристап до оваа акција.';
+  static const String apiErrorNotFound = 'Бараниот ресурс не постои.';
+  static const String apiErrorConflict =
+      'Дојде до конфликт со постоечки податоци.';
+  static const String apiErrorServer =
+      'Настана грешка на серверот. Обидете се повторно.';
+  static const String apiErrorUnknown = 'Настана непозната грешка.';
+  static const String apiErrorTimeout =
+      'Барањето трае предолго. Проверете ја интернет врската.';
+  static const String apiErrorNoConnection = 'Нема интернет врска.';
+  static const String apiErrorConnectionFailed =
+      'Настана грешка при поврзување со серверот.';
+
+  //AUTH / SESSION
+  static const String loginTwoFactorUnsupported =
+      'Потребна е дополнителна проверка (2FA), која сè уште не е поддржана '
+      'во апликацијава.';
+  static const String loginUnsupportedRole =
+      'Успешна најава, но вашата улога сè уште не е поддржана во апликацијава.';
 }

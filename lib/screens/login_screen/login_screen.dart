@@ -4,24 +4,17 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/forgot_password_screen/forgot_password_screen.dart';
+import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
+import 'package:bulka_frontend/services/session_controller.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
 
-/// [role] is deliberately nullable and has no default — this app has no
-/// backend yet, so Login itself has no way to know an account's role
-/// unless whoever opened it already does (e.g. the Dev Launcher's
-/// "Login · Tourist" / "Login · Provider" entries below). When it's null,
-/// the real destination is a TODO for backend authentication, which is
-/// what should determine the account's role and post-login destination —
-/// this screen must not silently guess Buyer.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.role});
-
-  final UserRole? role;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -30,15 +23,59 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _selectedLanguageCode = AppStrings.languageCodeMk;
 
-  /// TEMPORARY: stands in for real email/password authentication — there's
-  /// no backend yet, so this can only act on whichever [UserRole] the
-  /// caller already told this screen about (see the class doc). A Tourist
-  /// login goes straight to Home; a Provider login intentionally stays a
-  /// TODO (no post-login Provider destination decided here — untouched);
-  /// an unknown role also stays a TODO, since guessing would be exactly
-  /// the "fake authentication success" this is meant to avoid.
-  void _handleSubmit(BuildContext context) {
-    switch (widget.role) {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  final SessionController _session = SessionController.instance;
+
+  /// Set only when login succeeds but the account's backend role has no app
+  /// destination yet — a distinct, screen-local concern from
+  /// [SessionController.errorMessage], which is about login itself failing.
+  String? _unsupportedRoleMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _session.addListener(_onSessionChanged);
+    _emailController.addListener(_onFieldChanged);
+    _passwordController.addListener(_onFieldChanged);
+  }
+
+  @override
+  void dispose() {
+    _session.removeListener(_onSessionChanged);
+    _emailController.removeListener(_onFieldChanged);
+    _passwordController.removeListener(_onFieldChanged);
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _onSessionChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onFieldChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _canSubmit =>
+      !_session.isLoading &&
+      _emailController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty;
+
+  Future<void> _handleSubmit() async {
+    if (!_canSubmit) return;
+
+    setState(() => _unsupportedRoleMessage = null);
+
+    final success = await _session.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+    if (!mounted || !success) return;
+
+    switch (_session.appRole) {
       case UserRole.buyer:
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const TouristHomeScreen()),
@@ -46,17 +83,26 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         break;
       case UserRole.owner:
-        // TODO: wire up the Provider post-login destination.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+          (route) => false,
+        );
         break;
       case null:
-        // TODO: once real authentication exists, let the backend response
-        // determine the account's role and destination.
+        // Logged in successfully (e.g. an Admin account), but this backend
+        // role has no app destination yet — see backend_role_mapper.dart.
+        // Stay on Login rather than silently guessing Buyer.
+        setState(() {
+          _unsupportedRoleMessage = AppStrings.loginUnsupportedRole;
+        });
         break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final displayedError = _session.errorMessage ?? _unsupportedRoleMessage;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
@@ -106,12 +152,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: AppStrings.emailLabel,
                       hintText: AppStrings.emailPlaceholder,
                       keyboardType: TextInputType.emailAddress,
+                      controller: _emailController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.passwordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
+                      controller: _passwordController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     GestureDetector(
@@ -131,10 +179,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    if (displayedError != null) ...[
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                      Text(
+                        displayedError,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: AppDimensions.dsFooterFontSize,
+                          color: AppColors.settingsDangerColor,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppDimensions.dsBodyGap * 4),
+                    if (_session.isLoading) ...[
+                      const Center(child: CircularProgressIndicator()),
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                    ],
                     PrimaryButton(
                       label: AppStrings.loginSubmitButton,
-                      onPressed: () => _handleSubmit(context),
+                      onPressed: _canSubmit ? _handleSubmit : null,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     SecondaryButton(

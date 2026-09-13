@@ -44,6 +44,10 @@ dependencies:
   file_picker: ^8.1.2
   dio: ^5.11.0
 
+  # Encrypted local storage (Keychain/Keystore) for the access/refresh
+  # token session — never used for passwords or app preferences.
+  flutter_secure_storage: ^9.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -24,24 +24,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
   int _selectedRoleIndex = 0;
   bool _agreedToTerms = false;
 
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _businessNameController = TextEditingController();
 
   late final TapGestureRecognizer _termsOfServiceRecognizer =
       TapGestureRecognizer()..onTap = () {};
   late final TapGestureRecognizer _privacyPolicyRecognizer =
       TapGestureRecognizer()..onTap = () {};
 
-  // Extend this with any future field-validation requirements; today
-  // accepting the terms is the only gate on submission.
-  bool get _canSubmit => _agreedToTerms;
+  bool get _isProvider => _selectedRoleIndex == 1;
+
+  bool get _canSubmit =>
+      _agreedToTerms &&
+      _emailController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty &&
+      _firstNameController.text.trim().isNotEmpty &&
+      _lastNameController.text.trim().isNotEmpty &&
+      _displayNameController.text.trim().isNotEmpty &&
+      (!_isProvider || _businessNameController.text.trim().isNotEmpty);
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [
+      _firstNameController,
+      _lastNameController,
+      _displayNameController,
+      _emailController,
+      _passwordController,
+      _businessNameController,
+    ]) {
+      c.addListener(_onFieldChanged);
+    }
+  }
+
+  void _onFieldChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _displayNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _passwordController.dispose();
+    _businessNameController.dispose();
     _termsOfServiceRecognizer.dispose();
     _privacyPolicyRecognizer.dispose();
     super.dispose();
@@ -92,10 +126,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
-                      label: AppStrings.registerNameLabel,
-                      hintText: AppStrings.registerNamePlaceholder,
-                      controller: _nameController,
+                      label: AppStrings.registerFirstNameLabel,
+                      hintText: AppStrings.registerFirstNamePlaceholder,
+                      controller: _firstNameController,
                     ),
+                    const SizedBox(height: AppDimensions.dsBodyGap),
+                    LabeledTextField(
+                      label: AppStrings.registerLastNameLabel,
+                      hintText: AppStrings.registerLastNamePlaceholder,
+                      controller: _lastNameController,
+                    ),
+                    const SizedBox(height: AppDimensions.dsBodyGap),
+                    LabeledTextField(
+                      label: AppStrings.registerDisplayNameLabel,
+                      hintText: AppStrings.registerDisplayNamePlaceholder,
+                      controller: _displayNameController,
+                    ),
+                    if (_isProvider) ...[
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                      LabeledTextField(
+                        label: AppStrings.registerBusinessNameLabel,
+                        hintText: AppStrings.registerBusinessNamePlaceholder,
+                        controller: _businessNameController,
+                      ),
+                    ],
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.emailLabel,
@@ -115,6 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: AppStrings.passwordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
+                      controller: _passwordController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
@@ -178,13 +233,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: AppStrings.registerSubmitButton,
                       onPressed: _canSubmit
                           ? () {
+                              final firstName = _firstNameController.text
+                                  .trim();
+                              final lastName = _lastNameController.text
+                                  .trim();
                               final profile = RegistrationProfile(
-                                fullName: _nameController.text,
-                                email: _emailController.text,
+                                fullName: '$firstName $lastName'.trim(),
+                                email: _emailController.text.trim(),
                                 phone: _phoneController.text,
-                                role: _selectedRoleIndex == 0
-                                    ? UserRole.buyer
-                                    : UserRole.owner,
+                                role: _isProvider
+                                    ? UserRole.owner
+                                    : UserRole.buyer,
+                                firstName: firstName,
+                                lastName: lastName,
+                                displayName: _displayNameController.text
+                                    .trim(),
+                                password: _passwordController.text,
+                                businessName: _isProvider
+                                    ? _businessNameController.text.trim()
+                                    : null,
                               );
                               Navigator.of(context).push(
                                 MaterialPageRoute(

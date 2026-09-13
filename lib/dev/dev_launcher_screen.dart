@@ -6,7 +6,6 @@ import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/booking_request_screen/booking_request_screen.dart';
 import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
 import 'package:bulka_frontend/screens/chat_thread_screen/chat_thread_screen.dart';
@@ -66,14 +65,6 @@ class DevLauncherScreen extends StatelessWidget {
     _DevScreenSection('Onboarding / Auth', [
       _DevScreenEntry('Splash & Language', (_) => const SplashScreen()),
       _DevScreenEntry('Login', (_) => const LoginScreen()),
-      _DevScreenEntry(
-        'Login · Tourist (mock role known)',
-        (_) => const LoginScreen(role: UserRole.buyer),
-      ),
-      _DevScreenEntry(
-        'Login · Provider (mock role known)',
-        (_) => const LoginScreen(role: UserRole.owner),
-      ),
       _DevScreenEntry('Forgot Password', (_) => const ForgotPasswordScreen()),
       _DevScreenEntry('Register', (_) => const RegisterScreen()),
       _DevScreenEntry(
