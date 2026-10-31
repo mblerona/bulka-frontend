@@ -41,25 +41,36 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Space taken by the system gesture/button bar (0 on devices without
+    // one). The white background extends behind it, while the tabs sit
+    // above it, so the bar never gets covered.
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Container(
-      height: AppDimensions.bottomNavHeight,
+      // Design height is the minimum; the bar grows instead of overflowing
+      // if the label needs more room (large system font size).
+      constraints: BoxConstraints(
+        minHeight: AppDimensions.bottomNavHeight + bottomInset,
+      ),
+      padding: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(top: BorderSide(color: AppColors.agroBorder300)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < items.length; i++)
-            Expanded(
-              child: _BottomNavTab(
-                item: items[i],
-                isSelected: i == selectedIndex,
-                badgeCount: badgeCounts[i] ?? 0,
-                onTap: () => onTap(i),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < items.length; i++)
+              Expanded(
+                child: _BottomNavTab(
+                  item: items[i],
+                  isSelected: i == selectedIndex,
+                  badgeCount: badgeCounts[i] ?? 0,
+                  onTap: () => onTap(i),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -129,6 +140,13 @@ class _BottomNavTab extends StatelessWidget {
             const SizedBox(height: AppDimensions.bottomNavIndicatorGap),
             Text(
               item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              // Tab labels still follow the system font size, but capped so
+              // the bar keeps its shape on phones set to very large text.
+              textScaler: MediaQuery.textScalerOf(
+                context,
+              ).clamp(maxScaleFactor: AppDimensions.bottomNavLabelMaxTextScale),
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 fontSize: AppDimensions.bottomNavLabelFontSize,

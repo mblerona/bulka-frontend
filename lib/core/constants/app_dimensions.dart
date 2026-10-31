@@ -251,6 +251,7 @@ class AppDimensions {
   static const double bottomNavIndicatorGap = 4;
   static const double bottomNavIconSize = 22;
   static const double bottomNavLabelFontSize = 10;
+  static const double bottomNavLabelMaxTextScale = 1.3;
 
   // ── NOTIFICATIONS SCREEN ──
   static const double notificationsBodyTopPadding = 24;
@@ -539,7 +540,6 @@ class AppDimensions {
   static const double homeCategoryCardVerticalPadding = 12;
   static const double homeCategoryCardGap = 8;
   static const double homeCategoryRowGap = 10;
-  static const double homeCategoryIconAreaWidth = 18;
   static const double homeCategoryIconAreaHeight = 26;
   static const double homeCategoryEmojiFontSize = 18;
   static const double homeCategoryLabelFontSize = 10;

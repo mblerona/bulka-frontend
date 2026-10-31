@@ -424,7 +424,6 @@ class _CategoryCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: AppDimensions.homeCategoryIconAreaWidth,
               height: AppDimensions.homeCategoryIconAreaHeight,
               child: Center(
                 child: Text(

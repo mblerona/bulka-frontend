@@ -389,30 +389,32 @@ class _HostRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppDimensions.wizardAmenityRowGap),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${AppStrings.detailsHostPrefix}${listing.title}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: AppDimensions.detailsHostNameFontSize,
-                  color: AppColors.agroForest950,
-                ),
-              ),
-              if (listing.hostSinceYear != null) ...[
-                const SizedBox(height: AppDimensions.chatListContentGap),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  '${AppStrings.detailsHostSincePrefix}${listing.hostSinceYear}',
+                  '${AppStrings.detailsHostPrefix}${listing.title}',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: AppDimensions.detailsHostSinceFontSize,
-                    color: AppColors.profileSecondaryText,
+                    fontWeight: FontWeight.w700,
+                    fontSize: AppDimensions.detailsHostNameFontSize,
+                    color: AppColors.agroForest950,
                   ),
                 ),
+                if (listing.hostSinceYear != null) ...[
+                  const SizedBox(height: AppDimensions.chatListContentGap),
+                  Text(
+                    '${AppStrings.detailsHostSincePrefix}${listing.hostSinceYear}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: AppDimensions.detailsHostSinceFontSize,
+                      color: AppColors.profileSecondaryText,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ],
       ),
@@ -495,12 +497,14 @@ class _AmenitiesSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppDimensions.wizardAmenityRowGap),
-                Text(
-                  amenities[i].label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: AppDimensions.detailsAmenityLabelFontSize,
-                    color: AppColors.agroForest950,
+                Expanded(
+                  child: Text(
+                    amenities[i].label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: AppDimensions.detailsAmenityLabelFontSize,
+                      color: AppColors.agroForest950,
+                    ),
                   ),
                 ),
               ],
