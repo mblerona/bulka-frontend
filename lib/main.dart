@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:bulka_frontend/core/network/api_client.dart';
 import 'package:bulka_frontend/core/theme/app_theme.dart';
 import 'package:bulka_frontend/dev/dev_launcher_screen.dart';
+import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
+import 'package:bulka_frontend/services/auth_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +22,19 @@ void main() {
       systemNavigationBarContrastEnforced: false,
     ),
   );
+  // When the session can't be refreshed any more, drop the user and send
+  // them back to Login from wherever they are.
+  ApiClient.instance.onSessionExpired = () {
+    AuthController.instance.clearSession();
+    appNavigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  };
   runApp(const BulkaApp());
 }
+
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 class BulkaApp extends StatelessWidget {
   const BulkaApp({super.key});
@@ -29,6 +43,7 @@ class BulkaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Bulka',
+      navigatorKey: appNavigatorKey,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       // Debug builds boot straight into the dev screen launcher so any

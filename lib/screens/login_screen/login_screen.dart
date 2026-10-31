@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/forgot_password_screen/forgot_password_screen.dart';
+import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
+import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
@@ -11,17 +14,11 @@ import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
 
-/// [role] is deliberately nullable and has no default — this app has no
-/// backend yet, so Login itself has no way to know an account's role
-/// unless whoever opened it already does (e.g. the Dev Launcher's
-/// "Login · Tourist" / "Login · Provider" entries below). When it's null,
-/// the real destination is a TODO for backend authentication, which is
-/// what should determine the account's role and post-login destination —
-/// this screen must not silently guess Buyer.
+/// Signs in against the backend. The account's role comes from the login
+/// response and decides where the user lands (Tourist Home or Provider
+/// Dashboard).
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.role});
-
-  final UserRole? role;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -30,28 +27,52 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _selectedLanguageCode = AppStrings.languageCodeMk;
 
-  /// TEMPORARY: stands in for real email/password authentication — there's
-  /// no backend yet, so this can only act on whichever [UserRole] the
-  /// caller already told this screen about (see the class doc). A Tourist
-  /// login goes straight to Home; a Provider login intentionally stays a
-  /// TODO (no post-login Provider destination decided here — untouched);
-  /// an unknown role also stays a TODO, since guessing would be exactly
-  /// the "fake authentication success" this is meant to avoid.
-  void _handleSubmit(BuildContext context) {
-    switch (widget.role) {
-      case UserRole.buyer:
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const TouristHomeScreen()),
-          (route) => false,
-        );
-        break;
-      case UserRole.owner:
-        // TODO: wire up the Provider post-login destination.
-        break;
-      case null:
-        // TODO: once real authentication exists, let the backend response
-        // determine the account's role and destination.
-        break;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = AppStrings.loginErrorEmptyFields);
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      final user = await AuthController.instance.login(
+        email: email,
+        password: password,
+      );
+      if (!mounted) return;
+      final Widget destination = switch (user.role) {
+        UserRole.buyer => const TouristHomeScreen(),
+        UserRole.owner => const ProviderDashboardScreen(),
+      };
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => destination),
+        (route) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = e.kind == ApiErrorKind.unauthorized
+            ? AppStrings.loginErrorInvalidCredentials
+            : e.message;
+      });
     }
   }
 
@@ -106,12 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: AppStrings.emailLabel,
                       hintText: AppStrings.emailPlaceholder,
                       keyboardType: TextInputType.emailAddress,
+                      controller: _emailController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.passwordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
+                      controller: _passwordController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     GestureDetector(
@@ -132,9 +155,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap * 4),
+                    if (_errorMessage != null) ...[
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: AppDimensions.dsFooterFontSize,
+                          color: AppColors.settingsDangerColor,
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                    ],
                     PrimaryButton(
                       label: AppStrings.loginSubmitButton,
-                      onPressed: () => _handleSubmit(context),
+                      onPressed: _isSubmitting ? null : _handleSubmit,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     SecondaryButton(

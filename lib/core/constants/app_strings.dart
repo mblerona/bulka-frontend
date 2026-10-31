@@ -29,6 +29,23 @@ class AppStrings {
   static const String loginGoogleButton = 'ПРОДОЛЖИ СО GOOGLE';
   static const String loginFooterPrompt = 'Немате сметка? ';
   static const String loginFooterAction = 'Регистрирајте се';
+  static const String loginErrorEmptyFields = 'Внесете е-пошта и лозинка.';
+  static const String loginErrorInvalidCredentials =
+      'Погрешна е-пошта или лозинка.';
+  static const String loginErrorTwoFactorUnsupported =
+      'Оваа сметка има вклучена двофакторска автентикација, која сè уште не е поддржана во апликацијата.';
+
+  //API ERRORS (shown when a backend request fails)
+  static const String apiErrorNetwork =
+      'Нема интернет конекција. Проверете ја врската и обидете се повторно.';
+  static const String apiErrorTimeout =
+      'Серверот не одговара. Обидете се повторно.';
+  static const String apiErrorUnauthorized =
+      'Сесијата истече. Најавете се повторно.';
+  static const String apiErrorServer =
+      'Настана грешка на серверот. Обидете се подоцна.';
+  static const String apiErrorUnknown =
+      'Настана неочекувана грешка. Обидете се повторно.';
 
   //FORGOT PASSWORD SCREEN
   static const String forgotPasswordTitle = 'Заборавена лозинка';

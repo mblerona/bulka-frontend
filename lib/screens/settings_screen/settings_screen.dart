@@ -3,6 +3,7 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
+import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
@@ -18,8 +19,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedLanguageCode = AppStrings.languageCodeMk;
   bool _notificationsEnabled = true;
 
-  void _handleLogout() {
-    // TODO: clear the authenticated session/token once auth exists.
+  Future<void> _handleLogout() async {
+    await AuthController.instance.logout();
+    if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
