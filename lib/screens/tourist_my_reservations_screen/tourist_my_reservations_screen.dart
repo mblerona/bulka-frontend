@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -7,11 +9,9 @@ import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/leave_review_screen/leave_review_screen.dart';
 import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/services/reservation_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
@@ -126,7 +126,6 @@ class _TouristMyReservationsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
       body: Column(
         children: [
           ScreenHeader(
@@ -363,12 +362,7 @@ class _PastCard extends StatelessWidget {
       // is designed. Real duplicate-review prevention lives in
       // `ListingReviewController.submitReview` regardless of this check.
       enabled: !alreadyReviewed,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) =>
-              LeaveReviewScreen(reservation: reservation, listing: listing),
-        ),
-      ),
+      onTap: () => context.push(AppRoutes.leaveReview(reservation.id)),
     );
   }
 }

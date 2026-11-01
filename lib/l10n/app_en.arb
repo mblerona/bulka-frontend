@@ -391,6 +391,9 @@
   "ownerDescription": "List and manage your offers",
   "continueText": "CONTINUE",
   "alreadyAccount": "Already have an account? Log in",
+  "routeNotFoundTitle": "Page not found",
+  "routeNotFoundMessage": "This page doesn't exist or is no longer available.",
+  "routeNotFoundButton": "GO TO START",
   "agoMinutes": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
   "agoHours": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
   "agoDays": "{count, plural, =1{1 day ago} other{{count} days ago}}"

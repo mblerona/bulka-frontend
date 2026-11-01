@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/l10n/locale_controller.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
@@ -22,10 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _handleLogout() async {
     await AuthController.instance.logout();
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
+    context.go(AppRoutes.login);
   }
 
   @override

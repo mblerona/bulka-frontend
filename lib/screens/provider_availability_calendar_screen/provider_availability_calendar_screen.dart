@@ -8,7 +8,6 @@ import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/services/availability_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/services/reservation_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
@@ -108,7 +107,6 @@ class _ProviderAvailabilityCalendarScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const ProviderBottomNav(selectedIndex: 2),
       body: Column(
         children: [
           ScreenHeader(

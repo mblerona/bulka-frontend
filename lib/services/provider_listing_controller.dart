@@ -28,6 +28,14 @@ class ProviderListingController extends ChangeNotifier {
 
   List<ProviderListing> get listings => List.unmodifiable(_listings);
 
+  /// For routes like /home/listings/:id. Null if there is no such listing.
+  ProviderListing? listingById(String id) {
+    for (final listing in _listings) {
+      if (listing.id == id) return listing;
+    }
+    return null;
+  }
+
   /// All listings when [status] is null, otherwise just that status —
   /// backs the Provider Offers screen's filter chips. There is exactly
   /// one underlying list; nothing is duplicated per filter.

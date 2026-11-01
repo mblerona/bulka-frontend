@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/relative_time.dart';
 import 'package:bulka_frontend/models/chat_conversation.dart';
-import 'package:bulka_frontend/screens/chat_thread_screen/chat_thread_screen.dart';
 import 'package:bulka_frontend/services/chat_controller.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
@@ -37,11 +38,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     // here, on the navbar, everywhere — updates before the thread even
     // finishes animating in.
     _controller.markConversationRead(conversation.id);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChatThreadScreen(conversationId: conversation.id),
-      ),
-    );
+    context.push(AppRoutes.chat(conversation.id));
   }
 
   @override

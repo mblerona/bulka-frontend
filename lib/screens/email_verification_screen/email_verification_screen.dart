@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
-import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
@@ -72,10 +72,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         ..showSnackBar(
           SnackBar(content: Text(AppStrings.emailVerificationSuccess)),
         );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => LoginScreen(initialEmail: _email)),
-        (route) => false,
-      );
+      context.go(AppRoutes.loginWithEmail(_email));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -213,13 +210,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        );
-                      },
+                      onTap: () => context.go(AppRoutes.register),
                       child: Text(
                         AppStrings.emailVerificationChangeEmail,
                         style: TextStyle(

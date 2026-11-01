@@ -2446,6 +2446,24 @@ abstract class AppLocalizations {
   /// **'Веќе имате сметка? Најавете се'**
   String get alreadyAccount;
 
+  /// No description provided for @routeNotFoundTitle.
+  ///
+  /// In mk, this message translates to:
+  /// **'Страницата не е пронајдена'**
+  String get routeNotFoundTitle;
+
+  /// No description provided for @routeNotFoundMessage.
+  ///
+  /// In mk, this message translates to:
+  /// **'Оваа страница не постои или повеќе не е достапна.'**
+  String get routeNotFoundMessage;
+
+  /// No description provided for @routeNotFoundButton.
+  ///
+  /// In mk, this message translates to:
+  /// **'ОДИ НА ПОЧЕТОК'**
+  String get routeNotFoundButton;
+
   /// Relative time, e.g. on support tickets and listing cards.
   ///
   /// In mk, this message translates to:

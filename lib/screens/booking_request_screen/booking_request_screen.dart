@@ -3,13 +3,13 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
+import 'package:bulka_frontend/core/routing/app_router.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/availability_status.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservation_confirmation_screen.dart';
 import 'package:bulka_frontend/services/availability_controller.dart';
 import 'package:bulka_frontend/services/reservation_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
@@ -32,19 +32,9 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// check-in/check-out + nightly-price model doesn't apply to non-nightly
 /// categories.
 class BookingRequestScreen extends StatefulWidget {
-  const BookingRequestScreen({
-    super.key,
-    required this.listing,
-    this.originTabIndex = 0,
-  });
+  const BookingRequestScreen({super.key, required this.listing});
 
   final ProviderListing listing;
-
-  /// Inherited from `ListingDetailsScreen` — the user is still mid-browse
-  /// here, so the navbar keeps showing whichever section (Дома/Пребарај)
-  /// they actually started from; only `ReservationConfirmationScreen`
-  /// onward switches to Резервации, once a reservation actually exists.
-  final int originTabIndex;
 
   @override
   State<BookingRequestScreen> createState() => _BookingRequestScreenState();
@@ -129,13 +119,11 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
       endDate: _endDate!,
       guestCount: _guestCount,
     );
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ReservationConfirmationScreen(
-          reservation: reservation,
-          listing: widget.listing,
-        ),
-      ),
+    // Clear this tab (Home or Search) so coming back to it doesn't show
+    // this form again, then show the confirmation under Reservations.
+    resetTabThenGo(
+      AppRoutes.listingTabRoot(context),
+      AppRoutes.reservationConfirmation(reservation.id),
     );
   }
 
@@ -144,9 +132,6 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
     final listing = widget.listing;
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: TouristBottomNav(
-        selectedIndex: widget.originTabIndex,
-      ),
       body: Column(
         children: [
           ScreenHeader(

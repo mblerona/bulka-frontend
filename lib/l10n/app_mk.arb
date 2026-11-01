@@ -391,6 +391,9 @@
   "ownerDescription": "Огласи и управувај со своите понуди",
   "continueText": "ПРОДОЛЖИ",
   "alreadyAccount": "Веќе имате сметка? Најавете се",
+  "routeNotFoundTitle": "Страницата не е пронајдена",
+  "routeNotFoundMessage": "Оваа страница не постои или повеќе не е достапна.",
+  "routeNotFoundButton": "ОДИ НА ПОЧЕТОК",
   "agoMinutes": "{count, plural, =1{пред 1 минута} other{пред {count} минути}}",
   "@agoMinutes": {
     "description": "Relative time, e.g. on support tickets and listing cards.",

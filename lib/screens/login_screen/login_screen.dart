@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/l10n/locale_controller.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/user_role.dart';
-import 'package:bulka_frontend/screens/forgot_password_screen/forgot_password_screen.dart';
-import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
 import 'package:bulka_frontend/services/auth_controller.dart';
-import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
-import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -65,14 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
       if (!mounted) return;
-      final Widget destination = switch (user.role) {
-        UserRole.buyer => const TouristHomeScreen(),
-        UserRole.owner => const ProviderDashboardScreen(),
-      };
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => destination),
-        (route) => false,
-      );
+      context.go(switch (user.role) {
+        UserRole.buyer => AppRoutes.home,
+        UserRole.owner => AppRoutes.dashboard,
+      });
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -147,13 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ForgotPasswordScreen(),
-                          ),
-                        );
-                      },
+                      onTap: () => context.push(AppRoutes.forgotPassword),
                       child: Text(
                         AppStrings.loginForgotPassword,
                         style: const TextStyle(
@@ -192,13 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const RegisterScreen(),
-                              ),
-                            );
-                          },
+                          onTap: () => context.push(AppRoutes.register),
                           child: Text(
                             AppStrings.loginFooterAction,
                             style: const TextStyle(

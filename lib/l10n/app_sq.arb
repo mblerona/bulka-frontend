@@ -391,6 +391,9 @@
   "ownerDescription": "Publikoni dhe menaxhoni ofertat tuaja",
   "continueText": "VAZHDO",
   "alreadyAccount": "Keni tashmë llogari? Kyçuni",
+  "routeNotFoundTitle": "Faqja nuk u gjet",
+  "routeNotFoundMessage": "Kjo faqe nuk ekziston ose nuk është më e disponueshme.",
+  "routeNotFoundButton": "SHKO NË FILLIM",
   "agoMinutes": "{count, plural, =1{para 1 minute} other{para {count} minutash}}",
   "agoHours": "{count, plural, =1{para 1 ore} other{para {count} orësh}}",
   "agoDays": "{count, plural, =1{para 1 dite} other{para {count} ditësh}}"

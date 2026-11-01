@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
@@ -65,18 +65,11 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
       if (needsVerification) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => EmailVerificationScreen(profile: profile),
-          ),
-        );
+        context.push(AppRoutes.registerVerify, extra: profile);
       } else {
         // Account is already active: registration doesn't sign in, so the
         // user logs in with their new credentials.
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
+        context.go(AppRoutes.login);
       }
     } on ApiException catch (e) {
       if (!mounted) return;

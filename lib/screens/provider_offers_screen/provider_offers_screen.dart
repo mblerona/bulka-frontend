@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/ago_label.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/screens/create_offer_wizard_screen/create_offer_wizard_screen.dart';
 import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
@@ -68,7 +68,6 @@ class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      bottomNavigationBar: const ProviderBottomNav(selectedIndex: 1),
       body: Column(
         children: [
           ScreenHeader(
@@ -96,11 +95,8 @@ class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
                     PrimaryButton(
                       label: AppStrings.dashboardAddListingButton,
                       backgroundColor: AppColors.agroGreen600,
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CreateOfferWizardScreen(),
-                        ),
-                      ),
+                      // The wizard lives under the Dashboard tab.
+                      onPressed: () => context.go(AppRoutes.newOffer),
                     ),
                     const SizedBox(height: AppDimensions.offersBodyGap),
                     _FilterChipRow(

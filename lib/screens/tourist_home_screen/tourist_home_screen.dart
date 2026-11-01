@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -9,12 +11,9 @@ import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/promo_banner.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/screens/listing_details_screen/listing_details_screen.dart';
-import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/services/search_controller.dart' as search;
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 /// Buyer/Tourist "Дома" — the Figma "20 – Buyer · Discover Home" frame.
@@ -75,9 +74,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     );
     if (result == null || !mounted) return;
     current.applyFilter(result);
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const SearchResultsScreen()));
+    context.go(AppRoutes.search);
   }
 
   String get _firstName {
@@ -92,7 +89,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 0),
       body: Column(
         children: [
           _HomeHeader(greetingName: _firstName),
@@ -471,12 +467,7 @@ class _ListingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) =>
-              ListingDetailsScreen(listing: listing, originTabIndex: 0),
-        ),
-      ),
+      onTap: () => context.push(AppRoutes.listing(context, listing.id)),
       child: Container(
         width: double.infinity,
         clipBehavior: Clip.antiAlias,

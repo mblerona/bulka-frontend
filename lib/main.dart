@@ -1,13 +1,12 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/l10n/locale_controller.dart';
 import 'package:bulka_frontend/core/network/api_client.dart';
+import 'package:bulka_frontend/core/routing/app_router.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/theme/app_theme.dart';
-import 'package:bulka_frontend/dev/dev_launcher_screen.dart';
 import 'package:bulka_frontend/l10n/app_localizations.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
-import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
 import 'package:bulka_frontend/services/auth_controller.dart';
 
 Future<void> main() async {
@@ -30,18 +29,16 @@ Future<void> main() async {
   // them back to Login from wherever they are.
   ApiClient.instance.onSessionExpired = () {
     AuthController.instance.clearSession();
-    appNavigatorKey.currentState?.pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
+    appRouter.go(AppRoutes.login);
   };
-  runApp(const BulkaApp());
+  runApp(BulkaApp(router: appRouter));
 }
 
-final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
-
 class BulkaApp extends StatefulWidget {
-  const BulkaApp({super.key});
+  const BulkaApp({super.key, required this.router});
+
+  /// [appRouter] in the app; tests pass their own.
+  final GoRouter router;
 
   @override
   State<BulkaApp> createState() => _BulkaAppState();
@@ -77,21 +74,17 @@ class _BulkaAppState extends State<BulkaApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Bulka',
-      navigatorKey: appNavigatorKey,
+      // Routes are in lib/core/routing/app_router.dart. Debug builds start
+      // on the dev screen launcher, release builds on Splash.
+      routerConfig: widget.router,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       // Also translates Flutter's own widgets (date pickers, copy/paste).
       locale: _locale.locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      // Debug builds boot straight into the dev screen launcher so any
-      // screen can be opened directly, without ever touching this file.
-      // kDebugMode is false in release/profile builds, where the app
-      // always starts at SplashScreen exactly as before — the production
-      // flow is untouched.
-      home: kDebugMode ? const DevLauncherScreen() : const SplashScreen(),
     );
   }
 }

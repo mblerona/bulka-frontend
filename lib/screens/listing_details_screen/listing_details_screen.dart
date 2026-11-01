@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_review.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/screens/booking_request_screen/booking_request_screen.dart';
 import 'package:bulka_frontend/services/favorites_controller.dart';
 import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
@@ -27,23 +27,9 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// in the list), so this never holds a second, potentially-stale copy of
 /// the listing's data.
 class ListingDetailsScreen extends StatefulWidget {
-  const ListingDetailsScreen({
-    super.key,
-    required this.listing,
-    this.originTabIndex = 0,
-  });
+  const ListingDetailsScreen({super.key, required this.listing});
 
   final ProviderListing listing;
-
-  /// Which Tourist navbar tab actually led here — `TouristHomeScreen`'s
-  /// cards pass 0, `SearchResultsScreen`'s cards pass 1 — so the navbar
-  /// below highlights the section the user is really in rather than
-  /// always defaulting to "Дома" regardless of entry point. Threaded
-  /// through to `BookingRequestScreen` too, since the user is still
-  /// mid-browse there (only `ReservationConfirmationScreen` onward
-  /// switches to the Reservations section, once a reservation actually
-  /// exists).
-  final int originTabIndex;
 
   @override
   State<ListingDetailsScreen> createState() => _ListingDetailsScreenState();
@@ -94,9 +80,6 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: TouristBottomNav(
-        selectedIndex: widget.originTabIndex,
-      ),
       body: Column(
         children: [
           ScreenHeader(
@@ -141,10 +124,7 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
                       ),
                     ),
                   ),
-                  _BookingFooter(
-                    listing: listing,
-                    originTabIndex: widget.originTabIndex,
-                  ),
+                  _BookingFooter(listing: listing),
                 ],
               ),
             ),
@@ -652,10 +632,9 @@ class _ReviewCard extends StatelessWidget {
 }
 
 class _BookingFooter extends StatelessWidget {
-  const _BookingFooter({required this.listing, required this.originTabIndex});
+  const _BookingFooter({required this.listing});
 
   final ProviderListing listing;
-  final int originTabIndex;
 
   String get _priceLabel {
     final suffix = categoryRequiresPrice(listing.category)
@@ -714,14 +693,7 @@ class _BookingFooter extends StatelessWidget {
           ),
           GestureDetector(
             onTap: _bookable
-                ? () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => BookingRequestScreen(
-                        listing: listing,
-                        originTabIndex: originTabIndex,
-                      ),
-                    ),
-                  )
+                ? () => context.push(AppRoutes.booking(context, listing.id))
                 // TODO: this category has no booking flow/design yet —
                 // only accommodation listings book via check-in/check-out
                 // dates today.

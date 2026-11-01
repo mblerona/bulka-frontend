@@ -24,10 +24,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   void initState() {
     super.initState();
     _controller.addListener(_handleControllerChanged);
-    // Safe to call again even though Chat List already marks read at tap
-    // time — markConversationRead is a no-op once nothing is unread, so
-    // this only matters if the thread is ever opened another way later.
-    _controller.markConversationRead(widget.conversationId);
+    // Chat List already marks read at tap time; this covers opening the
+    // thread directly (e.g. /messages/:id). After the first frame, because
+    // the chat list underneath is built in the same frame and listens to
+    // the controller. A no-op once nothing is unread.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _controller.markConversationRead(widget.conversationId);
+    });
   }
 
   @override

@@ -1231,6 +1231,16 @@ class AppLocalizationsSq extends AppLocalizations {
   String get alreadyAccount => 'Keni tashmë llogari? Kyçuni';
 
   @override
+  String get routeNotFoundTitle => 'Faqja nuk u gjet';
+
+  @override
+  String get routeNotFoundMessage =>
+      'Kjo faqe nuk ekziston ose nuk është më e disponueshme.';
+
+  @override
+  String get routeNotFoundButton => 'SHKO NË FILLIM';
+
+  @override
   String agoMinutes(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

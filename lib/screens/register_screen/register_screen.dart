@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -12,7 +14,6 @@ import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/role_toggle.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
-import 'package:bulka_frontend/screens/terms_privacy_screen/terms_privacy_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -93,13 +94,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _errorMessage = error);
     if (error != null) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => TermsPrivacyScreen(
-          profile: profile,
-          password: _passwordController.text,
-        ),
-      ),
+    context.push(
+      AppRoutes.registerTerms,
+      extra: SignUpData(profile: profile, password: _passwordController.text),
     );
   }
 

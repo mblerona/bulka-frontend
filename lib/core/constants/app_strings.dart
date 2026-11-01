@@ -465,6 +465,9 @@ class AppStrings {
   static String get ownerDescription => _s.ownerDescription;
   static String get continueText => _s.continueText;
   static String get alreadyAccount => _s.alreadyAccount;
+  static String get routeNotFoundTitle => _s.routeNotFoundTitle;
+  static String get routeNotFoundMessage => _s.routeNotFoundMessage;
+  static String get routeNotFoundButton => _s.routeNotFoundButton;
   static String agoMinutes(int count) => _s.agoMinutes(count);
   static String agoHours(int count) => _s.agoHours(count);
   static String agoDays(int count) => _s.agoDays(count);

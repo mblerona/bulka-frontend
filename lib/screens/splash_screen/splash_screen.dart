@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/l10n/locale_controller.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -154,11 +155,7 @@ class _SplashContent extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
-            },
+            onPressed: () => context.push(AppRoutes.login),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.agroGreen100,
               foregroundColor: AppColors.agroForest950,

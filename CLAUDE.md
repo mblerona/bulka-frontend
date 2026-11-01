@@ -20,7 +20,7 @@ flutter test test/widget_test.dart  # Run single test file
 
 ## Architecture
 
-**Entry point**: `lib/main.dart` — boots `BulkaApp` with `MaterialApp`, Material 3, custom theme, and `SplashScreen` as home.
+**Entry point**: `lib/main.dart` — boots `BulkaApp` with `MaterialApp.router` (GoRouter), Material 3 and the custom theme. Debug builds start on the dev screen launcher (`/dev`), release builds on Splash (`/`).
 
 **Core structure**:
 - `lib/core/constants/` — `AppColors` and `AppStrings` (all user-facing text; `AppStrings` is generated and returns the current language)
@@ -31,7 +31,11 @@ flutter test test/widget_test.dart  # Run single test file
 - `lib/screens/` — one folder per screen (e.g. `splash_screen/`, `choose_role_screen/`)
 - `lib/widgets/` — shared reusable widgets
 
-**Routing**: No routing library yet; navigation is done via `MaterialApp.home` and `Navigator.push`.
+**Routing**: `go_router`. All routes are in `lib/core/routing/app_router.dart`; all paths and path helpers in `lib/core/routing/app_routes.dart` (`AppRoutes`) — navigate with `context.go`/`context.push(AppRoutes.x)`, never hard-coded strings or `MaterialPageRoute`.
+- Tourist and Provider tabs are `StatefulShellRoute`s (`TouristShell`/`ProviderShell` in `lib/widgets/app_bottom_nav.dart`) that draw the one shared bottom nav; each tab keeps its own history. Screens must not add their own `bottomNavigationBar`. Messages (and the Provider's Profile) open full screen.
+- Screens that need an object get its id in the URL (e.g. `/home/listings/:listingId`); the route looks it up and shows `RouteNotFoundScreen` if it's missing. Only sign-up data (contains the password) travels as `extra`.
+- To leave a tab cleared before jumping elsewhere (e.g. after booking), use `resetTabThenGo`.
+- New screens also get a `DevScreenEntry` in `lib/dev/dev_launcher_screen.dart`; `test/all_screens_localized_test.dart` then checks it in every language.
 
 **State management**: None yet — plain `StatefulWidget` where needed.
 

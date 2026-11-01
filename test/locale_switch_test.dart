@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:bulka_frontend/core/routing/app_router.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/main.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 
 void main() {
   tearDown(() {
@@ -41,10 +42,9 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({'app.languageCode': 'mk'});
     await LocaleController.instance.load();
-    await tester.pumpWidget(const BulkaApp());
-    appNavigatorKey.currentState!.push(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    final router = createAppRouter(initialLocation: AppRoutes.splash);
+    await tester.pumpWidget(BulkaApp(router: router));
+    router.push(AppRoutes.login);
     await tester.pumpAndSettle();
     expect(find.text('НАЈАВИ СЕ'), findsOneWidget);
 
@@ -53,7 +53,7 @@ void main() {
 
     expect(find.text('LOG IN'), findsOneWidget);
     expect(find.text('НАЈАВИ СЕ'), findsNothing);
-    expect(appNavigatorKey.currentState!.canPop(), isTrue);
+    expect(router.canPop(), isTrue);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('app.languageCode'), 'en');
   });

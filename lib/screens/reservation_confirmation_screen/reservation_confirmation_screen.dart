@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_router.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -6,9 +9,6 @@ import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
-import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
@@ -40,21 +40,12 @@ class ReservationConfirmationScreen extends StatelessWidget {
   int get _nights =>
       reservation.endDate.difference(reservation.startDate).inDays;
 
-  void _backToHome(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const TouristHomeScreen()),
-      (route) => false,
-    );
-  }
+  // Clear the Reservations tab first, so it doesn't reopen on this screen.
+  void _backToHome(BuildContext context) =>
+      resetTabThenGo(AppRoutes.reservations, AppRoutes.home);
 
-  // Same stack-clearing rationale as `_backToHome` — the booking form is
-  // already submitted, so there's no path back to it from here either.
-  void _viewMyReservations(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const TouristMyReservationsScreen()),
-      (route) => false,
-    );
-  }
+  void _viewMyReservations(BuildContext context) =>
+      context.go(AppRoutes.reservations);
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +67,6 @@ class ReservationConfirmationScreen extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.beigeBackground,
-        bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
         body: Column(
           children: [
             ScreenHeader(

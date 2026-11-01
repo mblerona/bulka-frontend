@@ -30,6 +30,14 @@ class ReservationController extends ChangeNotifier {
 
   List<Reservation> get reservations => List.unmodifiable(_reservations);
 
+  /// For routes like /reservations/:id/review. Null if there is none.
+  Reservation? reservationById(String id) {
+    for (final reservation in _reservations) {
+      if (reservation.id == id) return reservation;
+    }
+    return null;
+  }
+
   List<Reservation> get pendingReservations => _reservations
       .where((r) => r.status == ReservationStatus.pending)
       .toList();

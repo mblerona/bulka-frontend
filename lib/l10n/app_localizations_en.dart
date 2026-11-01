@@ -1230,6 +1230,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyAccount => 'Already have an account? Log in';
 
   @override
+  String get routeNotFoundTitle => 'Page not found';
+
+  @override
+  String get routeNotFoundMessage =>
+      'This page doesn\'t exist or is no longer available.';
+
+  @override
+  String get routeNotFoundButton => 'GO TO START';
+
+  @override
   String agoMinutes(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

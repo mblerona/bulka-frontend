@@ -1,57 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
+import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/booking_request_screen/booking_request_screen.dart';
-import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
-import 'package:bulka_frontend/screens/chat_thread_screen/chat_thread_screen.dart';
-import 'package:bulka_frontend/screens/create_offer_success_screen/create_offer_success_screen.dart';
-import 'package:bulka_frontend/screens/create_offer_wizard_screen/create_offer_wizard_screen.dart';
-import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
-import 'package:bulka_frontend/screens/forgot_password_screen/forgot_password_screen.dart';
-import 'package:bulka_frontend/screens/leave_review_screen/leave_review_screen.dart';
-import 'package:bulka_frontend/screens/listing_details_screen/listing_details_screen.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
-import 'package:bulka_frontend/screens/my_tickets_screen/my_tickets_screen.dart';
-import 'package:bulka_frontend/screens/new_support_ticket_screen/new_support_ticket_screen.dart';
-import 'package:bulka_frontend/screens/notifications_screen/notifications_screen.dart';
-import 'package:bulka_frontend/screens/profile_screen/profile_screen.dart';
-import 'package:bulka_frontend/screens/provider_availability_calendar_screen/provider_availability_calendar_screen.dart';
-import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
-import 'package:bulka_frontend/screens/provider_offers_screen/provider_offers_screen.dart';
-import 'package:bulka_frontend/screens/provider_profile_screen/provider_profile_screen.dart';
-import 'package:bulka_frontend/screens/rate_guest_screen/rate_guest_screen.dart';
-import 'package:bulka_frontend/screens/rating_saved_screen/rating_saved_screen.dart';
-import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
-import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservation_confirmation_screen.dart';
-import 'package:bulka_frontend/screens/review_submitted_screen/review_submitted_screen.dart';
-import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
-import 'package:bulka_frontend/screens/settings_screen/settings_screen.dart';
-import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
-import 'package:bulka_frontend/screens/terms_privacy_screen/terms_privacy_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
-import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
-import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
 import 'package:bulka_frontend/services/chat_controller.dart';
 import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/services/reservation_controller.dart';
 
-/// Debug-only screen picker. Lists every real screen currently implemented
-/// in the app and opens it with a plain `Navigator.push` — the actual
-/// widget, the actual singleton controllers/state, nothing duplicated or
-/// mocked here.
+/// Debug-only screen picker. Lists every real screen and opens it through
+/// its real route (so tab screens appear inside their tab shell, as in the
+/// app) with the real singleton controllers/state.
 ///
-/// Only reachable via the `kDebugMode` branch in `main.dart`, so it is
-/// never part of the app's real navigation flow and never shows up in a
-/// release build.
+/// Only registered as a route in debug builds (see `app_router.dart`), so
+/// it never ships in a release build.
 ///
-/// To add a newly implemented screen: import it above and append one
-/// [_DevScreenEntry] to the relevant section in [_sections] (or add a new
-/// section) — no other wiring needed.
+/// To add a newly implemented screen: give it a route in `app_router.dart`,
+/// then add one [DevScreenEntry] to the relevant section in [_sections].
 class DevLauncherScreen extends StatelessWidget {
   const DevLauncherScreen({super.key});
 
@@ -61,160 +32,157 @@ class DevLauncherScreen extends StatelessWidget {
     phone: '070 000 000',
   );
 
-  /// Every screen this launcher opens, as (name, builder) pairs. Also used
-  /// by test/all_screens_localized_test.dart to render each screen in every
+  /// Every entry this launcher opens. Also used by
+  /// test/all_screens_localized_test.dart to render each screen in every
   /// language.
   @visibleForTesting
-  static List<(String, WidgetBuilder)> get allScreens => [
-    for (final section in _sections)
-      for (final entry in section.entries) (entry.label, entry.builder),
+  static List<DevScreenEntry> get allEntries => [
+    for (final section in _sections) ...section.entries,
   ];
+
+  static ProviderListing get _firstAccommodation => ProviderListingController
+      .instance
+      .recommendedListings
+      .firstWhere((l) => categoryRequiresPrice(l.category));
+
+  static String _seedMockBooking({required String guestName}) {
+    return ReservationController.instance
+        .createReservation(
+          listing: _firstAccommodation,
+          guestName: guestName,
+          startDate: DateTime.now().add(const Duration(days: 10)),
+          endDate: DateTime.now().add(const Duration(days: 13)),
+          guestCount: 2,
+        )
+        .id;
+  }
 
   static final List<_DevScreenSection> _sections = [
     _DevScreenSection('Onboarding / Auth', [
-      _DevScreenEntry('Splash & Language', (_) => const SplashScreen()),
-      _DevScreenEntry('Login', (_) => const LoginScreen()),
-      _DevScreenEntry('Forgot Password', (_) => const ForgotPasswordScreen()),
-      _DevScreenEntry('Register', (_) => const RegisterScreen()),
-      _DevScreenEntry(
+      DevScreenEntry.route('Splash & Language', () => AppRoutes.splash),
+      DevScreenEntry.route('Login', () => AppRoutes.login),
+      DevScreenEntry.route('Forgot Password', () => AppRoutes.forgotPassword),
+      DevScreenEntry.route('Register', () => AppRoutes.register),
+      DevScreenEntry.route(
         'Terms & Privacy',
+        () => AppRoutes.registerTerms,
         // Empty password on purpose: submitting from here is rejected by
         // the backend instead of creating a real dev@example.com account.
-        (_) => const TermsPrivacyScreen(profile: _devProfile, password: ''),
+        extra: const SignUpData(profile: _devProfile, password: ''),
       ),
-      _DevScreenEntry(
+      DevScreenEntry.route(
         'Email Verification',
-        (_) => const EmailVerificationScreen(),
+        () => AppRoutes.registerVerify,
       ),
     ]),
     _DevScreenSection('Profiles', [
-      _DevScreenEntry('Profile · Tourist', (_) => const ProfileScreen()),
-      _DevScreenEntry(
+      DevScreenEntry.route('Profile · Tourist', () => AppRoutes.profile),
+      DevScreenEntry.route(
         'Profile · Provider',
-        (_) => const ProviderProfileScreen(),
+        () => AppRoutes.providerProfile,
       ),
     ]),
     _DevScreenSection('Tourist', [
-      _DevScreenEntry('Home · Tourist', (_) => const TouristHomeScreen()),
-      _DevScreenEntry(
+      DevScreenEntry.route('Home · Tourist', () => AppRoutes.home),
+      DevScreenEntry.widget(
         'Search Filters (Sheet) · Tourist',
         (_) => const _SearchFiltersPreviewScreen(),
       ),
-      _DevScreenEntry(
-        'Search Results · Tourist',
-        (_) => const SearchResultsScreen(),
-      ),
-      _DevScreenEntry(
+      DevScreenEntry.route('Search Results · Tourist', () => AppRoutes.search),
+      DevScreenEntry.route(
         'Listing Details (first active listing) · Tourist',
-        (_) => ListingDetailsScreen(
-          listing: ProviderListingController.instance.recommendedListings.first,
-        ),
+        () =>
+            '${AppRoutes.home}/listings/'
+            '${ProviderListingController.instance.recommendedListings.first.id}',
       ),
-      _DevScreenEntry(
+      DevScreenEntry.route(
         'Booking Request (first accommodation listing) · Tourist',
-        (_) => BookingRequestScreen(
-          listing: ProviderListingController.instance.recommendedListings
-              .firstWhere((l) => categoryRequiresPrice(l.category)),
+        () => '${AppRoutes.home}/listings/${_firstAccommodation.id}/book',
+      ),
+      DevScreenEntry.route(
+        'Reservation Confirmation (mock booking) · Tourist',
+        () => AppRoutes.reservationConfirmation(
+          _seedMockBooking(guestName: 'Дев Тестовски'),
         ),
       ),
-      _DevScreenEntry('Reservation Confirmation (mock booking) · Tourist', (_) {
-        final listing = ProviderListingController.instance.recommendedListings
-            .firstWhere((l) => categoryRequiresPrice(l.category));
-        final reservation = ReservationController.instance.createReservation(
-          listing: listing,
-          guestName: 'Дев Тестовски',
-          startDate: DateTime.now().add(const Duration(days: 10)),
-          endDate: DateTime.now().add(const Duration(days: 13)),
-          guestCount: 2,
-        );
-        return ReservationConfirmationScreen(
-          reservation: reservation,
-          listing: listing,
-        );
-      }),
-      _DevScreenEntry('My Reservations (seeds one mock booking) · Tourist', (
-        _,
-      ) {
-        final listing = ProviderListingController.instance.recommendedListings
-            .firstWhere((l) => categoryRequiresPrice(l.category));
-        ReservationController.instance.createReservation(
-          listing: listing,
-          guestName: mockTouristGuestName,
-          startDate: DateTime.now().add(const Duration(days: 10)),
-          endDate: DateTime.now().add(const Duration(days: 13)),
-          guestCount: 2,
-        );
-        return const TouristMyReservationsScreen();
-      }),
-      _DevScreenEntry('Leave Review (first completed reservation) · Tourist', (
-        _,
-      ) {
-        final reservation = ReservationController.instance.reservations
-            .firstWhere((r) => r.status == ReservationStatus.completed);
-        final listing = ProviderListingController.instance.listings.firstWhere(
-          (l) => l.id == reservation.listingId,
-        );
-        return LeaveReviewScreen(reservation: reservation, listing: listing);
-      }),
-      _DevScreenEntry(
+      DevScreenEntry.route(
+        'My Reservations (seeds one mock booking) · Tourist',
+        () {
+          _seedMockBooking(guestName: mockTouristGuestName);
+          return AppRoutes.reservations;
+        },
+      ),
+      DevScreenEntry.route(
+        'Leave Review (first completed reservation) · Tourist',
+        () => AppRoutes.leaveReview(
+          ReservationController.instance.reservations
+              .firstWhere(
+                (r) =>
+                    r.status == ReservationStatus.completed &&
+                    r.listingId != null,
+              )
+              .id,
+        ),
+      ),
+      DevScreenEntry.route(
         'Review Submitted · Tourist',
-        (_) => const ReviewSubmittedScreen(),
+        () => AppRoutes.reviewSubmitted,
       ),
     ]),
     _DevScreenSection('Provider', [
-      _DevScreenEntry(
-        'Dashboard · Provider',
-        (_) => const ProviderDashboardScreen(),
-      ),
-      _DevScreenEntry('Offers · Provider', (_) => const ProviderOffersScreen()),
-      _DevScreenEntry(
+      DevScreenEntry.route('Dashboard · Provider', () => AppRoutes.dashboard),
+      DevScreenEntry.route('Offers · Provider', () => AppRoutes.offers),
+      DevScreenEntry.route(
         'Availability Calendar · Provider',
-        (_) => const ProviderAvailabilityCalendarScreen(),
+        () => AppRoutes.calendar,
       ),
-      _DevScreenEntry(
+      DevScreenEntry.route(
         'Create Offer Wizard · Provider',
-        (_) => const CreateOfferWizardScreen(),
+        () => AppRoutes.newOffer,
       ),
-      _DevScreenEntry(
+      DevScreenEntry.route(
         'Offer Published (Success) · Provider',
-        (_) => const CreateOfferSuccessScreen(),
+        () => AppRoutes.offerPublished,
       ),
-      _DevScreenEntry(
+      DevScreenEntry.route(
         'Rate Guest (first completed reservation) · Provider',
-        (_) => RateGuestScreen(
-          reservation:
-              ReservationController.instance.completedReservations.first,
+        () => AppRoutes.rateGuest(
+          ReservationController.instance.completedReservations.first.id,
         ),
       ),
-      _DevScreenEntry(
+      DevScreenEntry.route(
         'Rating Saved · Provider',
-        (_) => const RatingSavedScreen(),
+        () => AppRoutes.ratingSaved,
       ),
     ]),
     _DevScreenSection('Messaging', [
-      _DevScreenEntry('Chat List', (_) => const ChatListScreen()),
-      _DevScreenEntry(
+      DevScreenEntry.route('Chat List', () => AppRoutes.messages),
+      DevScreenEntry.route(
         'Chat Thread (first mock conversation)',
-        (_) => ChatThreadScreen(
-          conversationId: ChatController.instance.conversations.first.id,
-        ),
+        () => AppRoutes.chat(ChatController.instance.conversations.first.id),
       ),
     ]),
     _DevScreenSection('Support', [
-      _DevScreenEntry('My Tickets', (_) => const MyTicketsScreen()),
-      _DevScreenEntry(
-        'New Support Ticket',
-        (_) => const NewSupportTicketScreen(),
-      ),
+      DevScreenEntry.route('My Tickets', () => AppRoutes.tickets),
+      DevScreenEntry.route('New Support Ticket', () => AppRoutes.newTicket),
     ]),
     _DevScreenSection('Other', [
-      _DevScreenEntry('Notifications', (_) => const NotificationsScreen()),
-      _DevScreenEntry('Settings', (_) => const SettingsScreen()),
+      DevScreenEntry.route('Notifications', () => AppRoutes.notifications),
+      DevScreenEntry.route('Settings', () => AppRoutes.settings),
+      DevScreenEntry.route(
+        'Unknown route (Not Found)',
+        () => '/does-not-exist',
+      ),
     ]),
   ];
 
-  void _open(BuildContext context, _DevScreenEntry entry) {
-    Navigator.of(context).push(MaterialPageRoute(builder: entry.builder));
+  void _open(BuildContext context, DevScreenEntry entry) {
+    final location = entry.location;
+    if (location != null) {
+      context.push(location(), extra: entry.extra);
+    } else {
+      Navigator.of(context).push(MaterialPageRoute(builder: entry.builder!));
+    }
   }
 
   @override
@@ -256,13 +224,28 @@ class DevLauncherScreen extends StatelessWidget {
 class _DevScreenSection {
   const _DevScreenSection(this.title, this.entries);
   final String title;
-  final List<_DevScreenEntry> entries;
+  final List<DevScreenEntry> entries;
 }
 
-class _DevScreenEntry {
-  const _DevScreenEntry(this.label, this.builder);
+/// One launcher row: either a route (most screens) or, for things that
+/// aren't routes (the filter sheet), a widget pushed directly.
+class DevScreenEntry {
+  /// [location] runs when the entry is opened, so it can seed mock data
+  /// first (e.g. create a booking and return its confirmation route).
+  const DevScreenEntry.route(
+    this.label,
+    String Function() this.location, {
+    this.extra,
+  }) : builder = null;
+
+  const DevScreenEntry.widget(this.label, WidgetBuilder this.builder)
+    : location = null,
+      extra = null;
+
   final String label;
-  final WidgetBuilder builder;
+  final String Function()? location;
+  final Object? extra;
+  final WidgetBuilder? builder;
 }
 
 /// Opens `SearchFiltersSheet` directly over a blank background — lets the

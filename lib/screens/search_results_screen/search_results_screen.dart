@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -8,11 +10,9 @@ import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/screens/listing_details_screen/listing_details_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
 import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/services/search_controller.dart' as search;
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
@@ -90,7 +90,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 1),
       body: Column(
         children: [
           ScreenHeader(
@@ -538,12 +537,7 @@ class _ResultListingCard extends StatelessWidget {
   }
 
   void _openDetails(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            ListingDetailsScreen(listing: listing, originTabIndex: 1),
-      ),
-    );
+    context.push(AppRoutes.listing(context, listing.id));
   }
 
   @override

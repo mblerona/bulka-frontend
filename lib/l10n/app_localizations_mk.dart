@@ -1232,6 +1232,16 @@ class AppLocalizationsMk extends AppLocalizations {
   String get alreadyAccount => 'Веќе имате сметка? Најавете се';
 
   @override
+  String get routeNotFoundTitle => 'Страницата не е пронајдена';
+
+  @override
+  String get routeNotFoundMessage =>
+      'Оваа страница не постои или повеќе не е достапна.';
+
+  @override
+  String get routeNotFoundButton => 'ОДИ НА ПОЧЕТОК';
+
+  @override
   String agoMinutes(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
