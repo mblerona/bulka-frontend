@@ -32,6 +32,27 @@ class FakeBackendAdapter implements HttpClientAdapter {
         {'id': 'c6', 'parentCategoryId': 'c1', 'code': 'rooms', 'name': 'Соби'},
       ],
     },
+    '/api/amenities': {
+      'success': true,
+      'data': [
+        {'id': 'a1', 'code': 'parking', 'name': 'Паркинг'},
+        {'id': 'a2', 'code': 'family-friendly', 'name': 'Погодно за семејства'},
+        {
+          'id': 'a3',
+          'code': 'pets-allowed',
+          'name': 'Домашни миленици дозволени',
+        },
+        {'id': 'a4', 'code': 'guide', 'name': 'Водич'},
+        {'id': 'a5', 'code': 'meal-included', 'name': 'Оброк вклучен'},
+        {
+          'id': 'a6',
+          'code': 'accessible',
+          'name': 'Пристапно за лица со попреченост',
+        },
+        {'id': 'a7', 'code': 'wi-fi', 'name': 'Wi-Fi'},
+        {'id': 'a8', 'code': 'toilet', 'name': 'Тоалет'},
+      ],
+    },
   };
 
   @override

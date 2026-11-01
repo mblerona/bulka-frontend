@@ -1,4 +1,3 @@
-import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 
 /// Tourist Search & Filters' own UI state — the Figma "Filter Sheet"
@@ -37,7 +36,10 @@ class ListingSearchFilter {
 
   /// Same values as `ProviderListing.category` / `createOfferCategories`.
   Set<ListingCategory> categories = {};
-  Set<ListingAmenity> amenities = {};
+
+  /// Backend amenity codes (`Amenity.code`, e.g. "wi-fi"), as listed by
+  /// `GET /api/amenities`.
+  Set<String> amenities = {};
 
   bool get isActive =>
       keyword.trim().isNotEmpty ||

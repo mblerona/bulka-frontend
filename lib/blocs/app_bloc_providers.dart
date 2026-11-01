@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/amenities/amenities_bloc.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
 import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
@@ -46,6 +47,7 @@ class AppBlocProviders extends StatelessWidget {
           },
         ),
         BlocProvider(create: (_) => CategoriesBloc()),
+        BlocProvider(create: (_) => AmenitiesBloc()),
         BlocProvider(create: (_) => ListingsBloc()),
         BlocProvider(create: (_) => ReservationsBloc()),
         BlocProvider(create: (_) => ListingReviewsBloc()),

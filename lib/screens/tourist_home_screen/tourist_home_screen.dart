@@ -462,7 +462,7 @@ class _CategoriesLoadFailed extends StatelessWidget {
         TextButton(
           onPressed: onRetry,
           child: Text(
-            AppStrings.homeCategoriesRetry,
+            AppStrings.retryButton,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: AppDimensions.homeCategoryLabelFontSize,

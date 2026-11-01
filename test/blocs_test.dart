@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bulka_frontend/blocs/amenities/amenities_bloc.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
 import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
@@ -20,6 +21,7 @@ import 'package:bulka_frontend/models/auth_user.dart';
 import 'package:bulka_frontend/models/availability_status.dart';
 import 'package:bulka_frontend/models/chat_conversation.dart';
 import 'package:bulka_frontend/models/chat_message.dart';
+import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
@@ -32,6 +34,7 @@ ProviderListing _listing({
   double price = 1000,
   ListingCategory? category = ListingCategory.accommodation,
   ListingStatus status = ListingStatus.active,
+  Set<ListingAmenity> amenities = const {},
 }) => ProviderListing(
   id: id,
   title: title,
@@ -41,6 +44,7 @@ ProviderListing _listing({
   price: price,
   category: category,
   guestCapacity: 4,
+  amenities: amenities,
 );
 
 Reservation _reservation({
@@ -270,6 +274,85 @@ void main() {
       reviews: ListingReviewsState(const []),
     );
     expect(matches.map((l) => l.id), ['cheap']);
+  });
+
+  test('searchListings matches amenities by backend code', () {
+    final listings = ListingsState([
+      _listing(
+        id: 'wifi-parking',
+        amenities: {ListingAmenity.wifi, ListingAmenity.parking},
+      ),
+      _listing(id: 'wifi', amenities: {ListingAmenity.wifi}),
+      _listing(id: 'none'),
+    ]);
+    List<String> idsFor(Set<String> codes) => searchListings(
+      filter: ListingSearchFilter()..amenities = codes,
+      listings: listings,
+      reviews: ListingReviewsState(const []),
+    ).map((l) => l.id).toList();
+
+    expect(idsFor({'wi-fi'}), ['wifi-parking', 'wifi']);
+    expect(idsFor({'wi-fi', 'parking'}), ['wifi-parking']);
+    // An amenity no app-side listing has yet matches nothing.
+    expect(idsFor({'guide'}), isEmpty);
+  });
+
+  group('AmenitiesBloc', () {
+    blocTest<AmenitiesBloc, AmenitiesState>(
+      'loads the amenities in the requested language',
+      build: () {
+        final dio = Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({
+            '/api/amenities': (
+              200,
+              {
+                'success': true,
+                'data': [
+                  {'id': 'a1', 'code': 'wi-fi', 'name': 'Wi-Fi'},
+                  {'id': 'a2', 'code': 'new-thing', 'name': 'Ново'},
+                ],
+              },
+            ),
+          });
+        return AmenitiesBloc(dio: dio);
+      },
+      act: (bloc) => bloc.add(const AmenitiesRequested('en')),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<AmenitiesState>().having(
+          (s) => s.status,
+          'status',
+          AmenitiesStatus.loading,
+        ),
+        isA<AmenitiesState>().having(
+          (s) => s.status,
+          'status',
+          AmenitiesStatus.loaded,
+        ),
+      ],
+      verify: (bloc) {
+        final state = bloc.state;
+        expect(state.amenities.map((a) => a.code), ['wi-fi', 'new-thing']);
+        expect(state.amenities.first.emoji, '📶');
+        expect(state.amenities.last.emoji, isNotEmpty);
+        expect(state.needsLoadFor('en'), isFalse);
+        expect(state.needsLoadFor('mk'), isTrue);
+      },
+    );
+
+    blocTest<AmenitiesBloc, AmenitiesState>(
+      'a failed request ends in failed',
+      build: () => AmenitiesBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({}),
+      ),
+      act: (bloc) => bloc.add(const AmenitiesRequested('mk')),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, AmenitiesStatus.failed);
+        expect(bloc.state.needsLoadFor('mk'), isTrue);
+      },
+    );
   });
 
   group('CategoriesBloc', () {

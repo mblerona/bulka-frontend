@@ -1037,7 +1037,7 @@ class AppLocalizationsSq extends AppLocalizations {
   String get homeCategoriesLoadFailed => 'Kategoritë nuk mund të ngarkohen.';
 
   @override
-  String get homeCategoriesRetry => 'Provo përsëri';
+  String get retryButton => 'Provo përsëri';
 
   @override
   String get homeRecommendedHeading => 'Të rekomanduara për ju';
@@ -1101,6 +1101,9 @@ class AppLocalizationsSq extends AppLocalizations {
 
   @override
   String get filtersAmenityHeading => 'Pajisjet';
+
+  @override
+  String get filtersAmenitiesLoadFailed => 'Pajisjet nuk mund të ngarkohen.';
 
   @override
   String get filtersClearButton => 'Pastro filtrat';

@@ -1034,7 +1034,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCategoriesLoadFailed => 'Couldn\'t load categories.';
 
   @override
-  String get homeCategoriesRetry => 'Try again';
+  String get retryButton => 'Try again';
 
   @override
   String get homeRecommendedHeading => 'Recommended for you';
@@ -1098,6 +1098,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filtersAmenityHeading => 'Amenities';
+
+  @override
+  String get filtersAmenitiesLoadFailed => 'Couldn\'t load amenities.';
 
   @override
   String get filtersClearButton => 'Clear filters';

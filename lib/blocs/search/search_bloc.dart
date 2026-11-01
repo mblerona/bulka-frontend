@@ -52,9 +52,9 @@ List<ProviderListing> searchListings({
         !filter.categories.contains(listing.category)) {
       return false;
     }
-    if (filter.amenities.isNotEmpty &&
-        !filter.amenities.every(listing.amenities.contains)) {
-      return false;
+    if (filter.amenities.isNotEmpty) {
+      final codes = listing.amenities.map((a) => a.backendCode).toSet();
+      if (!filter.amenities.every(codes.contains)) return false;
     }
     return true;
   }).toList();

@@ -38,6 +38,17 @@ enum ListingAmenity {
     }
   }
 
+  /// The matching `code` from `GET /api/amenities`, or null when the
+  /// backend has no such amenity. Lets the search filter (which lists the
+  /// backend's amenities) match these app-side listings until listings
+  /// come from the backend too.
+  String? get backendCode => switch (this) {
+    ListingAmenity.wifi => 'wi-fi',
+    ListingAmenity.parking => 'parking',
+    ListingAmenity.petsAllowed => 'pets-allowed',
+    _ => null,
+  };
+
   /// Figma renders each amenity with a full-color emoji glyph (not a
   /// simple line icon), so — same precedent as the chat send button's
   /// literal ">" glyph — this is rendered as text, not a Material icon

@@ -1037,7 +1037,7 @@ class AppLocalizationsMk extends AppLocalizations {
   String get homeCategoriesLoadFailed => 'Категориите не можат да се вчитаат.';
 
   @override
-  String get homeCategoriesRetry => 'Обиди се повторно';
+  String get retryButton => 'Обиди се повторно';
 
   @override
   String get homeRecommendedHeading => 'Препорачано за вас';
@@ -1101,6 +1101,9 @@ class AppLocalizationsMk extends AppLocalizations {
 
   @override
   String get filtersAmenityHeading => 'Опрема';
+
+  @override
+  String get filtersAmenitiesLoadFailed => 'Опремата не може да се вчита.';
 
   @override
   String get filtersClearButton => 'Избриши филтри';

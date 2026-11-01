@@ -402,7 +402,7 @@ class AppStrings {
   static String get homeSearchPlaceholder => _s.homeSearchPlaceholder;
   static String get homeCategoriesHeading => _s.homeCategoriesHeading;
   static String get homeCategoriesLoadFailed => _s.homeCategoriesLoadFailed;
-  static String get homeCategoriesRetry => _s.homeCategoriesRetry;
+  static String get retryButton => _s.retryButton;
   static String get homeRecommendedHeading => _s.homeRecommendedHeading;
   static String get homePricePrefix => _s.homePricePrefix;
   static String get homeBanner1Title => _s.homeBanner1Title;
@@ -424,6 +424,7 @@ class AppStrings {
   static String get filtersRatingAllOption => _s.filtersRatingAllOption;
   static String get filtersGuestCountLabel => _s.filtersGuestCountLabel;
   static String get filtersAmenityHeading => _s.filtersAmenityHeading;
+  static String get filtersAmenitiesLoadFailed => _s.filtersAmenitiesLoadFailed;
   static String get filtersClearButton => _s.filtersClearButton;
   static String get filtersShowResultsButton => _s.filtersShowResultsButton;
   static String get resultsTitle => _s.resultsTitle;

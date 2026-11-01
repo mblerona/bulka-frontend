@@ -2056,11 +2056,11 @@ abstract class AppLocalizations {
   /// **'Категориите не можат да се вчитаат.'**
   String get homeCategoriesLoadFailed;
 
-  /// No description provided for @homeCategoriesRetry.
+  /// No description provided for @retryButton.
   ///
   /// In mk, this message translates to:
   /// **'Обиди се повторно'**
-  String get homeCategoriesRetry;
+  String get retryButton;
 
   /// No description provided for @homeRecommendedHeading.
   ///
@@ -2187,6 +2187,12 @@ abstract class AppLocalizations {
   /// In mk, this message translates to:
   /// **'Опрема'**
   String get filtersAmenityHeading;
+
+  /// No description provided for @filtersAmenitiesLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Опремата не може да се вчита.'**
+  String get filtersAmenitiesLoadFailed;
 
   /// No description provided for @filtersClearButton.
   ///

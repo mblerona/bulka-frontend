@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/amenities/amenities_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/blocs/search/search_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
@@ -10,7 +12,7 @@ import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
-import 'package:bulka_frontend/models/listing_amenity.dart';
+import 'package:bulka_frontend/models/amenity.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
@@ -68,6 +70,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
       _filter.minPrice ?? bounds.min,
       _filter.maxPrice ?? bounds.max,
     );
+    _loadAmenities(context);
   }
 
   @override
@@ -182,10 +185,10 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
     });
   }
 
-  void _toggleAmenity(ListingAmenity amenity) {
+  void _toggleAmenity(String code) {
     setState(() {
-      if (!_filter.amenities.remove(amenity)) {
-        _filter.amenities.add(amenity);
+      if (!_filter.amenities.remove(code)) {
+        _filter.amenities.add(code);
       }
     });
   }
@@ -640,29 +643,90 @@ class _Pill extends StatelessWidget {
   }
 }
 
+/// Loads the amenities in the current language unless they're already
+/// loaded (or loading) in it.
+void _loadAmenities(BuildContext context) {
+  final language = context.read<LocaleBloc>().state.locale.languageCode;
+  final amenities = context.read<AmenitiesBloc>();
+  if (amenities.state.needsLoadFor(language)) {
+    amenities.add(AmenitiesRequested(language));
+  }
+}
+
+/// The amenities from `GET /api/amenities` (see [AmenitiesBloc]); the
+/// filter stores the chosen ones by `Amenity.code`.
 class _AmenityField extends StatelessWidget {
   const _AmenityField({required this.selected, required this.onToggle});
 
-  final Set<ListingAmenity> selected;
-  final ValueChanged<ListingAmenity> onToggle;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AmenitiesBloc>().state;
+    final amenities = state.amenities;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         _fieldLabel(AppStrings.filtersAmenityHeading),
         const SizedBox(height: AppDimensions.filtersAmenitySectionGap),
-        for (var i = 0; i < ListingAmenity.values.length; i++) ...[
+        if (amenities.isEmpty)
+          state.status == AmenitiesStatus.failed
+              ? _AmenitiesLoadFailed(onRetry: () => _loadAmenities(context))
+              : const Center(
+                  child: SizedBox.square(
+                    dimension: AppDimensions.wizardAmenityEmojiFontSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.agroGreen600,
+                    ),
+                  ),
+                ),
+        for (var i = 0; i < amenities.length; i++) ...[
           _AmenityRow(
-            amenity: ListingAmenity.values[i],
-            isSelected: selected.contains(ListingAmenity.values[i]),
-            onChanged: (_) => onToggle(ListingAmenity.values[i]),
+            amenity: amenities[i],
+            isSelected: selected.contains(amenities[i].code),
+            onChanged: (_) => onToggle(amenities[i].code),
           ),
-          if (i != ListingAmenity.values.length - 1)
+          if (i != amenities.length - 1)
             const SizedBox(height: AppDimensions.filtersAmenitySectionGap),
         ],
+      ],
+    );
+  }
+}
+
+class _AmenitiesLoadFailed extends StatelessWidget {
+  const _AmenitiesLoadFailed({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            AppStrings.filtersAmenitiesLoadFailed,
+            style: const TextStyle(
+              fontSize: AppDimensions.dsInputFontSize,
+              color: AppColors.profileSecondaryText,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onRetry,
+          child: Text(
+            AppStrings.retryButton,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: AppDimensions.dsInputFontSize,
+              color: AppColors.agroGreen600,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -675,7 +739,7 @@ class _AmenityRow extends StatelessWidget {
     required this.onChanged,
   });
 
-  final ListingAmenity amenity;
+  final Amenity amenity;
   final bool isSelected;
   final ValueChanged<bool> onChanged;
 
@@ -696,7 +760,7 @@ class _AmenityRow extends StatelessWidget {
               const SizedBox(width: AppDimensions.wizardAmenityRowGap),
               Expanded(
                 child: Text(
-                  amenity.label,
+                  amenity.name,
                   style: const TextStyle(
                     fontWeight: FontWeight.w400,
                     fontSize: AppDimensions.dsInputFontSize,
