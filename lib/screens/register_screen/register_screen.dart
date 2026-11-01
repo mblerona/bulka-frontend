@@ -6,6 +6,7 @@ import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/role_toggle.dart';
@@ -27,6 +28,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  String? _errorMessage;
 
   late final TapGestureRecognizer _termsOfServiceRecognizer =
       TapGestureRecognizer()..onTap = () {};
@@ -37,11 +41,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // accepting the terms is the only gate on submission.
   bool get _canSubmit => _agreedToTerms;
 
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+  /// International format, like the backend requires: "+" and digits.
+  /// Spaces and dashes are allowed (the backend accepts them too).
+  static bool _isInternationalPhone(String phone) {
+    final digitsOnly = phone.replaceAll(RegExp(r'[\s-]'), '');
+    return RegExp(r'^\+\d{8,15}$').hasMatch(digitsOnly);
+  }
+
+  /// Same password rules the backend enforces.
+  static bool _isStrongPassword(String password) {
+    return password.length >= 8 &&
+        RegExp(r'\p{Lu}', unicode: true).hasMatch(password) &&
+        RegExp(r'\d').hasMatch(password) &&
+        RegExp(r'[^\p{L}\p{N}]', unicode: true).hasMatch(password);
+  }
+
+  /// Returns the first problem with the form, or null when it's valid.
+  String? _validate(RegistrationProfile profile) {
+    if (profile.firstName.isEmpty || profile.lastName.isEmpty) {
+      return AppStrings.registerErrorFullName;
+    }
+    if (!_emailPattern.hasMatch(profile.email)) {
+      return AppStrings.registerErrorEmail;
+    }
+    if (!_isInternationalPhone(profile.phone)) {
+      return AppStrings.registerErrorPhone;
+    }
+    if (!_isStrongPassword(_passwordController.text)) {
+      return AppStrings.registerErrorPasswordRules;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      return AppStrings.registerErrorPasswordMismatch;
+    }
+    return null;
+  }
+
+  void _handleSubmit() {
+    final profile = RegistrationProfile(
+      fullName: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      role: _selectedRoleIndex == 0 ? UserRole.buyer : UserRole.owner,
+    );
+    final error = _validate(profile);
+    setState(() => _errorMessage = error);
+    if (error != null) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TermsPrivacyScreen(
+          profile: profile,
+          password: _passwordController.text,
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _termsOfServiceRecognizer.dispose();
     _privacyPolicyRecognizer.dispose();
     super.dispose();
@@ -115,12 +179,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: AppStrings.passwordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
+                      controller: _passwordController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.registerConfirmPasswordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
+                      controller: _confirmPasswordController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     Row(
@@ -174,26 +240,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
+                    if (_errorMessage != null) ...[
+                      FormErrorText(_errorMessage!),
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                    ],
                     PrimaryButton(
                       label: AppStrings.registerSubmitButton,
-                      onPressed: _canSubmit
-                          ? () {
-                              final profile = RegistrationProfile(
-                                fullName: _nameController.text,
-                                email: _emailController.text,
-                                phone: _phoneController.text,
-                                role: _selectedRoleIndex == 0
-                                    ? UserRole.buyer
-                                    : UserRole.owner,
-                              );
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      TermsPrivacyScreen(profile: profile),
-                                ),
-                              );
-                            }
-                          : null,
+                      onPressed: _canSubmit ? _handleSubmit : null,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     Row(

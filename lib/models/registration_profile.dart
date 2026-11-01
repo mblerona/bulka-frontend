@@ -21,6 +21,16 @@ class RegistrationProfile {
   final String city;
   final UserRole role;
 
+  /// The backend wants first and last name separately; the form has one
+  /// field. The first word is the first name, the rest is the last name.
+  String get firstName => _nameParts.first;
+  String get lastName => _nameParts.skip(1).join(' ');
+
+  List<String> get _nameParts {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    return parts.isEmpty ? const [''] : parts;
+  }
+
   RegistrationProfile copyWith({
     String? fullName,
     String? email,

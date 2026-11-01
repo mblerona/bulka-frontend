@@ -9,6 +9,7 @@ import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashbo
 import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
@@ -18,7 +19,10 @@ import 'package:bulka_frontend/widgets/secondary_button.dart';
 /// response and decides where the user lands (Tourist Home or Provider
 /// Dashboard).
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.initialEmail});
+
+  /// Pre-fills the email field, e.g. right after email verification.
+  final String? initialEmail;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -27,7 +31,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _selectedLanguageCode = AppStrings.languageCodeMk;
 
-  final _emailController = TextEditingController();
+  late final _emailController = TextEditingController(
+    text: widget.initialEmail,
+  );
   final _passwordController = TextEditingController();
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -156,14 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap * 4),
                     if (_errorMessage != null) ...[
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: AppDimensions.dsFooterFontSize,
-                          color: AppColors.settingsDangerColor,
-                        ),
-                      ),
+                      FormErrorText(_errorMessage!),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(

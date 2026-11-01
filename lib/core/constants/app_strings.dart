@@ -35,6 +35,48 @@ class AppStrings {
   static const String loginErrorTwoFactorUnsupported =
       'Оваа сметка има вклучена двофакторска автентикација, која сè уште не е поддржана во апликацијата.';
 
+  //REGISTER VALIDATION (mirrors the backend's rules)
+  static const String registerErrorFullName = 'Внесете име и презиме.';
+  static const String registerErrorEmail = 'Внесете валидна е-пошта.';
+  static const String registerErrorPhone =
+      'Внесете телефонски број во меѓународен формат, на пр. +389 70 123 456.';
+  static const String registerErrorPasswordRules =
+      'Лозинката мора да има најмалку 8 знаци, голема буква, бројка и специјален знак.';
+  static const String registerErrorPasswordMismatch =
+      'Лозинките не се совпаѓаат.';
+
+  //EMAIL VERIFICATION (API feedback)
+  static const String emailVerificationResent =
+      'Испративме нова порака за потврда.';
+
+  //BACKEND ERROR TRANSLATIONS (the backend only answers in English; these
+  //replace its messages by error code + field, see api_error_translator.dart)
+  static const String apiErrorEmailRequired = 'Е-поштата е задолжителна.';
+  static const String apiErrorFirstNameRequired = 'Името е задолжително.';
+  static const String apiErrorLastNameRequired = 'Презимето е задолжително.';
+  static const String apiErrorPhoneRequired =
+      'Телефонскиот број е задолжителен.';
+  static const String apiErrorPasswordRequired = 'Лозинката е задолжителна.';
+  static const String apiErrorCodeRequired = 'Кодот за потврда е задолжителен.';
+  static const String apiErrorTermsRequired =
+      'Мора да ги прифатите условите за користење.';
+  static const String apiErrorPrivacyRequired =
+      'Мора да ја прифатите политиката за приватност.';
+  static const String apiErrorPasswordTooShort =
+      'Лозинката мора да има најмалку 8 знаци.';
+  static const String apiErrorPasswordNeedsUppercase =
+      'Лозинката мора да содржи голема буква.';
+  static const String apiErrorPasswordNeedsLowercase =
+      'Лозинката мора да содржи мала буква.';
+  static const String apiErrorPasswordNeedsDigit =
+      'Лозинката мора да содржи бројка.';
+  static const String apiErrorPasswordNeedsSpecial =
+      'Лозинката мора да содржи специјален знак.';
+  static const String apiErrorVerificationCodeInvalid =
+      'Кодот за потврда не е точен. Проверете ја е-поштата и обидете се повторно.';
+  static const String apiErrorInvalidInput =
+      'Некои од внесените податоци не се точни. Проверете ги и обидете се повторно.';
+
   //API ERRORS (shown when a backend request fails)
   static const String apiErrorNetwork =
       'Нема интернет конекција. Проверете ја врската и обидете се повторно.';
@@ -63,7 +105,7 @@ class AppStrings {
   static const String registerNameLabel = 'Име и презиме';
   static const String registerNamePlaceholder = 'Јован Јовановски';
   static const String registerPhoneLabel = 'Телефон';
-  static const String registerPhonePlaceholder = '070 123 456';
+  static const String registerPhonePlaceholder = '+389 70 123 456';
   static const String registerConfirmPasswordLabel = 'Потврди лозинка';
   static const String registerTermsPrefix = 'Се согласувам со ';
   static const String registerTermsOfService = 'Условите за користење';
@@ -102,12 +144,19 @@ class AppStrings {
 
   //EMAIL VERIFICATION SCREEN
   static const String emailVerificationTitle = 'Потврдете ја вашата е-пошта';
-  static const String emailVerificationSentTo = 'Испративме линк за потврда до';
+  static const String emailVerificationSentTo = 'Испративме код за потврда до';
   static const String emailVerificationExampleEmail =
       'jovan.jovanovski@example.com';
   static const String emailVerificationInstructions =
-      'Кликнете на линкот во е-поштата за да го активирате вашиот профил и '
+      'Внесете го кодот од е-поштата за да го активирате вашиот профил и '
       'да продолжите со користење на апликацијата.';
+  static const String emailVerificationCodeLabel = 'Код за потврда';
+  static const String emailVerificationCodePlaceholder = 'Внесете го кодот';
+  static const String emailVerificationSubmitButton = 'ПОТВРДИ';
+  static const String emailVerificationErrorEmptyCode =
+      'Внесете го кодот од е-поштата.';
+  static const String emailVerificationSuccess =
+      'Е-поштата е потврдена. Најавете се за да продолжите.';
   static const String emailVerificationBadge = 'НЕ Е ПОТВРДЕНО';
   static const String emailVerificationResendButton = 'ИСПРАТИ ПОВТОРНО';
   static const String emailVerificationChangeEmail = 'Промени е-пошта';

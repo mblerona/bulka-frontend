@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/network/api_error_translator.dart';
 import 'package:bulka_frontend/core/network/api_response.dart';
 
 enum ApiErrorKind {
@@ -52,7 +54,7 @@ class ApiException implements Exception {
       fallback = AppStrings.apiErrorUnauthorized;
     } else if (status != null && status >= 400 && status < 500) {
       kind = ApiErrorKind.badRequest;
-      fallback = AppStrings.apiErrorUnknown;
+      fallback = AppStrings.apiErrorInvalidInput;
     } else if (status != null && status >= 500) {
       kind = ApiErrorKind.server;
       fallback = AppStrings.apiErrorServer;
@@ -63,7 +65,7 @@ class ApiException implements Exception {
 
     return ApiException(
       kind: kind,
-      message: _firstMessage(errors) ?? fallback,
+      message: _translatedMessage(errors) ?? fallback,
       statusCode: status,
       errors: errors,
     );
@@ -73,20 +75,31 @@ class ApiException implements Exception {
   factory ApiException.fromEnvelope(ApiResponse<Object?> response) {
     return ApiException(
       kind: ApiErrorKind.badRequest,
-      message: _firstMessage(response.errors) ?? AppStrings.apiErrorUnknown,
+      message:
+          _translatedMessage(response.errors) ??
+          AppStrings.apiErrorInvalidInput,
       errors: response.errors,
     );
   }
 
   final ApiErrorKind kind;
+
+  /// Always in the app's language, never the backend's English text.
   final String message;
   final int? statusCode;
   final List<ApiError> errors;
 
-  static String? _firstMessage(List<ApiError> errors) {
+  /// The first error the app has its own text for. Errors without a
+  /// translation are logged (debug builds) so they can be added to
+  /// api_error_translator.dart.
+  static String? _translatedMessage(List<ApiError> errors) {
     for (final error in errors) {
-      final message = error.message;
-      if (message != null && message.trim().isNotEmpty) return message;
+      final translated = translateApiError(error);
+      if (translated != null) return translated;
+      debugPrint(
+        '[API] No translation for error ${error.code} '
+        '(field: ${error.field}): ${error.message}',
+      );
     }
     return null;
   }

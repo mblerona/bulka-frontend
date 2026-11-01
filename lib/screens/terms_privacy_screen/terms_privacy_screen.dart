@@ -2,16 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
+import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
+import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
+/// Last step before the account is created: once all consents are given,
+/// submitting registers the account and moves on to Email Verification.
 class TermsPrivacyScreen extends StatefulWidget {
-  const TermsPrivacyScreen({super.key, required this.profile});
+  const TermsPrivacyScreen({
+    super.key,
+    required this.profile,
+    required this.password,
+  });
 
   final RegistrationProfile profile;
+
+  /// Passed separately (not part of [RegistrationProfile]) so it isn't
+  /// carried through the rest of the sign-up flow.
+  final String password;
 
   @override
   State<TermsPrivacyScreen> createState() => _TermsPrivacyScreenState();
@@ -21,9 +35,54 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
   bool _agreedToTerms = false;
   bool _agreedToPrivacy = false;
   bool _agreedToResponsibilities = false;
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   bool get _canSubmit =>
-      _agreedToTerms && _agreedToPrivacy && _agreedToResponsibilities;
+      !_isSubmitting &&
+      _agreedToTerms &&
+      _agreedToPrivacy &&
+      _agreedToResponsibilities;
+
+  Future<void> _handleSubmit() async {
+    final profile = widget.profile;
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      final needsVerification = await AuthController.instance.register(
+        role: profile.role,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone,
+        password: widget.password,
+      );
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      if (needsVerification) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => EmailVerificationScreen(profile: profile),
+          ),
+        );
+      } else {
+        // Account is already active: registration doesn't sign in, so the
+        // user logs in with their new credentials.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = e.message;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,19 +133,13 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
                     const SizedBox(
                       height: AppDimensions.termsPrivacyBottomSpacerHeight,
                     ),
+                    if (_errorMessage != null) ...[
+                      FormErrorText(_errorMessage!),
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                    ],
                     PrimaryButton(
                       label: AppStrings.termsPrivacySubmitButton,
-                      onPressed: _canSubmit
-                          ? () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => EmailVerificationScreen(
-                                    profile: widget.profile,
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
+                      onPressed: _canSubmit ? _handleSubmit : null,
                     ),
                   ],
                 ),

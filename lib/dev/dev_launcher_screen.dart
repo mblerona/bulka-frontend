@@ -69,7 +69,9 @@ class DevLauncherScreen extends StatelessWidget {
       _DevScreenEntry('Register', (_) => const RegisterScreen()),
       _DevScreenEntry(
         'Terms & Privacy',
-        (_) => const TermsPrivacyScreen(profile: _devProfile),
+        // Empty password on purpose: submitting from here is rejected by
+        // the backend instead of creating a real dev@example.com account.
+        (_) => const TermsPrivacyScreen(profile: _devProfile, password: ''),
       ),
       _DevScreenEntry(
         'Email Verification',

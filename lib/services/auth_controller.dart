@@ -7,6 +7,7 @@ import 'package:bulka_frontend/core/network/api_response.dart';
 import 'package:bulka_frontend/core/network/auth_interceptor.dart';
 import 'package:bulka_frontend/core/network/token_storage.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
+import 'package:bulka_frontend/models/user_role.dart';
 
 /// Signs the user in and out, and holds who is signed in. Tokens live in
 /// [TokenStorage]; attaching and refreshing them is [AuthInterceptor]'s job.
@@ -31,26 +32,96 @@ class AuthController extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    final Response<Map<String, dynamic>> response;
+    final data = await _postWithoutAuth('/api/auth/login', {
+      'email': email.trim(),
+      'password': password,
+    });
+    if (data is! Map<String, dynamic>) {
+      throw const ApiException(
+        kind: ApiErrorKind.unknown,
+        message: AppStrings.apiErrorUnknown,
+      );
+    }
+    return _startSession(data);
+  }
+
+  /// Creates a Tourist ([UserRole.buyer]) or Provider ([UserRole.owner])
+  /// account. It does not sign the user in: the backend answers with
+  /// `{ userId, status: "PendingVerification", emailVerificationRequired }`
+  /// and the user logs in after confirming their email.
+  ///
+  /// Returns whether email verification is required. Validation errors
+  /// (e.g. email already in use) come back as [ApiException] with the
+  /// backend's message.
+  Future<bool> register({
+    required UserRole role,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    final path = role == UserRole.owner
+        ? '/api/auth/register/provider'
+        : '/api/auth/register/buyer';
+    final data = await _postWithoutAuth(path, {
+      'email': email.trim(),
+      'password': password,
+      'firstName': firstName.trim(),
+      'lastName': lastName.trim(),
+      'displayName': '${firstName.trim()} ${lastName.trim()}',
+      'phone': phone.trim(),
+      'acceptedTerms': true,
+      'acceptedPrivacy': true,
+    });
+    // Assume verification is needed unless the backend explicitly says not.
+    return data is! Map<String, dynamic> ||
+        data['emailVerificationRequired'] != false;
+  }
+
+  /// Confirms the account with the code from the verification email. Does
+  /// not sign the user in.
+  Future<void> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    await _postWithoutAuth('/api/auth/verify-email', {
+      'email': email.trim(),
+      'code': code.trim(),
+    });
+  }
+
+  Future<void> resendEmailVerification(String email) async {
+    await _postWithoutAuth('/api/auth/resend-email-verification', {
+      'email': email.trim(),
+    });
+  }
+
+  /// POSTs to an endpoint that doesn't need a signed-in user and returns
+  /// the envelope's `data`. Throws [ApiException] on any failure.
+  Future<Object?> _postWithoutAuth(
+    String path,
+    Map<String, Object?> body,
+  ) async {
+    final Response<Object?> response;
     try {
-      response = await _dio.post<Map<String, dynamic>>(
-        '/api/auth/login',
-        data: {'email': email.trim(), 'password': password},
+      response = await _dio.post<Object?>(
+        path,
+        data: body,
         options: Options(extra: {skipAuth: true}),
       );
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
+    final json = response.data;
+    if (json is! Map<String, dynamic>) return null; // e.g. an empty 200
+    final envelope = ApiResponse<Object?>.fromJson(json, (data) => data);
+    if (!envelope.success) throw ApiException.fromEnvelope(envelope);
+    return envelope.data;
+  }
 
-    final envelope = ApiResponse<Map<String, dynamic>>.fromJson(
-      response.data ?? const {},
-      (data) => data as Map<String, dynamic>,
-    );
-    final data = envelope.data;
-    if (!envelope.success || data == null) {
-      throw ApiException.fromEnvelope(envelope);
-    }
-
+  /// Stores the tokens from a login-style response and remembers the user.
+  Future<AuthUser> _startSession(Map<String, dynamic> data) async {
     if (data['twoFactorChallenge'] != null) {
       // TODO: support 2FA via /api/auth/2fa/challenge/verify.
       throw const ApiException(
