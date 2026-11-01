@@ -4,6 +4,7 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
@@ -102,19 +103,19 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.wizardDiscardDialogTitle),
-        content: const Text(AppStrings.wizardDiscardDialogMessage),
+        title: Text(AppStrings.wizardDiscardDialogTitle),
+        content: Text(AppStrings.wizardDiscardDialogMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text(
+            child: Text(
               AppStrings.wizardDiscardDialogCancel,
               style: TextStyle(color: AppColors.agroForest950),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text(
+            child: Text(
               AppStrings.wizardDiscardDialogConfirm,
               style: TextStyle(
                 color: AppColors.settingsDangerColor,
@@ -205,7 +206,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
                 Icons.photo_library,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.imageSourceGallery),
+              title: Text(AppStrings.imageSourceGallery),
               onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
@@ -213,7 +214,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
                 Icons.camera_alt,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.imageSourceCamera),
+              title: Text(AppStrings.imageSourceCamera),
               onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
           ],
@@ -241,7 +242,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
 
   void _removePhoto(int index) => setState(() => _draft.photos.removeAt(index));
 
-  void _selectCategory(String category) =>
+  void _selectCategory(ListingCategory category) =>
       setState(() => _draft.category = category);
 
   void _toggleAmenity(ListingAmenity amenity) {
@@ -352,7 +353,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
         children: [
           for (final category in createOfferCategories)
             _CategoryChip(
-              label: category,
+              label: category.shortLabel,
               isSelected: category == _draft.category,
               onTap: () => _selectCategory(category),
             ),
@@ -471,7 +472,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
       _ReviewRow(label: AppStrings.wizardReviewTitleRow, value: _draft.title),
       _ReviewRow(
         label: AppStrings.wizardReviewCategoryRow,
-        value: _draft.category,
+        value: _draft.category.shortLabel,
       ),
       _ReviewRow(
         label: AppStrings.wizardReviewLocationRow,
@@ -501,7 +502,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
         _ReviewRow(
           label: AppStrings.wizardReviewPriceRow,
           value: _draft.price != null
-              ? '${formatMkPrice(_draft.price!)} ${AppStrings.wizardPricePerNightSuffix}'
+              ? '${formatPrice(_draft.price!)} ${AppStrings.wizardPricePerNightSuffix}'
               : '',
         ),
     ];
@@ -705,7 +706,7 @@ class _WizardFooter extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: onBack,
-            child: const Text(
+            child: Text(
               AppStrings.wizardBackButton,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -958,7 +959,7 @@ class _DescriptionField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.wizardDescriptionLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -987,7 +988,7 @@ class _DescriptionField extends StatelessWidget {
               fontSize: AppDimensions.dsInputFontSize,
               color: AppColors.agroForest950,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: AppStrings.wizardDescriptionPlaceholder,
               hintStyle: TextStyle(
                 fontWeight: FontWeight.w400,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/l10n/locale_controller.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/forgot_password_screen/forgot_password_screen.dart';
@@ -29,14 +30,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String _selectedLanguageCode = AppStrings.languageCodeMk;
-
   late final _emailController = TextEditingController(
     text: widget.initialEmail,
   );
   final _passwordController = TextEditingController();
   bool _isSubmitting = false;
-  String? _errorMessage;
+
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
   @override
   void dispose() {
@@ -49,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = AppStrings.loginErrorEmptyFields);
+      setState(() => _errorMessage = () => AppStrings.loginErrorEmptyFields);
       return;
     }
 
@@ -75,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _errorMessage = e.kind == ApiErrorKind.unauthorized
+        _errorMessage = () => e.kind == ApiErrorKind.unauthorized
             ? AppStrings.loginErrorInvalidCredentials
             : e.message;
       });
@@ -93,9 +95,10 @@ class _LoginScreenState extends State<LoginScreen> {
             titleFontSize: AppDimensions.loginTitleFontSize,
             bottomPadding: AppDimensions.loginHeaderBottomPadding,
             contentGap: AppDimensions.loginHeaderRowGap,
-            selectedLanguageCode: _selectedLanguageCode,
+            selectedLanguageCode: LocaleController.instance.switchCode,
             onLanguageChanged: (code) {
-              setState(() => _selectedLanguageCode = code);
+              // Saved app-wide; BulkaApp rebuilds every screen.
+              LocaleController.instance.setLanguage(code);
             },
           ),
           Expanded(
@@ -162,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap * 4),
                     if (_errorMessage != null) ...[
-                      FormErrorText(_errorMessage!),
+                      FormErrorText(_errorMessage!()),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(

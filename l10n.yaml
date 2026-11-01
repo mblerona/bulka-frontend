@@ -1,0 +1,6 @@
+# Flutter localization (gen-l10n). Macedonian is the template: every key
+# must exist in app_mk.arb first; app_en.arb and app_sq.arb translate it.
+arb-dir: lib/l10n
+template-arb-file: app_mk.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations

@@ -19,7 +19,7 @@ class _FilterOption {
   final ListingStatus? status;
 }
 
-const List<_FilterOption> _filters = [
+List<_FilterOption> get _filters => [
   _FilterOption(AppStrings.offersFilterAll, null),
   _FilterOption(AppStrings.offersFilterActive, ListingStatus.active),
   _FilterOption(
@@ -71,7 +71,7 @@ class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
       bottomNavigationBar: const ProviderBottomNav(selectedIndex: 1),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.offersTitle,
             subtitle: AppStrings.offersSubtitle,
             titleFontSize: AppDimensions.dsHeaderSubtitleTitleFontSize,

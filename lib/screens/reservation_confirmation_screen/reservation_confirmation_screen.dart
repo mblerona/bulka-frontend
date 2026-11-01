@@ -173,7 +173,7 @@ class _SuccessBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.successBlockGap),
-            const Text(
+            Text(
               AppStrings.bookingRequestSentHeading,
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -183,7 +183,7 @@ class _SuccessBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.successBlockGap),
-            const Text(
+            Text(
               AppStrings.bookingRequestSentSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -309,7 +309,7 @@ class _TripDetailsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.tripDetailsHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -320,12 +320,12 @@ class _TripDetailsSection extends StatelessWidget {
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
             AppStrings.checkInLabel,
-            formatMkDateShort(reservation.startDate),
+            formatDateShort(reservation.startDate),
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
             AppStrings.checkOutLabel,
-            formatMkDateShort(reservation.endDate),
+            formatDateShort(reservation.endDate),
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(AppStrings.wizardGuestsLabel, _guestsValue),
@@ -364,7 +364,7 @@ class _PriceBreakdownSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.paymentDetailsHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -374,14 +374,14 @@ class _PriceBreakdownSection extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
-            '${formatMkPrice(nightlyPrice)} ${AppStrings.wizardPriceSuffix} '
+            '${formatPrice(nightlyPrice)} ${AppStrings.wizardPriceSuffix} '
                 'x $nights $nightsWord',
-            '${formatMkPrice(subtotal)} ${AppStrings.wizardPriceSuffix}',
+            '${formatPrice(subtotal)} ${AppStrings.wizardPriceSuffix}',
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
             AppStrings.serviceFeeLabel,
-            '${formatMkPrice(serviceFee)} ${AppStrings.wizardPriceSuffix}',
+            '${formatPrice(serviceFee)} ${AppStrings.wizardPriceSuffix}',
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           Container(height: 1, color: AppColors.agroBorder300),
@@ -389,7 +389,7 @@ class _PriceBreakdownSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 AppStrings.totalLabel,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
@@ -398,7 +398,7 @@ class _PriceBreakdownSection extends StatelessWidget {
                 ),
               ),
               Text(
-                '${formatMkPrice(total)} ${AppStrings.wizardPriceSuffix}',
+                '${formatPrice(total)} ${AppStrings.wizardPriceSuffix}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: AppDimensions.confirmationTotalFontSize,
@@ -429,7 +429,7 @@ class _ReferenceSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.reservationNumberLabel,
             style: TextStyle(
               fontWeight: FontWeight.w400,

@@ -24,7 +24,7 @@ class PromoBanner {
 /// its own seed — nothing else reads/mutates banners yet, so a full
 /// `ChangeNotifier` singleton isn't needed; swapping this for a backend
 /// fetch later only touches this list, not the widgets that render it.
-const List<PromoBanner> mockPromoBanners = [
+List<PromoBanner> get mockPromoBanners => [
   PromoBanner(
     id: '1',
     title: AppStrings.homeBanner1Title,

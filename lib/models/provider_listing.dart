@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 
 /// A provider's listing lifecycle state. [label]/[badgeBackground]/
 /// [badgeTextColor] centralize the Figma status styling here instead of
@@ -87,7 +88,7 @@ class ProviderListing {
     this.reservationCount = 0,
     this.rating,
     this.rejectionReason,
-    this.category = '',
+    this.category,
     this.description = '',
     this.price = 0,
     this.guestCapacity = 0,
@@ -107,7 +108,8 @@ class ProviderListing {
   final double? rating;
   final String? rejectionReason;
 
-  final String category;
+  /// Null for listings without a category.
+  final ListingCategory? category;
   final String description;
   final double price;
   final int guestCapacity;

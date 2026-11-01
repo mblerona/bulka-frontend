@@ -61,6 +61,15 @@ class DevLauncherScreen extends StatelessWidget {
     phone: '070 000 000',
   );
 
+  /// Every screen this launcher opens, as (name, builder) pairs. Also used
+  /// by test/all_screens_localized_test.dart to render each screen in every
+  /// language.
+  @visibleForTesting
+  static List<(String, WidgetBuilder)> get allScreens => [
+    for (final section in _sections)
+      for (final entry in section.entries) (entry.label, entry.builder),
+  ];
+
   static final List<_DevScreenSection> _sections = [
     _DevScreenSection('Onboarding / Auth', [
       _DevScreenEntry('Splash & Language', (_) => const SplashScreen()),

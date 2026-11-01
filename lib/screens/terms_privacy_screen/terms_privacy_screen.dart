@@ -36,7 +36,10 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
   bool _agreedToPrivacy = false;
   bool _agreedToResponsibilities = false;
   bool _isSubmitting = false;
-  String? _errorMessage;
+
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
   bool get _canSubmit =>
       !_isSubmitting &&
@@ -79,7 +82,7 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _errorMessage = e.message;
+        _errorMessage = () => e.message;
       });
     }
   }
@@ -90,7 +93,7 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
       backgroundColor: AppColors.beigeBackground,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.termsPrivacyTitle,
             titleFontSize: AppDimensions.termsPrivacyTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -134,7 +137,7 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
                       height: AppDimensions.termsPrivacyBottomSpacerHeight,
                     ),
                     if (_errorMessage != null) ...[
-                      FormErrorText(_errorMessage!),
+                      FormErrorText(_errorMessage!()),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(
@@ -170,7 +173,7 @@ class _LegalTextCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               AppStrings.termsPrivacyTermsHeading,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -179,7 +182,7 @@ class _LegalTextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.termsPrivacyCardGap),
-            const Text(
+            Text(
               AppStrings.termsPrivacyTermsBody,
               style: TextStyle(
                 fontWeight: FontWeight.w400,
@@ -188,7 +191,7 @@ class _LegalTextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.termsPrivacyCardGap),
-            const Text(
+            Text(
               AppStrings.termsPrivacyPolicyHeading,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -197,7 +200,7 @@ class _LegalTextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.termsPrivacyCardGap),
-            const Text(
+            Text(
               AppStrings.termsPrivacyPolicyBody,
               style: TextStyle(
                 fontWeight: FontWeight.w400,

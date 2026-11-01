@@ -37,7 +37,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final _codeController = TextEditingController();
   bool _isVerifying = false;
   bool _isResending = false;
-  String? _errorMessage;
+
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
   String get _email => widget.profile.email;
 
@@ -51,7 +54,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
       setState(
-        () => _errorMessage = AppStrings.emailVerificationErrorEmptyCode,
+        () => _errorMessage = () => AppStrings.emailVerificationErrorEmptyCode,
       );
       return;
     }
@@ -67,7 +70,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text(AppStrings.emailVerificationSuccess)),
+          SnackBar(content: Text(AppStrings.emailVerificationSuccess)),
         );
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => LoginScreen(initialEmail: _email)),
@@ -77,7 +80,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       if (!mounted) return;
       setState(() {
         _isVerifying = false;
-        _errorMessage = e.message;
+        _errorMessage = () => e.message;
       });
     }
   }
@@ -136,7 +139,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
-                    const Text(
+                    Text(
                       AppStrings.emailVerificationTitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -146,7 +149,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
-                    const Text(
+                    Text(
                       AppStrings.emailVerificationSentTo,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -166,7 +169,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
-                    const Text(
+                    Text(
                       AppStrings.emailVerificationInstructions,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -176,7 +179,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
-                    const StatusBadge(
+                    StatusBadge(
                       label: AppStrings.emailVerificationBadge,
                       backgroundColor: AppColors.agroGold100,
                       textColor: AppColors.agroForest950,
@@ -193,7 +196,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     if (_errorMessage != null) ...[
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: FormErrorText(_errorMessage!),
+                        child: FormErrorText(_errorMessage!()),
                       ),
                       const SizedBox(
                         height: AppDimensions.emailVerificationGap,
@@ -217,7 +220,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                           ),
                         );
                       },
-                      child: const Text(
+                      child: Text(
                         AppStrings.emailVerificationChangeEmail,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,

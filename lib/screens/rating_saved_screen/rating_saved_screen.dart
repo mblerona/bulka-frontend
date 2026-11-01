@@ -71,7 +71,7 @@ class RatingSavedScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.successBlockGap),
-                          const Text(
+                          Text(
                             AppStrings.ratingSavedHeading,
                             textAlign: TextAlign.center,
                             style: TextStyle(

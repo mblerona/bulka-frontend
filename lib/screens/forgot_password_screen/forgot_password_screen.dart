@@ -15,7 +15,7 @@ class ForgotPasswordScreen extends StatelessWidget {
       backgroundColor: AppColors.beigeBackground,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.forgotPasswordTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

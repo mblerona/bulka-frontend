@@ -48,7 +48,7 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.myTicketsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

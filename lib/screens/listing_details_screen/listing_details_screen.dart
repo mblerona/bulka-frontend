@@ -99,7 +99,7 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
       ),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.detailsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -314,7 +314,7 @@ class _TitleBlock extends StatelessWidget {
               ),
             ),
             child: Text(
-              listing.category,
+              listing.category?.shortLabel ?? '',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: AppDimensions.wizardChipFontSize,
@@ -438,7 +438,7 @@ class _DescriptionSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.detailsAboutHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -478,7 +478,7 @@ class _AmenitiesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.detailsAmenitiesHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -534,7 +534,7 @@ class _LocationSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.detailsLocationHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -661,7 +661,7 @@ class _BookingFooter extends StatelessWidget {
     final suffix = categoryRequiresPrice(listing.category)
         ? AppStrings.wizardPricePerNightSuffix
         : AppStrings.wizardPriceSuffix;
-    return '${formatMkPrice(listing.price)} $suffix';
+    return '${formatPrice(listing.price)} $suffix';
   }
 
   // The check-in/check-out + nightly-price booking flow only makes sense
@@ -737,7 +737,7 @@ class _BookingFooter extends StatelessWidget {
                   color: AppColors.agroGreen600,
                   borderRadius: BorderRadius.circular(AppDimensions.dsRadiusMd),
                 ),
-                child: const Text(
+                child: Text(
                   AppStrings.detailsReserveButton,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,

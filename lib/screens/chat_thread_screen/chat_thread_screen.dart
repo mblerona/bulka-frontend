@@ -120,7 +120,11 @@ class _ChatThreadHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: AppDimensions.chatThreadHeaderHeight,
+      // A minimum, not a fixed height: after the 56px top padding the fixed
+      // 100px left only 24px for the 38px avatar and the two text lines.
+      constraints: const BoxConstraints(
+        minHeight: AppDimensions.chatThreadHeaderHeight,
+      ),
       padding: const EdgeInsets.only(
         left: AppDimensions.dsHeaderHorizontalPadding,
         right: AppDimensions.dsHeaderHorizontalPadding,
@@ -297,7 +301,7 @@ class _ChatInputBar extends StatelessWidget {
                   fontSize: AppDimensions.chatThreadInputFontSize,
                   color: AppColors.agroForest950,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: AppStrings.chatInputPlaceholder,
                   hintStyle: TextStyle(
                     fontWeight: FontWeight.w400,

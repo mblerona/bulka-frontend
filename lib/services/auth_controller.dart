@@ -37,10 +37,7 @@ class AuthController extends ChangeNotifier {
       'password': password,
     });
     if (data is! Map<String, dynamic>) {
-      throw const ApiException(
-        kind: ApiErrorKind.unknown,
-        message: AppStrings.apiErrorUnknown,
-      );
+      throw const ApiException(kind: ApiErrorKind.unknown);
     }
     return _startSession(data);
   }
@@ -124,9 +121,9 @@ class AuthController extends ChangeNotifier {
   Future<AuthUser> _startSession(Map<String, dynamic> data) async {
     if (data['twoFactorChallenge'] != null) {
       // TODO: support 2FA via /api/auth/2fa/challenge/verify.
-      throw const ApiException(
+      throw ApiException(
         kind: ApiErrorKind.badRequest,
-        message: AppStrings.loginErrorTwoFactorUnsupported,
+        customMessage: () => AppStrings.loginErrorTwoFactorUnsupported,
       );
     }
 
@@ -142,10 +139,7 @@ class AuthController extends ChangeNotifier {
         'refreshToken: ${refreshToken != null}, '
         'user: ${userJson is Map}',
       );
-      throw const ApiException(
-        kind: ApiErrorKind.unknown,
-        message: AppStrings.apiErrorUnknown,
-      );
+      throw const ApiException(kind: ApiErrorKind.unknown);
     }
 
     await _tokenStorage.save(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/l10n/locale_controller.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
@@ -21,7 +22,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  String _selectedLanguageCode = AppStrings.languageCodeMk;
   int _selectedRoleIndex = 0;
   bool _agreedToTerms = false;
 
@@ -30,7 +30,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String? _errorMessage;
+
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
   late final TapGestureRecognizer _termsOfServiceRecognizer =
       TapGestureRecognizer()..onTap = () {};
@@ -58,22 +61,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
         RegExp(r'[^\p{L}\p{N}]', unicode: true).hasMatch(password);
   }
 
-  /// Returns the first problem with the form, or null when it's valid.
-  String? _validate(RegistrationProfile profile) {
+  /// Returns the first problem with the form (as a function, so its text
+  /// follows a language switch), or null when it's valid.
+  String Function()? _validate(RegistrationProfile profile) {
     if (profile.firstName.isEmpty || profile.lastName.isEmpty) {
-      return AppStrings.registerErrorFullName;
+      return () => AppStrings.registerErrorFullName;
     }
     if (!_emailPattern.hasMatch(profile.email)) {
-      return AppStrings.registerErrorEmail;
+      return () => AppStrings.registerErrorEmail;
     }
     if (!_isInternationalPhone(profile.phone)) {
-      return AppStrings.registerErrorPhone;
+      return () => AppStrings.registerErrorPhone;
     }
     if (!_isStrongPassword(_passwordController.text)) {
-      return AppStrings.registerErrorPasswordRules;
+      return () => AppStrings.registerErrorPasswordRules;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
-      return AppStrings.registerErrorPasswordMismatch;
+      return () => AppStrings.registerErrorPasswordMismatch;
     }
     return null;
   }
@@ -122,9 +126,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
-            selectedLanguageCode: _selectedLanguageCode,
+            selectedLanguageCode: LocaleController.instance.switchCode,
             onLanguageChanged: (code) {
-              setState(() => _selectedLanguageCode = code);
+              // Saved app-wide; BulkaApp rebuilds every screen.
+              LocaleController.instance.setLanguage(code);
             },
           ),
           Expanded(
@@ -145,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     RoleToggle(
-                      options: const [
+                      options: [
                         AppStrings.registerRoleGuest,
                         AppStrings.registerRoleProvider,
                       ],
@@ -208,9 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: AppColors.agroInk500,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: AppStrings.registerTermsPrefix,
-                                ),
+                                TextSpan(text: AppStrings.registerTermsPrefix),
                                 TextSpan(
                                   text: AppStrings.registerTermsOfService,
                                   recognizer: _termsOfServiceRecognizer,
@@ -230,9 +233,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     color: AppColors.agroGreen700,
                                   ),
                                 ),
-                                const TextSpan(
-                                  text: AppStrings.registerTermsSuffix,
-                                ),
+                                TextSpan(text: AppStrings.registerTermsSuffix),
                               ],
                             ),
                           ),
@@ -241,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     if (_errorMessage != null) ...[
-                      FormErrorText(_errorMessage!),
+                      FormErrorText(_errorMessage!()),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(

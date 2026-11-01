@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
@@ -196,7 +196,7 @@ class ProviderListingController extends ChangeNotifier {
         reservationCount: 5,
         rating: 4.8,
         updatedAt: now.subtract(const Duration(days: 10)),
-        category: AppStrings.providerCategoryAccommodation,
+        category: ListingCategory.accommodation,
         price: 2770,
         description:
             'Пространа традиционална куќа во срцето на Преспа, опкружена со '
@@ -223,7 +223,7 @@ class ProviderListingController extends ChangeNotifier {
         reservationCount: 3,
         rating: 4.6,
         updatedAt: now.subtract(const Duration(days: 15)),
-        category: AppStrings.providerCategoryAccommodation,
+        category: ListingCategory.accommodation,
         price: 1980,
         description:
             'Топла и уредна гостинска соба во стара охридска куќа, само '
@@ -245,7 +245,7 @@ class ProviderListingController extends ChangeNotifier {
         reservationCount: 2,
         rating: 4.9,
         updatedAt: now.subtract(const Duration(days: 20)),
-        category: AppStrings.providerCategoryGastronomy,
+        category: ListingCategory.gastronomy,
         price: 900,
         description:
             'Дегустација на домашно вино во винарија среде лозјата на '
@@ -263,7 +263,7 @@ class ProviderListingController extends ChangeNotifier {
         reservationCount: 4,
         rating: 4.7,
         updatedAt: now.subtract(const Duration(days: 8)),
-        category: AppStrings.providerCategoryFarmParticipation,
+        category: ListingCategory.farmParticipation,
         price: 700,
         description:
             'Поминете еден ден на вистинска фарма — хранење на животните, '
@@ -285,7 +285,7 @@ class ProviderListingController extends ChangeNotifier {
         reservationCount: 1,
         rating: 5.0,
         updatedAt: now.subtract(const Duration(days: 5)),
-        category: AppStrings.providerCategoryFarmEducation,
+        category: ListingCategory.farmEducation,
         price: 850,
         description:
             'Научете го традиционалниот начин на правење сирење од '

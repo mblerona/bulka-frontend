@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/l10n/locale_controller.dart';
 import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 
@@ -13,8 +14,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String _selectedLanguageCode = AppStrings.languageCodeMk;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,9 +44,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
               final Widget content = _SplashContent(
                 logoSize: logoSize,
-                selectedLanguageCode: _selectedLanguageCode,
+                selectedLanguageCode: LocaleController.instance.switchCode,
                 onLanguageChanged: (code) {
-                  setState(() => _selectedLanguageCode = code);
+                  // Saved app-wide; BulkaApp rebuilds every screen.
+                  LocaleController.instance.setLanguage(code);
                 },
               );
 

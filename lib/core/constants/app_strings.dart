@@ -1,659 +1,498 @@
+// GENERATED from lib/l10n/app_mk.arb by
+// `dart run tool/gen_app_strings.dart` — edit the .arb files in
+// lib/l10n/ (mk is the template), not the getters below. The
+// constants at the bottom are kept as-is when regenerating.
+import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:bulka_frontend/l10n/app_localizations.dart';
+
+/// All user-facing text, in the language picked in [LocaleController].
+///
+/// Translated text is a getter (not `const`), so it always returns the
+/// current language. Text that's the same in every language (symbols,
+/// emoji, sample data) stays `const` at the bottom.
 class AppStrings {
-  //SPLASH SCREEN
-  static const String splashTitle = 'Агро Еко Туризам';
-  static const String splashSubtitle =
-      'Откријте ја убавината на руралниот туризам во Македонија';
-  static const String chooseLanguage = 'Изберете јазик';
+  AppStrings._();
+
+  static AppLocalizations get _s => LocaleController.instance.strings;
+
+  static String get splashTitle => _s.splashTitle;
+  static String get splashSubtitle => _s.splashSubtitle;
+  static String get chooseLanguage => _s.chooseLanguage;
+  static String get continueButton => _s.continueButton;
+  static String get emailLabel => _s.emailLabel;
+  static String get emailPlaceholder => _s.emailPlaceholder;
+  static String get passwordLabel => _s.passwordLabel;
+  static String get backToLoginAction => _s.backToLoginAction;
+  static String get loginTitle => _s.loginTitle;
+  static String get loginWelcomeBack => _s.loginWelcomeBack;
+  static String get loginWelcomeBackSubtitle => _s.loginWelcomeBackSubtitle;
+  static String get loginForgotPassword => _s.loginForgotPassword;
+  static String get loginSubmitButton => _s.loginSubmitButton;
+  static String get loginGoogleButton => _s.loginGoogleButton;
+  static String get loginFooterPrompt => _s.loginFooterPrompt;
+  static String get loginFooterAction => _s.loginFooterAction;
+  static String get loginErrorEmptyFields => _s.loginErrorEmptyFields;
+  static String get loginErrorInvalidCredentials =>
+      _s.loginErrorInvalidCredentials;
+  static String get loginErrorTwoFactorUnsupported =>
+      _s.loginErrorTwoFactorUnsupported;
+  static String get registerErrorFullName => _s.registerErrorFullName;
+  static String get registerErrorEmail => _s.registerErrorEmail;
+  static String get registerErrorPhone => _s.registerErrorPhone;
+  static String get registerErrorPasswordRules => _s.registerErrorPasswordRules;
+  static String get registerErrorPasswordMismatch =>
+      _s.registerErrorPasswordMismatch;
+  static String get emailVerificationResent => _s.emailVerificationResent;
+  static String get apiErrorEmailRequired => _s.apiErrorEmailRequired;
+  static String get apiErrorFirstNameRequired => _s.apiErrorFirstNameRequired;
+  static String get apiErrorLastNameRequired => _s.apiErrorLastNameRequired;
+  static String get apiErrorPhoneRequired => _s.apiErrorPhoneRequired;
+  static String get apiErrorPasswordRequired => _s.apiErrorPasswordRequired;
+  static String get apiErrorCodeRequired => _s.apiErrorCodeRequired;
+  static String get apiErrorTermsRequired => _s.apiErrorTermsRequired;
+  static String get apiErrorPrivacyRequired => _s.apiErrorPrivacyRequired;
+  static String get apiErrorPasswordTooShort => _s.apiErrorPasswordTooShort;
+  static String get apiErrorPasswordNeedsUppercase =>
+      _s.apiErrorPasswordNeedsUppercase;
+  static String get apiErrorPasswordNeedsLowercase =>
+      _s.apiErrorPasswordNeedsLowercase;
+  static String get apiErrorPasswordNeedsDigit => _s.apiErrorPasswordNeedsDigit;
+  static String get apiErrorPasswordNeedsSpecial =>
+      _s.apiErrorPasswordNeedsSpecial;
+  static String get apiErrorVerificationCodeInvalid =>
+      _s.apiErrorVerificationCodeInvalid;
+  static String get apiErrorInvalidInput => _s.apiErrorInvalidInput;
+  static String get apiErrorNetwork => _s.apiErrorNetwork;
+  static String get apiErrorTimeout => _s.apiErrorTimeout;
+  static String get apiErrorUnauthorized => _s.apiErrorUnauthorized;
+  static String get apiErrorServer => _s.apiErrorServer;
+  static String get apiErrorUnknown => _s.apiErrorUnknown;
+  static String get forgotPasswordTitle => _s.forgotPasswordTitle;
+  static String get forgotPasswordHeading => _s.forgotPasswordHeading;
+  static String get forgotPasswordSubheading => _s.forgotPasswordSubheading;
+  static String get forgotPasswordSubmitButton => _s.forgotPasswordSubmitButton;
+  static String get forgotPasswordFooterPrompt => _s.forgotPasswordFooterPrompt;
+  static String get registerTitle => _s.registerTitle;
+  static String get registerRoleLabel => _s.registerRoleLabel;
+  static String get registerRoleGuest => _s.registerRoleGuest;
+  static String get registerRoleProvider => _s.registerRoleProvider;
+  static String get registerNameLabel => _s.registerNameLabel;
+  static String get registerNamePlaceholder => _s.registerNamePlaceholder;
+  static String get registerPhoneLabel => _s.registerPhoneLabel;
+  static String get registerConfirmPasswordLabel =>
+      _s.registerConfirmPasswordLabel;
+  static String get registerTermsPrefix => _s.registerTermsPrefix;
+  static String get registerTermsOfService => _s.registerTermsOfService;
+  static String get registerPrivacyPolicy => _s.registerPrivacyPolicy;
+  static String get registerTermsSuffix => _s.registerTermsSuffix;
+  static String get registerSubmitButton => _s.registerSubmitButton;
+  static String get registerFooterPrompt => _s.registerFooterPrompt;
+  static String get termsPrivacyTitle => _s.termsPrivacyTitle;
+  static String get termsPrivacySubtitle => _s.termsPrivacySubtitle;
+  static String get termsPrivacyTermsHeading => _s.termsPrivacyTermsHeading;
+  static String get termsPrivacyTermsBody => _s.termsPrivacyTermsBody;
+  static String get termsPrivacyPolicyHeading => _s.termsPrivacyPolicyHeading;
+  static String get termsPrivacyPolicyBody => _s.termsPrivacyPolicyBody;
+  static String get termsPrivacyConsentTerms => _s.termsPrivacyConsentTerms;
+  static String get termsPrivacyConsentPrivacy => _s.termsPrivacyConsentPrivacy;
+  static String get termsPrivacyConsentResponsibilities =>
+      _s.termsPrivacyConsentResponsibilities;
+  static String get termsPrivacySubmitButton => _s.termsPrivacySubmitButton;
+  static String get emailVerificationTitle => _s.emailVerificationTitle;
+  static String get emailVerificationSentTo => _s.emailVerificationSentTo;
+  static String get emailVerificationInstructions =>
+      _s.emailVerificationInstructions;
+  static String get emailVerificationCodeLabel => _s.emailVerificationCodeLabel;
+  static String get emailVerificationCodePlaceholder =>
+      _s.emailVerificationCodePlaceholder;
+  static String get emailVerificationSubmitButton =>
+      _s.emailVerificationSubmitButton;
+  static String get emailVerificationErrorEmptyCode =>
+      _s.emailVerificationErrorEmptyCode;
+  static String get emailVerificationSuccess => _s.emailVerificationSuccess;
+  static String get emailVerificationBadge => _s.emailVerificationBadge;
+  static String get emailVerificationResendButton =>
+      _s.emailVerificationResendButton;
+  static String get emailVerificationChangeEmail =>
+      _s.emailVerificationChangeEmail;
+  static String get profileTitle => _s.profileTitle;
+  static String get profilePersonalDataHeading => _s.profilePersonalDataHeading;
+  static String get profilePhoneLabel => _s.profilePhoneLabel;
+  static String get profileCityLabel => _s.profileCityLabel;
+  static String get profileCityPlaceholder => _s.profileCityPlaceholder;
+  static String get profileReservationsLabel => _s.profileReservationsLabel;
+  static String get profileFavoritePlacesLabel => _s.profileFavoritePlacesLabel;
+  static String get profileSaveButton => _s.profileSaveButton;
+  static String get providerSubjectTypeLabel => _s.providerSubjectTypeLabel;
+  static String get providerSubjectTypeIndividual =>
+      _s.providerSubjectTypeIndividual;
+  static String get providerSubjectTypeLegal => _s.providerSubjectTypeLegal;
+  static String get providerLegalEntityComingSoon =>
+      _s.providerLegalEntityComingSoon;
+  static String get providerOfferInfoHeading => _s.providerOfferInfoHeading;
+  static String get providerOfferNameLabel => _s.providerOfferNameLabel;
+  static String get providerOfferNamePlaceholder =>
+      _s.providerOfferNamePlaceholder;
+  static String get providerCategoryHeading => _s.providerCategoryHeading;
+  static String get providerCategoryAccommodation =>
+      _s.providerCategoryAccommodation;
+  static String get providerCategoryGastronomy => _s.providerCategoryGastronomy;
+  static String get providerCategoryFarmParticipation =>
+      _s.providerCategoryFarmParticipation;
+  static String get providerCategoryDirectSales =>
+      _s.providerCategoryDirectSales;
+  static String get providerCategoryFarmEducation =>
+      _s.providerCategoryFarmEducation;
+  static String get providerCategoryFarmRecreation =>
+      _s.providerCategoryFarmRecreation;
+  static String get providerCategoryOffFarmTours =>
+      _s.providerCategoryOffFarmTours;
+  static String get providerLocationLabel => _s.providerLocationLabel;
+  static String get providerLocationPlaceholder =>
+      _s.providerLocationPlaceholder;
+  static String get providerActiveOffersLabel => _s.providerActiveOffersLabel;
+  static String get providerAverageRatingLabel => _s.providerAverageRatingLabel;
+  static String get providerNotVerifiedBadge => _s.providerNotVerifiedBadge;
+  static String get providerVerifiedBadge => _s.providerVerifiedBadge;
+  static String get providerExampleName => _s.providerExampleName;
+  static String get providerSetupTitle => _s.providerSetupTitle;
+  static String get providerSetupSubtitle => _s.providerSetupSubtitle;
+  static String get providerAddLogoLabel => _s.providerAddLogoLabel;
+  static String get providerLegalCompanyNameLabel =>
+      _s.providerLegalCompanyNameLabel;
+  static String get providerLegalResponsiblePersonLabel =>
+      _s.providerLegalResponsiblePersonLabel;
+  static String get providerLegalResponsiblePersonPlaceholder =>
+      _s.providerLegalResponsiblePersonPlaceholder;
+  static String get providerLegalEmailPlaceholder =>
+      _s.providerLegalEmailPlaceholder;
+  static String get providerLegalBusinessDetailsHeading =>
+      _s.providerLegalBusinessDetailsHeading;
+  static String get providerLegalTaxIdLabel => _s.providerLegalTaxIdLabel;
+  static String get providerLegalCategoryHeading =>
+      _s.providerLegalCategoryHeading;
+  static String get providerLegalAddressLabel => _s.providerLegalAddressLabel;
+  static String get providerLegalAddressPlaceholder =>
+      _s.providerLegalAddressPlaceholder;
+  static String get providerAdditionalContactsHeading =>
+      _s.providerAdditionalContactsHeading;
+  static String get providerAdditionalContactLabel =>
+      _s.providerAdditionalContactLabel;
+  static String get providerAdditionalContactPlaceholder =>
+      _s.providerAdditionalContactPlaceholder;
+  static String get providerAddContactButton => _s.providerAddContactButton;
+  static String get providerSaveAndContinueButton =>
+      _s.providerSaveAndContinueButton;
+  static String get imageSourceGallery => _s.imageSourceGallery;
+  static String get imageSourceCamera => _s.imageSourceCamera;
+  static String get navTouristHome => _s.navTouristHome;
+  static String get navTouristSearch => _s.navTouristSearch;
+  static String get navTouristBookings => _s.navTouristBookings;
+  static String get navProviderDashboard => _s.navProviderDashboard;
+  static String get navProviderOffers => _s.navProviderOffers;
+  static String get navProviderCalendar => _s.navProviderCalendar;
+  static String get navMessages => _s.navMessages;
+  static String get navProfile => _s.navProfile;
+  static String get settingsTitle => _s.settingsTitle;
+  static String get settingsLanguageHeading => _s.settingsLanguageHeading;
+  static String get settingsLanguageRowLabel => _s.settingsLanguageRowLabel;
+  static String get settingsNotificationsLabel => _s.settingsNotificationsLabel;
+  static String get settingsPrivacyHeading => _s.settingsPrivacyHeading;
+  static String get settingsPrivacyDescription => _s.settingsPrivacyDescription;
+  static String get settingsDownloadDataButton => _s.settingsDownloadDataButton;
+  static String get settingsDeleteAccountButton =>
+      _s.settingsDeleteAccountButton;
+  static String get settingsLogoutButton => _s.settingsLogoutButton;
+  static String get notificationsTitle => _s.notificationsTitle;
+  static String get notificationsUnreadSuffix => _s.notificationsUnreadSuffix;
+  static String get timeJustNow => _s.timeJustNow;
+  static String get timeMinutesSuffix => _s.timeMinutesSuffix;
+  static String get timeHoursSuffix => _s.timeHoursSuffix;
+  static String get timeDaysSuffix => _s.timeDaysSuffix;
+  static String get chatToday => _s.chatToday;
+  static String get chatInputPlaceholder => _s.chatInputPlaceholder;
+  static String get myTicketsTitle => _s.myTicketsTitle;
+  static String get createTicketButton => _s.createTicketButton;
+  static String get ticketStatusOpen => _s.ticketStatusOpen;
+  static String get ticketStatusInProgress => _s.ticketStatusInProgress;
+  static String get ticketStatusResolved => _s.ticketStatusResolved;
+  static String get ticketLastChangedLabel => _s.ticketLastChangedLabel;
+  static String get newTicketTitle => _s.newTicketTitle;
+  static String get newTicketSubtitle => _s.newTicketSubtitle;
+  static String get newTicketCategoryLabel => _s.newTicketCategoryLabel;
+  static String get newTicketTitleLabel => _s.newTicketTitleLabel;
+  static String get newTicketTitlePlaceholder => _s.newTicketTitlePlaceholder;
+  static String get newTicketDescriptionLabel => _s.newTicketDescriptionLabel;
+  static String get newTicketDescriptionPlaceholder =>
+      _s.newTicketDescriptionPlaceholder;
+  static String get newTicketAttachmentLabel => _s.newTicketAttachmentLabel;
+  static String get newTicketAttachmentOptional =>
+      _s.newTicketAttachmentOptional;
+  static String get newTicketSubmitButton => _s.newTicketSubmitButton;
+  static String get newTicketCategoryReservations =>
+      _s.newTicketCategoryReservations;
+  static String get newTicketCategoryListings => _s.newTicketCategoryListings;
+  static String get newTicketCategoryPayments => _s.newTicketCategoryPayments;
+  static String get newTicketCategoryProfile => _s.newTicketCategoryProfile;
+  static String get newTicketCategoryOther => _s.newTicketCategoryOther;
+  static String get attachmentSourceDocument => _s.attachmentSourceDocument;
+  static String get dashboardTitle => _s.dashboardTitle;
+  static String get dashboardGreetingPrefix => _s.dashboardGreetingPrefix;
+  static String get dashboardAddListingButton => _s.dashboardAddListingButton;
+  static String get dashboardListingsSummaryHeading =>
+      _s.dashboardListingsSummaryHeading;
+  static String get dashboardActiveListingsLabel =>
+      _s.dashboardActiveListingsLabel;
+  static String get dashboardPendingReviewListingsLabel =>
+      _s.dashboardPendingReviewListingsLabel;
+  static String get dashboardMonthlyReservationsLabel =>
+      _s.dashboardMonthlyReservationsLabel;
+  static String get dashboardPendingReservationsHeading =>
+      _s.dashboardPendingReservationsHeading;
+  static String get dashboardCompletedReservationsHeading =>
+      _s.dashboardCompletedReservationsHeading;
+  static String get reservationStatusPending => _s.reservationStatusPending;
+  static String get reservationStatusAccepted => _s.reservationStatusAccepted;
+  static String get reservationStatusAcceptedTourist =>
+      _s.reservationStatusAcceptedTourist;
+  static String get reservationStatusRejected => _s.reservationStatusRejected;
+  static String get reservationStatusCompleted => _s.reservationStatusCompleted;
+  static String get reservationStatusCancelled => _s.reservationStatusCancelled;
+  static String get reservationGuestSingular => _s.reservationGuestSingular;
+  static String get reservationGuestsPlural => _s.reservationGuestsPlural;
+  static String get acceptReservationButton => _s.acceptReservationButton;
+  static String get rejectReservationButton => _s.rejectReservationButton;
+  static String get rateGuestButton => _s.rateGuestButton;
+  static String get offersTitle => _s.offersTitle;
+  static String get offersSubtitle => _s.offersSubtitle;
+  static String get offersFilterAll => _s.offersFilterAll;
+  static String get offersFilterActive => _s.offersFilterActive;
+  static String get offersFilterPendingReview => _s.offersFilterPendingReview;
+  static String get offersFilterRejected => _s.offersFilterRejected;
+  static String get listingStatusActive => _s.listingStatusActive;
+  static String get listingStatusPendingReview => _s.listingStatusPendingReview;
+  static String get listingStatusRejected => _s.listingStatusRejected;
+  static String get listingStatusArchived => _s.listingStatusArchived;
+  static String get listingReservationsThisMonthLabel =>
+      _s.listingReservationsThisMonthLabel;
+  static String get listingSubmittedForReviewLabel =>
+      _s.listingSubmittedForReviewLabel;
+  static String get listingRejectedReasonPrefix =>
+      _s.listingRejectedReasonPrefix;
+  static String get listingArchivedOnLabel => _s.listingArchivedOnLabel;
+  static String get editListingButton => _s.editListingButton;
+  static String get editAndResubmitListingButton =>
+      _s.editAndResubmitListingButton;
+  static String get reactivateListingButton => _s.reactivateListingButton;
+  static String get calendarTitle => _s.calendarTitle;
+  static String get availabilityStatusAvailable =>
+      _s.availabilityStatusAvailable;
+  static String get availabilityStatusOccupied => _s.availabilityStatusOccupied;
+  static String get availabilityStatusBlocked => _s.availabilityStatusBlocked;
+  static String get weekdayMon => _s.weekdayMon;
+  static String get weekdayTue => _s.weekdayTue;
+  static String get weekdayWed => _s.weekdayWed;
+  static String get weekdayThu => _s.weekdayThu;
+  static String get weekdayFri => _s.weekdayFri;
+  static String get weekdaySat => _s.weekdaySat;
+  static String get weekdaySun => _s.weekdaySun;
+  static String get blockSelectedDatesButton => _s.blockSelectedDatesButton;
+  static String get unblockSelectedDatesButton => _s.unblockSelectedDatesButton;
+  static String get wizardHeaderTitle => _s.wizardHeaderTitle;
+  static String get wizardStepLabel => _s.wizardStepLabel;
+  static String get wizardStepOfLabel => _s.wizardStepOfLabel;
+  static String get wizardBackButton => _s.wizardBackButton;
+  static String get wizardNextButton => _s.wizardNextButton;
+  static String get wizardPublishButton => _s.wizardPublishButton;
+  static String get wizardCategoryFarmRecreation =>
+      _s.wizardCategoryFarmRecreation;
+  static String get wizardCategoryOffFarmTours => _s.wizardCategoryOffFarmTours;
+  static String get wizardStep1Heading => _s.wizardStep1Heading;
+  static String get wizardStep1Subtitle => _s.wizardStep1Subtitle;
+  static String get wizardCategoryLabel => _s.wizardCategoryLabel;
+  static String get wizardTitleLabel => _s.wizardTitleLabel;
+  static String get wizardTitlePlaceholder => _s.wizardTitlePlaceholder;
+  static String get wizardStep2Heading => _s.wizardStep2Heading;
+  static String get wizardStep2Subtitle => _s.wizardStep2Subtitle;
+  static String get wizardLocationLabel => _s.wizardLocationLabel;
+  static String get wizardLocationPlaceholder => _s.wizardLocationPlaceholder;
+  static String get wizardStep3Heading => _s.wizardStep3Heading;
+  static String get wizardStep3Subtitle => _s.wizardStep3Subtitle;
+  static String get wizardGuestsLabel => _s.wizardGuestsLabel;
+  static String get wizardRoomsLabel => _s.wizardRoomsLabel;
+  static String get wizardBedsLabel => _s.wizardBedsLabel;
+  static String get wizardStep4Heading => _s.wizardStep4Heading;
+  static String get wizardStep4Subtitle => _s.wizardStep4Subtitle;
+  static String get wizardStep5Heading => _s.wizardStep5Heading;
+  static String get wizardStep5Subtitle => _s.wizardStep5Subtitle;
+  static String get wizardStep6Heading => _s.wizardStep6Heading;
+  static String get wizardStep6Subtitle => _s.wizardStep6Subtitle;
+  static String get wizardDescriptionLabel => _s.wizardDescriptionLabel;
+  static String get wizardDescriptionPlaceholder =>
+      _s.wizardDescriptionPlaceholder;
+  static String get wizardPriceLabel => _s.wizardPriceLabel;
+  static String get wizardPricePlaceholder => _s.wizardPricePlaceholder;
+  static String get wizardPriceSuffix => _s.wizardPriceSuffix;
+  static String get wizardPricePerNightSuffix => _s.wizardPricePerNightSuffix;
+  static String get wizardReviewHeading => _s.wizardReviewHeading;
+  static String get wizardReviewSubtitle => _s.wizardReviewSubtitle;
+  static String get wizardReviewTitleRow => _s.wizardReviewTitleRow;
+  static String get wizardReviewCategoryRow => _s.wizardReviewCategoryRow;
+  static String get wizardReviewLocationRow => _s.wizardReviewLocationRow;
+  static String get wizardReviewCapacityRow => _s.wizardReviewCapacityRow;
+  static String get wizardReviewAmenitiesRow => _s.wizardReviewAmenitiesRow;
+  static String get wizardReviewPhotosRow => _s.wizardReviewPhotosRow;
+  static String get wizardReviewPriceRow => _s.wizardReviewPriceRow;
+  static String get wizardRoomSingular => _s.wizardRoomSingular;
+  static String get wizardRoomsPlural => _s.wizardRoomsPlural;
+  static String get wizardBedSingular => _s.wizardBedSingular;
+  static String get wizardBedsPlural => _s.wizardBedsPlural;
+  static String get wizardAmenitySingular => _s.wizardAmenitySingular;
+  static String get wizardAmenitiesPlural => _s.wizardAmenitiesPlural;
+  static String get wizardPhotoSingular => _s.wizardPhotoSingular;
+  static String get wizardPhotosPlural => _s.wizardPhotosPlural;
+  static String get wizardDiscardDialogTitle => _s.wizardDiscardDialogTitle;
+  static String get wizardDiscardDialogMessage => _s.wizardDiscardDialogMessage;
+  static String get wizardDiscardDialogCancel => _s.wizardDiscardDialogCancel;
+  static String get wizardDiscardDialogConfirm => _s.wizardDiscardDialogConfirm;
+  static String get amenityParking => _s.amenityParking;
+  static String get amenityKitchen => _s.amenityKitchen;
+  static String get amenityAirConditioning => _s.amenityAirConditioning;
+  static String get amenityTv => _s.amenityTv;
+  static String get amenityFireplace => _s.amenityFireplace;
+  static String get amenityFarmAccess => _s.amenityFarmAccess;
+  static String get amenityHotWater => _s.amenityHotWater;
+  static String get amenityPetsAllowed => _s.amenityPetsAllowed;
+  static String get offerPublishedTitle => _s.offerPublishedTitle;
+  static String get offerPublishedHeading => _s.offerPublishedHeading;
+  static String get offerPublishedSubtitle => _s.offerPublishedSubtitle;
+  static String get offerPublishedViewOffersButton =>
+      _s.offerPublishedViewOffersButton;
+  static String get offerPublishedGoToDashboardButton =>
+      _s.offerPublishedGoToDashboardButton;
+  static String get rateGuestTitle => _s.rateGuestTitle;
+  static String get rateGuestQuestion => _s.rateGuestQuestion;
+  static String get rateGuestNoteLabel => _s.rateGuestNoteLabel;
+  static String get rateGuestNotePlaceholder => _s.rateGuestNotePlaceholder;
+  static String get rateGuestHelperText => _s.rateGuestHelperText;
+  static String get submitRatingButton => _s.submitRatingButton;
+  static String get ratingSavedTitle => _s.ratingSavedTitle;
+  static String get ratingSavedHeading => _s.ratingSavedHeading;
+  static String get homeGreetingPrefix => _s.homeGreetingPrefix;
+  static String get homeSubtitle => _s.homeSubtitle;
+  static String get homeSearchPlaceholder => _s.homeSearchPlaceholder;
+  static String get homeCategoriesHeading => _s.homeCategoriesHeading;
+  static String get homeRecommendedHeading => _s.homeRecommendedHeading;
+  static String get homePricePrefix => _s.homePricePrefix;
+  static String get homeBanner1Title => _s.homeBanner1Title;
+  static String get homeBanner1Action => _s.homeBanner1Action;
+  static String get homeBanner2Title => _s.homeBanner2Title;
+  static String get homeBanner2Action => _s.homeBanner2Action;
+  static String get homeBanner3Title => _s.homeBanner3Title;
+  static String get homeBanner3Action => _s.homeBanner3Action;
+  static String get filtersSheetTitle => _s.filtersSheetTitle;
+  static String get filtersKeywordLabel => _s.filtersKeywordLabel;
+  static String get filtersKeywordPlaceholder => _s.filtersKeywordPlaceholder;
+  static String get filtersLocationLabel => _s.filtersLocationLabel;
+  static String get filtersAllLocationsOption => _s.filtersAllLocationsOption;
+  static String get filtersPriceRangeLabel => _s.filtersPriceRangeLabel;
+  static String get filtersPriceRangeUnit => _s.filtersPriceRangeUnit;
+  static String get filtersDateLabel => _s.filtersDateLabel;
+  static String get filtersDatePlaceholder => _s.filtersDatePlaceholder;
+  static String get filtersRatingLabel => _s.filtersRatingLabel;
+  static String get filtersRatingAllOption => _s.filtersRatingAllOption;
+  static String get filtersGuestCountLabel => _s.filtersGuestCountLabel;
+  static String get filtersAmenityHeading => _s.filtersAmenityHeading;
+  static String get filtersClearButton => _s.filtersClearButton;
+  static String get filtersShowResultsButton => _s.filtersShowResultsButton;
+  static String get resultsTitle => _s.resultsTitle;
+  static String get resultsFiltersChipLabel => _s.resultsFiltersChipLabel;
+  static String get resultsRatingChipLabel => _s.resultsRatingChipLabel;
+  static String get resultsPriceChipLabel => _s.resultsPriceChipLabel;
+  static String get resultsCountSuffix => _s.resultsCountSuffix;
+  static String get resultsCountLocationPrefix => _s.resultsCountLocationPrefix;
+  static String get resultsSortLabel => _s.resultsSortLabel;
+  static String get resultsMapButtonLabel => _s.resultsMapButtonLabel;
+  static String get resultsShowDetailsButton => _s.resultsShowDetailsButton;
+  static String get resultsReservationsSuffix => _s.resultsReservationsSuffix;
+  static String get resultsPricePerNightSuffix => _s.resultsPricePerNightSuffix;
+  static String get detailsTitle => _s.detailsTitle;
+  static String get detailsHostPrefix => _s.detailsHostPrefix;
+  static String get detailsHostSincePrefix => _s.detailsHostSincePrefix;
+  static String get detailsAboutHeading => _s.detailsAboutHeading;
+  static String get detailsAmenitiesHeading => _s.detailsAmenitiesHeading;
+  static String get detailsLocationHeading => _s.detailsLocationHeading;
+  static String get detailsReserveButton => _s.detailsReserveButton;
+  static String get reservationFlowTitle => _s.reservationFlowTitle;
+  static String get bookingDatesUnavailableError =>
+      _s.bookingDatesUnavailableError;
+  static String get bookingRequestSentHeading => _s.bookingRequestSentHeading;
+  static String get bookingRequestSentSubtitle => _s.bookingRequestSentSubtitle;
+  static String get tripDetailsHeading => _s.tripDetailsHeading;
+  static String get checkInLabel => _s.checkInLabel;
+  static String get checkOutLabel => _s.checkOutLabel;
+  static String get paymentDetailsHeading => _s.paymentDetailsHeading;
+  static String get serviceFeeLabel => _s.serviceFeeLabel;
+  static String get totalLabel => _s.totalLabel;
+  static String get reservationNumberLabel => _s.reservationNumberLabel;
+  static String get nightSingular => _s.nightSingular;
+  static String get nightsPlural => _s.nightsPlural;
+  static String get viewMyReservationsButton => _s.viewMyReservationsButton;
+  static String get backToHomeButton => _s.backToHomeButton;
+  static String get myReservationsTitle => _s.myReservationsTitle;
+  static String get upcomingTabLabel => _s.upcomingTabLabel;
+  static String get pastTabLabel => _s.pastTabLabel;
+  static String get myReservationsDetailsButton =>
+      _s.myReservationsDetailsButton;
+  static String get leaveReviewButton => _s.leaveReviewButton;
+  static String get myReservationsEmptyUpcoming =>
+      _s.myReservationsEmptyUpcoming;
+  static String get myReservationsEmptyPast => _s.myReservationsEmptyPast;
+  static String get leaveReviewQuestion => _s.leaveReviewQuestion;
+  static String get leaveReviewTextLabel => _s.leaveReviewTextLabel;
+  static String get leaveReviewTextPlaceholder => _s.leaveReviewTextPlaceholder;
+  static String get leaveReviewDisclaimer => _s.leaveReviewDisclaimer;
+  static String get submitReviewButton => _s.submitReviewButton;
+  static String get reviewSubmittedTitle => _s.reviewSubmittedTitle;
+  static String get reviewSubmittedHeading => _s.reviewSubmittedHeading;
+  static String get backToReservationsButton => _s.backToReservationsButton;
+  static String get welcomeToBulka => _s.welcomeToBulka;
+  static String get whoAreYou => _s.whoAreYou;
+  static String get chooseProfile => _s.chooseProfile;
+  static String get tourist => _s.tourist;
+  static String get touristDescription => _s.touristDescription;
+  static String get owner => _s.owner;
+  static String get ownerDescription => _s.ownerDescription;
+  static String get continueText => _s.continueText;
+  static String get alreadyAccount => _s.alreadyAccount;
+  static String agoMinutes(int count) => _s.agoMinutes(count);
+  static String agoHours(int count) => _s.agoHours(count);
+  static String agoDays(int count) => _s.agoDays(count);
+
+  // ── Same in every language ──
   static const String languageCodeMk = 'MK';
   static const String languageCodeSq = 'SQ';
   static const String languageCodeEn = 'EN';
-  static const String continueButton = 'Продолжи';
-
-  //SHARED (Login, Forgot Password, Register)
-  static const String emailLabel = 'Е-пошта';
-  static const String emailPlaceholder = 'tvojotmejl@example.com';
-
-  //SHARED (Login, Register)
-  static const String passwordLabel = 'Лозинка';
   static const String passwordPlaceholder = '••••••••';
-
-  //SHARED (Forgot Password, Register)
-  static const String backToLoginAction = 'Најавете се';
-
-  //LOGIN SCREEN
-  static const String loginTitle = 'Најава';
-  static const String loginWelcomeBack = 'Добредојдовте назад!';
-  static const String loginWelcomeBackSubtitle = 'Најавете се на вашата сметка';
-  static const String loginForgotPassword = 'Заборавена лозинка?';
-  static const String loginSubmitButton = 'НАЈАВИ СЕ';
-  static const String loginGoogleButton = 'ПРОДОЛЖИ СО GOOGLE';
-  static const String loginFooterPrompt = 'Немате сметка? ';
-  static const String loginFooterAction = 'Регистрирајте се';
-  static const String loginErrorEmptyFields = 'Внесете е-пошта и лозинка.';
-  static const String loginErrorInvalidCredentials =
-      'Погрешна е-пошта или лозинка.';
-  static const String loginErrorTwoFactorUnsupported =
-      'Оваа сметка има вклучена двофакторска автентикација, која сè уште не е поддржана во апликацијата.';
-
-  //REGISTER VALIDATION (mirrors the backend's rules)
-  static const String registerErrorFullName = 'Внесете име и презиме.';
-  static const String registerErrorEmail = 'Внесете валидна е-пошта.';
-  static const String registerErrorPhone =
-      'Внесете телефонски број во меѓународен формат, на пр. +389 70 123 456.';
-  static const String registerErrorPasswordRules =
-      'Лозинката мора да има најмалку 8 знаци, голема буква, бројка и специјален знак.';
-  static const String registerErrorPasswordMismatch =
-      'Лозинките не се совпаѓаат.';
-
-  //EMAIL VERIFICATION (API feedback)
-  static const String emailVerificationResent =
-      'Испративме нова порака за потврда.';
-
-  //BACKEND ERROR TRANSLATIONS (the backend only answers in English; these
-  //replace its messages by error code + field, see api_error_translator.dart)
-  static const String apiErrorEmailRequired = 'Е-поштата е задолжителна.';
-  static const String apiErrorFirstNameRequired = 'Името е задолжително.';
-  static const String apiErrorLastNameRequired = 'Презимето е задолжително.';
-  static const String apiErrorPhoneRequired =
-      'Телефонскиот број е задолжителен.';
-  static const String apiErrorPasswordRequired = 'Лозинката е задолжителна.';
-  static const String apiErrorCodeRequired = 'Кодот за потврда е задолжителен.';
-  static const String apiErrorTermsRequired =
-      'Мора да ги прифатите условите за користење.';
-  static const String apiErrorPrivacyRequired =
-      'Мора да ја прифатите политиката за приватност.';
-  static const String apiErrorPasswordTooShort =
-      'Лозинката мора да има најмалку 8 знаци.';
-  static const String apiErrorPasswordNeedsUppercase =
-      'Лозинката мора да содржи голема буква.';
-  static const String apiErrorPasswordNeedsLowercase =
-      'Лозинката мора да содржи мала буква.';
-  static const String apiErrorPasswordNeedsDigit =
-      'Лозинката мора да содржи бројка.';
-  static const String apiErrorPasswordNeedsSpecial =
-      'Лозинката мора да содржи специјален знак.';
-  static const String apiErrorVerificationCodeInvalid =
-      'Кодот за потврда не е точен. Проверете ја е-поштата и обидете се повторно.';
-  static const String apiErrorInvalidInput =
-      'Некои од внесените податоци не се точни. Проверете ги и обидете се повторно.';
-
-  //API ERRORS (shown when a backend request fails)
-  static const String apiErrorNetwork =
-      'Нема интернет конекција. Проверете ја врската и обидете се повторно.';
-  static const String apiErrorTimeout =
-      'Серверот не одговара. Обидете се повторно.';
-  static const String apiErrorUnauthorized =
-      'Сесијата истече. Најавете се повторно.';
-  static const String apiErrorServer =
-      'Настана грешка на серверот. Обидете се подоцна.';
-  static const String apiErrorUnknown =
-      'Настана неочекувана грешка. Обидете се повторно.';
-
-  //FORGOT PASSWORD SCREEN
-  static const String forgotPasswordTitle = 'Заборавена лозинка';
-  static const String forgotPasswordHeading = 'Ресетирајте ја лозинката';
-  static const String forgotPasswordSubheading =
-      'Внесете ја вашата е-пошта и ќе ви испратиме код за ресетирање на лозинката.';
-  static const String forgotPasswordSubmitButton = 'ИСПРАТИ КОД';
-  static const String forgotPasswordFooterPrompt = 'Се сетивте на лозинката? ';
-
-  //REGISTER SCREEN
-  static const String registerTitle = 'Регистрација';
-  static const String registerRoleLabel = 'Изберете тип на профил';
-  static const String registerRoleGuest = 'Гостин';
-  static const String registerRoleProvider = 'Понудувач';
-  static const String registerNameLabel = 'Име и презиме';
-  static const String registerNamePlaceholder = 'Јован Јовановски';
-  static const String registerPhoneLabel = 'Телефон';
   static const String registerPhonePlaceholder = '+389 70 123 456';
-  static const String registerConfirmPasswordLabel = 'Потврди лозинка';
-  static const String registerTermsPrefix = 'Се согласувам со ';
-  static const String registerTermsOfService = 'Условите за користење';
   static const String registerTermsSeparator = ', ';
-  static const String registerPrivacyPolicy = 'Политиката за приватност';
-  static const String registerTermsSuffix = ' и Одговорностите на корисникот.';
-  static const String registerSubmitButton = 'РЕГИСТРИРАЈ СЕ';
-  static const String registerFooterPrompt = 'Веќе имате сметка? ';
-
-  //TERMS & PRIVACY SCREEN
-  static const String termsPrivacyTitle = 'Услови и правила';
-  static const String termsPrivacySubtitle =
-      'Ве молиме прочитајте пред да продолжите';
-  static const String termsPrivacyTermsHeading = '1. Услови за користење';
-  static const String termsPrivacyTermsBody =
-      'Со користење на платформата се согласувате дека понудите се објавуваат '
-      'од страна на понудувачите и дека платформата делува како посредник '
-      'меѓу понудувачот и гостинот. Резервациите подлежат на политиките за '
-      'откажување дефинирани за секоја понуда. Платформата задржува право да '
-      'модерира, одобрува или отстранува содржина што не е во согласност со '
-      'правилата на заедницата.\n\n'
-      'Корисниците се обврзуваат да внесуваат точни и ажурирани податоци при '
-      'регистрација и користење на услугите.';
-  static const String termsPrivacyPolicyHeading = '2. Политика на приватност';
-  static const String termsPrivacyPolicyBody =
-      'Личните податоци се обработуваат согласно важечките прописи за '
-      'заштита на лични податоци и се користат исклучиво за целите на '
-      'резервација, комуникација и подобрување на услугата.';
-  static const String termsPrivacyConsentTerms =
-      'Ги прочитав и се согласувам со Условите за користење.';
-  static const String termsPrivacyConsentPrivacy =
-      'Ја прочитав и се согласувам со Политиката за приватност.';
-  static const String termsPrivacyConsentResponsibilities =
-      'Ги прифаќам одговорностите на корисникот при резервација и плаќање.';
-  static const String termsPrivacySubmitButton = 'ПРИФАТИ И ПРОДОЛЖИ';
-
-  //EMAIL VERIFICATION SCREEN
-  static const String emailVerificationTitle = 'Потврдете ја вашата е-пошта';
-  static const String emailVerificationSentTo = 'Испративме код за потврда до';
   static const String emailVerificationExampleEmail =
       'jovan.jovanovski@example.com';
-  static const String emailVerificationInstructions =
-      'Внесете го кодот од е-поштата за да го активирате вашиот профил и '
-      'да продолжите со користење на апликацијата.';
-  static const String emailVerificationCodeLabel = 'Код за потврда';
-  static const String emailVerificationCodePlaceholder = 'Внесете го кодот';
-  static const String emailVerificationSubmitButton = 'ПОТВРДИ';
-  static const String emailVerificationErrorEmptyCode =
-      'Внесете го кодот од е-поштата.';
-  static const String emailVerificationSuccess =
-      'Е-поштата е потврдена. Најавете се за да продолжите.';
-  static const String emailVerificationBadge = 'НЕ Е ПОТВРДЕНО';
-  static const String emailVerificationResendButton = 'ИСПРАТИ ПОВТОРНО';
-  static const String emailVerificationChangeEmail = 'Промени е-пошта';
-
-  //PROFILE SCREEN
-  static const String profileTitle = 'Мојот профил';
-  static const String profilePersonalDataHeading = 'Лични податоци';
-  static const String profilePhoneLabel = 'Телефонски број';
-  static const String profileCityLabel = 'Град / Локација';
-  static const String profileCityPlaceholder = 'Охрид, Северна Македонија';
-  static const String profileReservationsLabel = 'Резервации';
-  static const String profileFavoritePlacesLabel = 'Омилени места';
-  static const String profileSaveButton = 'Зачувај промени';
-
-  //PROVIDER PROFILE SCREEN
-  static const String providerSubjectTypeLabel = 'Тип на субјект';
-  static const String providerSubjectTypeIndividual = 'Физичко лице';
-  static const String providerSubjectTypeLegal = 'Правно лице';
-  static const String providerLegalEntityComingSoon =
-      'Полињата за правни лица ќе бидат достапни наскоро.';
-  static const String providerOfferInfoHeading = 'Информации за понудата';
-  static const String providerOfferNameLabel = 'Име на понуда / искуство';
-  static const String providerOfferNamePlaceholder =
-      'Гостинска соба со појадок';
-  static const String providerCategoryHeading = 'Категорија на понуда';
-  static const String providerCategoryAccommodation = 'Сместување';
-  static const String providerCategoryGastronomy = 'Гастрономија';
-  static const String providerCategoryFarmParticipation =
-      'Активно учество на фарма';
-  static const String providerCategoryDirectSales = 'Директна продажба';
-  static const String providerCategoryFarmEducation = 'Едукација на фарма';
-  static const String providerCategoryFarmRecreation =
-      'Рекреација и релаксација на фарма';
-  static const String providerCategoryOffFarmTours =
-      'Тури и активности надвор од фарма';
-  static const String providerLocationLabel = 'Локација';
-  static const String providerLocationPlaceholder = 'Крушево';
-  static const String providerActiveOffersLabel = 'Активни понуди';
-  static const String providerAverageRatingLabel = 'Просечна оценка';
-  static const String providerNotVerifiedBadge = 'НЕ Е ВЕРИФИКУВАН';
-  static const String providerVerifiedBadge = 'ВЕРИФИКУВАН';
-  static const String providerExampleName = 'Ана Трајковска';
   static const String providerExampleEmail = 'ana.trajkovska@example.com';
   static const String providerExamplePhone = '070 987 654';
-
-  //PROVIDER PROFILE SETUP SCREEN (Правно лице / legal entity)
-  static const String providerSetupTitle = 'Поставување профил';
-  static const String providerSetupSubtitle =
-      'Внесете ги основните податоци за вашиот профил';
-  static const String providerAddLogoLabel = 'Додади лого';
-  static const String providerLegalCompanyNameLabel =
-      'Име на компанија / носител на дејност';
+  static const String providerLegalTaxIdPlaceholder = '4021998123456';
   static const String providerLegalCompanyNamePlaceholder =
       'Villa Zdravkovski DOOEL';
-  static const String providerLegalResponsiblePersonLabel = 'Одговорно лице';
-  static const String providerLegalResponsiblePersonPlaceholder =
-      'Владимир Здравковски';
-  static const String providerLegalEmailPlaceholder =
-      'На пример: контакт@company.mk';
-  static const String providerLegalBusinessDetailsHeading = 'Деловни податоци';
-  static const String providerLegalTaxIdLabel = 'ЕДБ / Даночен број';
-  static const String providerLegalTaxIdPlaceholder = '4021998123456';
-  static const String providerLegalCategoryHeading = 'Категорија на дејност';
-  static const String providerLegalAddressLabel = 'Адреса на бизнисот';
-  static const String providerLegalAddressPlaceholder = 'Брајчино, Преспа';
-  static const String providerAdditionalContactsHeading =
-      'Дополнителни контакти';
-  static const String providerAdditionalContactLabel =
-      'Контакт (телефон или е-пошта)';
-  static const String providerAdditionalContactPlaceholder =
-      'Внесете телефон или е-пошта';
-  static const String providerAddContactButton = '+ Додади контакт';
-  static const String providerSaveAndContinueButton = 'Зачувај и продолжи';
-
-  //SHARED (Provider Profile Setup, New Support Ticket) — attachment/image
-  //picker action-sheet labels
-  static const String imageSourceGallery = 'Галерија';
-  static const String imageSourceCamera = 'Камера';
-
-  //BOTTOM NAV (DS/Nav/Tourist, DS/Nav/Provider)
-  static const String navTouristHome = 'Дома';
-  static const String navTouristSearch = 'Пребарај';
-  static const String navTouristBookings = 'Резервации';
-  static const String navProviderDashboard = 'Табла';
-  static const String navProviderOffers = 'Понуди';
-  static const String navProviderCalendar = 'Календар';
-  static const String navMessages = 'Пораки';
-  static const String navProfile = 'Профил';
-
-  //SETTINGS SCREEN
-  static const String settingsTitle = 'Поставки';
-  static const String settingsLanguageHeading = 'Јазик на апликацијата';
-  static const String settingsLanguageRowLabel = 'Изберете јазик';
-  static const String settingsNotificationsLabel = 'Известувања';
-  static const String settingsPrivacyHeading = 'Приватност и податоци';
-  static const String settingsPrivacyDescription =
-      'Во согласност со GDPR можете да ги преземете или избришете вашите '
-      'лични податоци.';
-  static const String settingsDownloadDataButton = 'Преземи ги моите податоци';
-  static const String settingsDeleteAccountButton =
-      'Побарај бришење на сметката';
-  static const String settingsLogoutButton = 'Одјава';
-
-  //NOTIFICATIONS SCREEN
-  static const String notificationsTitle = 'Известувања';
-  static const String notificationsUnreadSuffix = 'непрочитани известувања';
-
-  //SHARED (Notifications, Chat List) — relative timestamp formatting
-  static const String timeJustNow = 'сега';
-  static const String timeMinutesSuffix = 'мин';
-  static const String timeHoursSuffix = 'ч';
-  static const String timeDaysSuffix = 'ден';
-
-  //CHAT LIST / CHAT THREAD SCREENS
-  static const String chatToday = 'Денес';
-  static const String chatInputPlaceholder = 'Напишете порака...';
-  static const String chatSendButtonGlyph = '>';
-
-  //MY TICKETS SCREEN
-  static const String myTicketsTitle = 'Мои тикети';
-  static const String createTicketButton = 'Креирај нов тикет';
-
-  static const String ticketStatusOpen = 'ОТВОРЕН';
-  static const String ticketStatusInProgress = 'ВО ТЕК';
-  static const String ticketStatusResolved = 'РЕШЕН';
-
-  static const String ticketLastChangedLabel = 'Последна промена';
-
-  //SHARED (My Tickets, Provider Offers) — "пред X..." relative-time phrasing
-  static const String agoPrefix = 'пред';
-  static const String agoMinuteSingular = 'минута';
-  static const String agoMinutesPlural = 'минути';
-  static const String agoHourSingular = 'час';
-  static const String agoHoursPlural = 'часа';
-  static const String agoDaySingular = 'ден';
-  static const String agoDaysPlural = 'дена';
-
-  //NEW SUPPORT TICKET SCREEN
-  static const String newTicketTitle = 'Нов тикет за поддршка';
-  static const String newTicketSubtitle =
-      'Опишете го проблемот и ќе ви одговориме наскоро';
-  static const String newTicketCategoryLabel = 'Категорија';
-  static const String newTicketTitleLabel = 'Наслов';
-  static const String newTicketTitlePlaceholder = 'На пр. Проблем со плаќање';
-  static const String newTicketDescriptionLabel = 'Опис на проблемот';
-  static const String newTicketDescriptionPlaceholder =
-      'Опишете детално што се случи, кога и на кој оглас или резервација '
-      'се однесува...';
-  static const String newTicketAttachmentLabel = 'Прикачи слика или документ';
-  static const String newTicketAttachmentOptional = '(опционално)';
-  static const String newTicketSubmitButton = 'Испрати барање';
-
-  static const String newTicketCategoryReservations = 'Резервации';
-  static const String newTicketCategoryListings = 'Огласи';
-  static const String newTicketCategoryPayments = 'Плаќање';
-  static const String newTicketCategoryProfile = 'Профил';
-  static const String newTicketCategoryOther = 'Друго';
-
-  // Camera/Gallery labels re-use AppStrings.imageSourceCamera/Gallery.
-  static const String attachmentSourceDocument = 'Документ';
-
-  //PROVIDER DASHBOARD SCREEN
-  static const String dashboardTitle = 'Контролна табла';
-  static const String dashboardGreetingPrefix = 'Добредојдовте, ';
-  static const String dashboardAddListingButton = '+ Додади нова понуда';
-
-  static const String dashboardListingsSummaryHeading = 'Преглед на понуди';
-  static const String dashboardActiveListingsLabel = 'Активни понуди';
-  static const String dashboardPendingReviewListingsLabel = 'На преглед';
-  static const String dashboardMonthlyReservationsLabel =
-      'Резервации овој месец';
-
-  static const String dashboardPendingReservationsHeading =
-      'Резервации кои чекаат';
-  static const String dashboardCompletedReservationsHeading =
-      'Завршени резервации';
-
-  static const String reservationStatusPending = 'НА ЧЕКАЊЕ';
-  static const String reservationStatusAccepted = 'ПРИФАТЕНА';
-  // Tourist-facing label for the exact same `accepted` status — see
-  // `ReservationStatus.touristLabel`.
-  static const String reservationStatusAcceptedTourist = 'ПОТВРДЕНА';
-  static const String reservationStatusRejected = 'ОДБИЕНА';
-  static const String reservationStatusCompleted = 'ЗАВРШЕНА';
-  static const String reservationStatusCancelled = 'ОТКАЖАНА';
-
-  static const String reservationGuestSingular = 'гостин';
-  static const String reservationGuestsPlural = 'гости';
-
-  static const String acceptReservationButton = 'Прифати';
-  static const String rejectReservationButton = 'Одбиј';
-  static const String rateGuestButton = 'Оцени гостин';
-
-  //PROVIDER OFFERS SCREEN
-  static const String offersTitle = 'Моите понуди';
-  static const String offersSubtitle =
-      'Управувајте со вашите понуди и нивниот статус';
-
-  static const String offersFilterAll = 'Сите';
-  static const String offersFilterActive = 'Активни';
-  static const String offersFilterPendingReview = 'На преглед';
-  static const String offersFilterRejected = 'Одбиени';
-
-  static const String listingStatusActive = 'АКТИВНА';
-  static const String listingStatusPendingReview = 'НА ПРЕГЛЕД';
-  static const String listingStatusRejected = 'ОДБИЕНО';
-  static const String listingStatusArchived = 'АРХИВИРАНО';
-
-  static const String listingReservationsThisMonthLabel =
-      'резервации овој месец';
-  static const String listingSubmittedForReviewLabel = 'Испратено на преглед';
-  static const String listingRejectedReasonPrefix = 'Одбиено: ';
-  static const String listingArchivedOnLabel = 'Архивирано на';
-
-  static const String editListingButton = 'Уреди';
-  static const String editAndResubmitListingButton = 'Уреди и поднеси повторно';
-  static const String reactivateListingButton = 'Активирај повторно';
-
-  //PROVIDER AVAILABILITY CALENDAR SCREEN
-  static const String calendarTitle = 'Календар на достапност';
-
-  static const String availabilityStatusAvailable = 'Слободно';
-  static const String availabilityStatusOccupied = 'Зафатено';
-  static const String availabilityStatusBlocked = 'Блокирано';
-
-  static const String weekdayMon = 'Пон';
-  static const String weekdayTue = 'Вт';
-  static const String weekdayWed = 'Ср';
-  static const String weekdayThu = 'Чет';
-  static const String weekdayFri = 'Пет';
-  static const String weekdaySat = 'Саб';
-  static const String weekdaySun = 'Нед';
-
-  static const String blockSelectedDatesButton = 'Блокирај избрани датуми';
-  static const String unblockSelectedDatesButton = 'Отклучи избрани датуми';
-
-  //CREATE OFFER WIZARD
-  static const String wizardHeaderTitle = 'Нова понуда';
-  static const String wizardStepLabel = 'Чекор'; // "Чекор 1 од 7"
-  static const String wizardStepOfLabel = 'од';
-  static const String wizardCloseGlyph = '✕';
-  static const String wizardBackButton = 'Назад';
-  static const String wizardNextButton = 'Понатаму';
-  static const String wizardPublishButton = 'Објави';
-
-  // Step 1 — category chips reuse the 5 unchanged provider category
-  // strings above; these 2 are the shorter labels this wizard's chips use
-  // for "Рекреација и релаксација на фарма"/"Тури и активности надвор од
-  // фарма" — same categories, shorter display text, not a second taxonomy.
-  static const String wizardCategoryFarmRecreation = 'Рекреација и релаксација';
-  static const String wizardCategoryOffFarmTours = 'Тури надвор од фарма';
-
-  static const String wizardStep1Heading = 'Кажете ни за вашата понуда';
-  static const String wizardStep1Subtitle =
-      'Изберете категорија и дадете наслов на вашата понуда.';
-  static const String wizardCategoryLabel = 'Категорија';
-  static const String wizardTitleLabel = 'Наслов на понудата';
-  static const String wizardTitlePlaceholder =
-      'На пр. Гостинска соба со појадок';
-
-  static const String wizardStep2Heading = 'Каде се наоѓа вашата понуда?';
-  static const String wizardStep2Subtitle =
-      'Вашата адреса ќе биде споделена со гостите дури откако ќе '
-      'резервираат.';
-  static const String wizardLocationLabel = 'Адреса / населено место';
-  static const String wizardLocationPlaceholder = 'Брајчино, Преспа';
-  static const String wizardMapPinGlyph = '📍';
-
-  static const String wizardStep3Heading = 'Колку гости може да прифатите?';
-  static const String wizardStep3Subtitle = 'Ова подоцна може да го промените.';
-  static const String wizardGuestsLabel = 'Гости';
-  static const String wizardRoomsLabel = 'Соби';
-  static const String wizardBedsLabel = 'Кревети';
-
-  static const String wizardStep4Heading = 'Кажете им на гостите што нудите';
-  static const String wizardStep4Subtitle =
-      'Изберете ги сите нешта кои ги нудите.';
-
-  static const String wizardStep5Heading = 'Додадете фотографии';
-  static const String wizardStep5Subtitle =
-      'Најмалку 5 фотографии се потребни за да ја објавите понудата.';
-
-  static const String wizardStep6Heading = 'Опишете ја вашата понуда';
-  static const String wizardStep6Subtitle =
-      'Кратко опишете што нудите и одредете цена.';
-  static const String wizardDescriptionLabel = 'Опис';
-  static const String wizardDescriptionPlaceholder =
-      'Пространа традиционална куќа во срцето на Преспа...';
-  static const String wizardPriceLabel =
-      'Цена (по ноќ, доколку се работи за сместување)';
-  static const String wizardPricePlaceholder = '2.770 ден.';
-  static const String wizardPriceSuffix = 'ден.';
-  static const String wizardPricePerNightSuffix = 'ден. / ноќ';
-
-  static const String wizardReviewHeading = 'Преглед';
-  static const String wizardReviewSubtitle =
-      'Проверете ги деталите пред да ја објавите понудата.';
-  static const String wizardReviewTitleRow = 'Наслов';
-  static const String wizardReviewCategoryRow = 'Категорија';
-  static const String wizardReviewLocationRow = 'Локација';
-  static const String wizardReviewCapacityRow = 'Капацитет';
-  static const String wizardReviewAmenitiesRow = 'Опрема';
-  static const String wizardReviewPhotosRow = 'Фотографии';
-  static const String wizardReviewPriceRow = 'Цена';
-
-  static const String wizardRoomSingular = 'соба';
-  static const String wizardRoomsPlural = 'соби';
-  static const String wizardBedSingular = 'кревет';
-  static const String wizardBedsPlural = 'кревети';
-  static const String wizardAmenitySingular = 'нешто';
-  static const String wizardAmenitiesPlural = 'нешта';
-  static const String wizardPhotoSingular = 'фотографија';
-  static const String wizardPhotosPlural = 'фотографии';
-
-  static const String wizardDiscardDialogTitle = 'Да ја напуштите понудата?';
-  static const String wizardDiscardDialogMessage =
-      'Внесените информации нема да бидат зачувани.';
-  static const String wizardDiscardDialogCancel = 'Откажи';
-  static const String wizardDiscardDialogConfirm = 'Напушти';
-
-  //LISTING AMENITIES (Create Offer Wizard, Step 4)
   static const String amenityWifi = 'Wi-Fi';
-  static const String amenityParking = 'Бесплатен паркинг';
-  static const String amenityKitchen = 'Опремена кујна';
-  static const String amenityAirConditioning = 'Клима уред';
-  static const String amenityTv = 'ТВ';
-  static const String amenityFireplace = 'Огниште';
-  static const String amenityFarmAccess = 'Пристап до фарма';
-  static const String amenityHotWater = 'Топла вода';
-  static const String amenityPetsAllowed = 'Домашни миленици дозволени';
-
-  //CREATE OFFER SUCCESS SCREEN
-  static const String offerPublishedTitle = 'Понуда објавена';
+  static const String chatSendButtonGlyph = '>';
+  static const String wizardCloseGlyph = '✕';
+  static const String wizardMapPinGlyph = '📍';
   static const String offerPublishedCheckGlyph = '✓';
-  static const String offerPublishedHeading = 'Понудата е објавена!';
-  static const String offerPublishedSubtitle =
-      'Вашата понуда сега е видлива за гостите на платформата.';
-  static const String offerPublishedViewOffersButton =
-      'Прегледај ги моите понуди';
-  static const String offerPublishedGoToDashboardButton =
-      'Оди на контролна табла';
-
-  //RATE GUEST SCREEN
-  static const String rateGuestTitle = 'Оцени гостин';
-  static const String rateGuestQuestion = 'Како беше престојот на гостинот?';
-  static const String rateGuestNoteLabel = 'Белешка (опционално)';
-  static const String rateGuestNotePlaceholder =
-      'На пр. Одличен гостин, ја остави куќата уредна.';
-  static const String rateGuestHelperText =
-      'Согласно правилата на платформата, гостинот може да биде оценет само '
-      'по завршена услуга каде постоела резервација.';
-  static const String submitRatingButton = 'Испрати оцена';
-
-  //RATING SAVED SCREEN
-  static const String ratingSavedTitle = 'Оценка';
-  static const String ratingSavedHeading = 'Оценката е зачувана!';
-
-  //TOURIST HOME SCREEN
-  static const String homeGreetingPrefix = 'Здраво, ';
   static const String homeGreetingEmoji = '👋';
-  static const String homeSubtitle =
-      'Пронајдете го вашето следно рурално доживување';
-  static const String homeSearchPlaceholder = 'Пребарај дестинации, понуди...';
   static const String homeSearchIconGlyph = '🔍';
-  static const String homeCategoriesHeading = 'Категории';
-  static const String homeRecommendedHeading = 'Препорачано за вас';
-  static const String homePricePrefix = 'од ';
-
-  static const String homeBanner1Title = 'До 20% попуст на избрани понуди';
-  static const String homeBanner1Action = 'Погледни ги →';
-  static const String homeBanner2Title = 'Нови понуди оваа недела';
-  static const String homeBanner2Action = 'Истражи ги →';
-  static const String homeBanner3Title =
-      'Омилено на гостите: Villa Zdravkovski';
-  static const String homeBanner3Action = 'Резервирај →';
-
-  //SEARCH FILTERS SHEET (Tourist Home's Search Bar -> Filter Bottom Sheet)
-  // Close glyph reuses wizardCloseGlyph; "Категорија" label reuses
-  // wizardCategoryLabel — same exact text/concept, not a second constant.
-  static const String filtersSheetTitle = 'Филтри';
-  static const String filtersKeywordLabel = 'Клучен збор';
-  static const String filtersKeywordPlaceholder = 'На пр. куќа со базен';
-  static const String filtersLocationLabel = 'Локација';
-  static const String filtersAllLocationsOption = 'Сите локации';
-  static const String filtersPriceRangeLabel = 'Ценовен опсег';
-  static const String filtersPriceRangeUnit = 'ден.';
-  static const String filtersDateLabel = 'Датум на престој';
-  static const String filtersDatePlaceholder = 'Изберете датуми';
-  static const String filtersRatingLabel = 'Оценка';
-  static const String filtersRatingAllOption = 'Сите';
-  // "Сите" reuses filtersRatingAllOption — same word, same meaning.
-  static const String filtersGuestCountLabel = 'Број на гости';
-  static const String filtersAmenityHeading = 'Опрема';
-  static const String filtersClearButton = 'Избриши филтри';
-  static const String filtersShowResultsButton = 'Прикажи резултати';
-
-  //SEARCH RESULTS SCREEN
-  static const String resultsTitle = 'Резултати';
   static const String filterIconGlyph = '⚙';
   static const String resultsFiltersChipGlyph = '☰';
-  static const String resultsFiltersChipLabel = 'Филтри';
-  // A specific quick-filter chip label (not generated from minRating), per
-  // the Figma "Резултати" frame — distinct from the filter sheet's own
-  // Сите/3+★/4+★/4.5+★ group.
-  static const String resultsRatingChipLabel = 'Оценка 4+';
-  static const String resultsPriceChipLabel = 'Цена';
-  static const String resultsCountSuffix = 'понуди';
-  static const String resultsCountLocationPrefix = 'во';
-  static const String resultsSortLabel = 'Прикажани по релевантност';
   static const String resultsMapButtonGlyph = '🗺';
-  static const String resultsMapButtonLabel = 'Карта';
-  static const String resultsShowDetailsButton = 'Прикажи детали';
-  static const String resultsReservationsSuffix = 'резервации';
-  // Distinct spacing from wizardPricePerNightSuffix ("ден. / ноќ") — this
-  // frame's price pill uses "ден./ноќ" with no surrounding spaces.
-  static const String resultsPricePerNightSuffix = 'ден./ноќ';
-
-  //LISTING DETAILS SCREEN
-  static const String detailsTitle = 'Детали';
   static const String detailsHeartOutlineGlyph = '♡';
   static const String detailsHeartFilledGlyph = '♥';
-  static const String detailsHostPrefix = 'Домаќин: ';
-  static const String detailsHostSincePrefix = 'Тука од ';
-  static const String detailsAboutHeading = 'За понудата';
-  static const String detailsAmenitiesHeading = 'Што нуди?';
-  static const String detailsLocationHeading = 'Каде се наоѓа?';
-  static const String detailsReserveButton = 'Резервирај';
-
-  //TOURIST BOOKING FLOW (Booking Request + Reservation Confirmation)
-  static const String reservationFlowTitle = 'Резервација';
-
-  // BookingRequestScreen — reuses filtersDateLabel/filtersDatePlaceholder/
-  // wizardGuestsLabel/detailsReserveButton for its own fields/submit
-  // button, so only the availability error message is new here.
-  static const String bookingDatesUnavailableError =
-      'Избраните датуми не се достапни за оваа понуда.';
-
-  // ReservationConfirmationScreen
-  static const String bookingRequestSentHeading =
-      'Барањето за резервација е испратено!';
-  static const String bookingRequestSentSubtitle =
-      'Ќе добиете е-пошта штом понудувачот ја потврди вашата резервација.';
-  static const String tripDetailsHeading = 'Детали за престојот';
-  static const String checkInLabel = 'Пристигнување';
-  static const String checkOutLabel = 'Заминување';
-  static const String paymentDetailsHeading = 'Детали за плаќањето';
-  static const String serviceFeeLabel = 'Такса за услуга';
-  static const String totalLabel = 'Вкупно';
-  static const String reservationNumberLabel = 'Број на резервација';
-  static const String nightSingular = 'ноќ';
-  static const String nightsPlural = 'ноќи';
-  static const String viewMyReservationsButton =
-      'Прегледај ги моите резервации';
-  static const String backToHomeButton = 'Назад кон почетна';
-
-  //TOURIST MY RESERVATIONS SCREEN
-  static const String myReservationsTitle = 'Мои резервации';
-  static const String upcomingTabLabel = 'Претстојни';
-  static const String pastTabLabel = 'Минати';
-  static const String myReservationsDetailsButton = 'Прегледај детали';
-  static const String leaveReviewButton = 'Остави рецензија';
-  static const String myReservationsEmptyUpcoming =
-      'Нема претстојни резервации.';
-  static const String myReservationsEmptyPast = 'Нема минати резервации.';
-
-  //LEAVE REVIEW SCREEN + REVIEW SUBMITTED SCREEN
-  // Header title reuses leaveReviewButton above — same phrase, same
-  // concept, not a coincidental match.
-  static const String leaveReviewQuestion = 'Каков беше вашиот престој?';
-  static const String leaveReviewTextLabel = 'Вашата рецензија';
-  static const String leaveReviewTextPlaceholder =
-      'Споделете го вашето искуство со идните гости...';
-  static const String leaveReviewDisclaimer =
-      'Рецензија може да оставите само по валидна завршена резервација, '
-      'преку мобилна или веб апликација.';
-  static const String submitReviewButton = 'Испрати рецензија';
-
-  static const String reviewSubmittedTitle = 'Рецензија';
-  static const String reviewSubmittedHeading = 'Ви благодариме за рецензијата!';
-  static const String backToReservationsButton = 'Назад кон резервации';
-
-  //ROLE SCREEN
-  static const welcomeToBulka = 'Добредојде во Булка';
-
-  static const whoAreYou = 'Вие сте?';
-
-  static const chooseProfile = 'Изберете го вашиот тип на профил';
-
-  static const tourist = 'Турист';
-
-  static const touristDescription = 'Пребарувај и резервирај уникатни искуства';
-
-  static const owner = 'Сопственик на имот/услуги';
-
-  static const ownerDescription = 'Огласи и управувај со своите понуди';
-
-  static const continueText = 'ПРОДОЛЖИ';
-
-  static const alreadyAccount = 'Веќе имате сметка? Најавете се';
 }

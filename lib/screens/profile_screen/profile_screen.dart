@@ -118,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bottomNavigationBar: const TouristBottomNav(selectedIndex: 4),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.profileTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -217,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                     const SizedBox(height: AppDimensions.profileBodyGap),
-                    const Text(
+                    Text(
                       AppStrings.profilePersonalDataHeading,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,

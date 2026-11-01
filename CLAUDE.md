@@ -23,7 +23,9 @@ flutter test test/widget_test.dart  # Run single test file
 **Entry point**: `lib/main.dart` — boots `BulkaApp` with `MaterialApp`, Material 3, custom theme, and `SplashScreen` as home.
 
 **Core structure**:
-- `lib/core/constants/` — `AppColors` and `AppStrings` (all user-facing text is in Macedonian, defined here)
+- `lib/core/constants/` — `AppColors` and `AppStrings` (all user-facing text; `AppStrings` is generated and returns the current language)
+- `lib/l10n/` — translations: `app_mk.arb` (template), `app_en.arb`, `app_sq.arb`, plus the generated `app_localizations*.dart`
+- `lib/core/l10n/locale_controller.dart` — current language (MK/SQ/EN), saved choice, phone language on first launch
 - `lib/core/theme/` — `AppTheme.lightTheme` with Montserrat font
 - `lib/models/` — `UserRole` enum (`buyer`, `owner`)
 - `lib/screens/` — one folder per screen (e.g. `splash_screen/`, `choose_role_screen/`)
@@ -35,7 +37,8 @@ flutter test test/widget_test.dart  # Run single test file
 
 ## Conventions
 
-- All user-facing strings go in `AppColors` / `AppStrings` in `lib/core/constants/`, never hardcoded inline.
+- All user-facing strings are read through `AppStrings`, never hardcoded inline. To add one: add the key to all three `.arb` files in `lib/l10n/`, then run `flutter gen-l10n` and `dart run tool/gen_app_strings.dart`. Text that's the same in every language (symbols, emoji) goes in the constants at the bottom of `AppStrings`.
+- Translated `AppStrings` values aren't `const`; lists of labels must be getters (not `const`/`final` fields) so they follow a language switch. Store choices as values (enums, indexes), never as translated text.
 - Screen folders live under `lib/screens/<screen_name>/` and contain a single `<screen_name>.dart` file.
 - Assets are under `assets/images/` with subfolders per screen (e.g. `assets/images/SplashScreen/`).
 - Package name / import prefix: `package:bulka_frontend/`.

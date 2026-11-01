@@ -1,4 +1,5 @@
 import 'package:bulka_frontend/models/listing_amenity.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 
 /// Tourist Search & Filters' own UI state — the Figma "Filter Sheet"
 /// mapped 1:1 to fields, deliberately kept separate from `ProviderListing`
@@ -34,9 +35,8 @@ class ListingSearchFilter {
   /// exact headcount.
   int? minimumGuests;
 
-  /// Values are the same canonical strings as `ProviderListing.category`/
-  /// `createOfferCategories` — not a second taxonomy.
-  Set<String> categories = {};
+  /// Same values as `ProviderListing.category` / `createOfferCategories`.
+  Set<ListingCategory> categories = {};
   Set<ListingAmenity> amenities = {};
 
   bool get isActive =>

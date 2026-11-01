@@ -129,7 +129,7 @@ class _TouristMyReservationsScreenState
       bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.myReservationsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -310,7 +310,7 @@ class _UpcomingCard extends StatelessWidget {
   final ProviderListing listing;
 
   String get _metaLine =>
-      '${formatMkDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
+      '${formatDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
       ' · ${_guestsLabel(reservation.guestCount)}';
 
   String get _actionLabel {
@@ -318,7 +318,7 @@ class _UpcomingCard extends StatelessWidget {
       return AppStrings.myReservationsDetailsButton;
     }
     return '${AppStrings.myReservationsDetailsButton} · '
-        '${formatMkPrice(reservation.totalAmount!)} ${AppStrings.wizardPriceSuffix}';
+        '${formatPrice(reservation.totalAmount!)} ${AppStrings.wizardPriceSuffix}';
   }
 
   @override
@@ -343,7 +343,7 @@ class _PastCard extends StatelessWidget {
   final ProviderListing listing;
 
   String get _metaLine =>
-      '${formatMkDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
+      '${formatDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
       ' · ${_guestsLabel(reservation.guestCount)}';
 
   @override

@@ -1,29 +1,16 @@
 import 'package:image_picker/image_picker.dart';
-import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 
-/// The one category taxonomy the Create Offer wizard uses — reuses 5 of
-/// the existing shared `AppStrings.providerCategory*` constants as-is;
-/// the other 2 use this wizard's shorter chip labels
-/// (`wizardCategoryFarmRecreation`/`wizardCategoryOffFarmTours`) for the
-/// *same* categories, not a second, logically separate set.
-const List<String> createOfferCategories = [
-  AppStrings.providerCategoryAccommodation,
-  AppStrings.providerCategoryGastronomy,
-  AppStrings.providerCategoryFarmParticipation,
-  AppStrings.providerCategoryDirectSales,
-  AppStrings.providerCategoryFarmEducation,
-  AppStrings.wizardCategoryFarmRecreation,
-  AppStrings.wizardCategoryOffFarmTours,
-];
+/// The categories the Create Offer wizard (and the search filters) offer,
+/// in display order. Chips show [ListingCategory.shortLabel].
+const List<ListingCategory> createOfferCategories = ListingCategory.values;
 
-/// Centralizes the "does this category charge a nightly price" business
-/// rule in one place, per Step 6's "(по ноќ, доколку се работи за
-/// сместување)" hint — only accommodation listings require a price to
-/// proceed/publish. Nothing else in the wizard checks `category` directly
-/// for this.
-bool categoryRequiresPrice(String category) =>
-    category == AppStrings.providerCategoryAccommodation;
+/// Whether a listing in [category] charges a nightly price — only
+/// accommodation does (Step 6's "по ноќ, доколку се работи за сместување"
+/// hint). A listing with no category doesn't.
+bool categoryRequiresPrice(ListingCategory? category) =>
+    category?.requiresPrice ?? false;
 
 /// Mutable, single shared draft for the entire Create Offer wizard.
 /// Deliberately not immutable/copyWith-based like the app's persisted
@@ -36,7 +23,7 @@ bool categoryRequiresPrice(String category) =>
 /// (same convention as every other screen's Figma placeholders in this
 /// app), not sensible defaults for a brand new listing.
 class CreateListingDraft {
-  String category = createOfferCategories.first;
+  ListingCategory category = createOfferCategories.first;
   String title = '';
   String location = '';
 

@@ -4,6 +4,7 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
@@ -68,7 +69,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     if (result != null) _search.applyFilter(result);
   }
 
-  void _toggleCategory(String category) {
+  void _toggleCategory(ListingCategory category) {
     final updated = _search.filter.copy();
     if (!updated.categories.remove(category)) {
       updated.categories.add(category);
@@ -92,7 +93,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       bottomNavigationBar: const TouristBottomNav(selectedIndex: 1),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.resultsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -143,7 +144,7 @@ class _TopBar extends StatelessWidget {
     final parts = <String>[
       if (filter.location != null) filter.location!,
       if (filter.startDate != null && filter.endDate != null)
-        formatMkDateRangeShort(filter.startDate!, filter.endDate!),
+        formatDateRangeShort(filter.startDate!, filter.endDate!),
       // A minimum threshold, not a real booking's exact guest count, so
       // "N+" rather than claiming an exact headcount like Figma's "N
       // гости" example (that's `Reservation.guestCount`, a different
@@ -249,13 +250,13 @@ class _QuickFiltersRow extends StatelessWidget {
 
   final ListingSearchFilter filter;
   final VoidCallback onFiltersTap;
-  final ValueChanged<String> onToggleCategory;
+  final ValueChanged<ListingCategory> onToggleCategory;
   final VoidCallback onToggleRating;
   final VoidCallback onPriceTap;
 
-  static const List<String> _quickCategories = [
-    AppStrings.providerCategoryAccommodation,
-    AppStrings.providerCategoryGastronomy,
+  static const List<ListingCategory> _quickCategories = [
+    ListingCategory.accommodation,
+    ListingCategory.gastronomy,
   ];
 
   @override
@@ -296,7 +297,7 @@ class _QuickFiltersRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppDimensions.resultsFiltersChipGap),
-                    const Text(
+                    Text(
                       AppStrings.resultsFiltersChipLabel,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
@@ -311,7 +312,7 @@ class _QuickFiltersRow extends StatelessWidget {
             const SizedBox(width: AppDimensions.wizardChipGap),
             for (var i = 0; i < _quickCategories.length; i++) ...[
               _QuickChip(
-                label: _quickCategories[i],
+                label: _quickCategories[i].shortLabel,
                 isSelected: filter.categories.contains(_quickCategories[i]),
                 onTap: () => onToggleCategory(_quickCategories[i]),
               ),
@@ -416,7 +417,7 @@ class _ResultsHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppDimensions.resultsHeaderTextGap),
-              const Text(
+              Text(
                 AppStrings.resultsSortLabel,
                 style: TextStyle(
                   fontWeight: FontWeight.w400,
@@ -495,7 +496,7 @@ class _MapButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppDimensions.wizardChipGap),
-            const Text(
+            Text(
               AppStrings.resultsMapButtonLabel,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -525,7 +526,7 @@ class _ResultListingCard extends StatelessWidget {
     final suffix = categoryRequiresPrice(listing.category)
         ? AppStrings.resultsPricePerNightSuffix
         : AppStrings.wizardPriceSuffix;
-    return '${formatMkPrice(listing.price)} $suffix';
+    return '${formatPrice(listing.price)} $suffix';
   }
 
   String get _metaLine {
@@ -649,7 +650,7 @@ class _ResultListingCard extends StatelessWidget {
                         AppDimensions.dashboardActionButtonRadius,
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       AppStrings.resultsShowDetailsButton,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,

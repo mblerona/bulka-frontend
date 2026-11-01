@@ -1,69 +1,53 @@
-/// Lowercase Macedonian month names, index 0 = January. Public so other
-/// screens (e.g. the Provider Availability Calendar's "Август 2026" title)
-/// can reuse this one list instead of keeping a second copy.
-const List<String> mkMonthNames = [
-  'јануари',
-  'февруари',
-  'март',
-  'април',
-  'мај',
-  'јуни',
-  'јули',
-  'август',
-  'септември',
-  'октомври',
-  'ноември',
-  'декември',
-];
+import 'package:intl/intl.dart';
 
-/// Short Macedonian date-range label, e.g. "12–15 август" for a same-month
-/// range or "28 јули – 2 август" across months. Shared by any screen that
-/// needs to show a reservation/booking date range (currently the Provider
-/// Dashboard; a future Calendar screen will likely need the same format).
-String formatMkDateRange(DateTime start, DateTime end) {
-  final startMonth = mkMonthNames[start.month - 1];
+// Month names come from `intl` in the app's current language
+// (`Intl.defaultLocale`, set by LocaleController), e.g. "август" /
+// "August" / "gusht". The day/range shapes are the same in every language.
+
+/// Full month name as it's written on its own, e.g. the Provider
+/// Availability Calendar's "Август 2026" title (the caller capitalizes).
+String monthName(int month) => DateFormat.LLLL().format(DateTime(2000, month));
+
+String _fullMonth(DateTime date) => DateFormat.MMMM().format(date);
+
+/// Abbreviated month without the trailing dot some languages use
+/// ("авг.", "sept."), to match the design's "12 авг 2026".
+String _shortMonth(DateTime date) =>
+    DateFormat.MMM().format(date).replaceAll('.', '');
+
+/// Date range, e.g. "12–15 август" in one month or "28 јули – 2 август"
+/// across months (Provider Dashboard, booking forms).
+String formatDateRange(DateTime start, DateTime end) {
   if (start.year == end.year && start.month == end.month) {
-    return '${start.day}–${end.day} $startMonth';
+    return '${start.day}–${end.day} ${_fullMonth(start)}';
   }
-  final endMonth = mkMonthNames[end.month - 1];
-  return '${start.day} $startMonth – ${end.day} $endMonth';
+  return '${start.day} ${_fullMonth(start)} – ${end.day} ${_fullMonth(end)}';
 }
 
-/// A single date with a 3-letter abbreviated month and the year, e.g.
-/// "12 авг 2026" — the Reservation Confirmation screen's check-in/
-/// check-out rows. Derived from the same [mkMonthNames] list as
-/// [formatMkDateRange]/[formatMkDateRangeShort], not a third copy.
-String formatMkDateShort(DateTime date) {
-  final month = mkMonthNames[date.month - 1].substring(0, 3);
-  return '${date.day} $month ${date.year}';
+/// A single date with a short month and the year, e.g. "12 авг 2026"
+/// (Reservation Confirmation's check-in/check-out rows).
+String formatDateShort(DateTime date) =>
+    '${date.day} ${_shortMonth(date)} ${date.year}';
+
+/// Like [formatDateRange] with short months, e.g. "12–15 авг", for narrow
+/// spots (the Search Results summary pill).
+String formatDateRangeShort(DateTime start, DateTime end) {
+  if (start.year == end.year && start.month == end.month) {
+    return '${start.day}–${end.day} ${_shortMonth(start)}';
+  }
+  return '${start.day} ${_shortMonth(start)} – ${end.day} ${_shortMonth(end)}';
 }
 
-/// Same shape as [formatMkDateRange] but with a 3-letter abbreviated month
-/// (e.g. "12–15 авг") — derived from the same [mkMonthNames] list rather
-/// than a second month-name list, for contexts too narrow for the full
-/// name (the Search Results/Map search-summary pill).
-String formatMkDateRangeShort(DateTime start, DateTime end) {
-  final startMonth = mkMonthNames[start.month - 1].substring(0, 3);
+/// Like [formatDateRangeShort] plus the year, e.g. "12–15 авг 2026" or
+/// "28 дек 2025 – 2 јан 2026" (My Reservations' card meta line).
+String formatDateRangeShortWithYear(DateTime start, DateTime end) {
+  final s = _shortMonth(start);
+  final e = _shortMonth(end);
   if (start.year == end.year && start.month == end.month) {
-    return '${start.day}–${end.day} $startMonth';
+    return '${start.day}–${end.day} $s ${end.year}';
   }
-  final endMonth = mkMonthNames[end.month - 1].substring(0, 3);
-  return '${start.day} $startMonth – ${end.day} $endMonth';
-}
-
-/// Same shape as [formatMkDateRangeShort] but with the year appended, e.g.
-/// "12–15 авг 2026" or "28 дек 2025 – 2 јан 2026" across years — My
-/// Reservations' card meta line, the only date-range context that needs
-/// the year alongside the range itself.
-String formatMkDateRangeShortWithYear(DateTime start, DateTime end) {
-  final startMonth = mkMonthNames[start.month - 1].substring(0, 3);
-  if (start.year == end.year && start.month == end.month) {
-    return '${start.day}–${end.day} $startMonth ${end.year}';
-  }
-  final endMonth = mkMonthNames[end.month - 1].substring(0, 3);
   if (start.year == end.year) {
-    return '${start.day} $startMonth – ${end.day} $endMonth ${end.year}';
+    return '${start.day} $s – ${end.day} $e ${end.year}';
   }
-  return '${start.day} $startMonth ${start.year} – ${end.day} $endMonth '
-      '${end.year}';
+  return '${start.day} $s ${start.year} – ${end.day} $e ${end.year}';
 }

@@ -82,7 +82,7 @@ class CreateOfferSuccessScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.successBlockGap),
-                          const Text(
+                          Text(
                             AppStrings.offerPublishedHeading,
                             textAlign: TextAlign.center,
                             style: TextStyle(
@@ -92,7 +92,7 @@ class CreateOfferSuccessScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.successBlockGap),
-                          const Text(
+                          Text(
                             AppStrings.offerPublishedSubtitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(

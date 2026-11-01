@@ -54,7 +54,7 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
     final reservation = widget.reservation;
     final contextLine =
         '${reservation.listingName} · '
-        '${formatMkDateRange(reservation.startDate, reservation.endDate)} '
+        '${formatDateRange(reservation.startDate, reservation.endDate)} '
         '${reservation.startDate.year}';
 
     return Scaffold(
@@ -62,7 +62,7 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
       bottomNavigationBar: const ProviderBottomNav(selectedIndex: 0),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.rateGuestTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -140,7 +140,7 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       AppStrings.rateGuestQuestion,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -156,7 +156,7 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
                     const SizedBox(height: AppDimensions.wizardContentGap),
                     _NoteField(controller: _noteController),
                     const SizedBox(height: AppDimensions.wizardContentGap),
-                    const Text(
+                    Text(
                       AppStrings.rateGuestHelperText,
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
@@ -235,7 +235,7 @@ class _NoteField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.rateGuestNoteLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -264,7 +264,7 @@ class _NoteField extends StatelessWidget {
               fontSize: AppDimensions.dsInputFontSize,
               color: AppColors.agroForest950,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: AppStrings.rateGuestNotePlaceholder,
               hintStyle: TextStyle(
                 fontWeight: FontWeight.w400,

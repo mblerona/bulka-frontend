@@ -301,7 +301,7 @@ class _ReservationCard extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.dashboardReservationCardGap),
           Text(
-            '${formatMkDateRange(reservation.startDate, reservation.endDate)} · '
+            '${formatDateRange(reservation.startDate, reservation.endDate)} · '
             '${_guestCountLabel(reservation.guestCount)}',
             style: const TextStyle(
               fontWeight: FontWeight.w400,

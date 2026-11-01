@@ -4,6 +4,7 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
@@ -119,7 +120,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text(AppStrings.filtersAllLocationsOption),
+              title: Text(AppStrings.filtersAllLocationsOption),
               onTap: () => Navigator.pop(sheetContext, _allLocationsSentinel),
             ),
             for (final location in locations)
@@ -165,7 +166,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
     });
   }
 
-  void _toggleCategory(String category) {
+  void _toggleCategory(ListingCategory category) {
     setState(() {
       if (!_filter.categories.remove(category)) {
         _filter.categories.add(category);
@@ -237,7 +238,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
                       label: AppStrings.filtersDateLabel,
                       value:
                           _filter.startDate != null && _filter.endDate != null
-                          ? formatMkDateRange(
+                          ? formatDateRange(
                               _filter.startDate!,
                               _filter.endDate!,
                             )
@@ -319,7 +320,7 @@ class _TitleRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           AppStrings.filtersSheetTitle,
           style: TextStyle(
             fontWeight: FontWeight.w800,
@@ -434,8 +435,8 @@ class _PriceField extends StatelessWidget {
           children: [
             _fieldLabel(AppStrings.filtersPriceRangeLabel),
             Text(
-              '${formatMkPrice(range.start)} – '
-              '${formatMkPrice(range.end)} '
+              '${formatPrice(range.start)} – '
+              '${formatPrice(range.end)} '
               '${AppStrings.filtersPriceRangeUnit}',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
@@ -558,8 +559,8 @@ class _GuestCountField extends StatelessWidget {
 class _CategoryField extends StatelessWidget {
   const _CategoryField({required this.selected, required this.onToggle});
 
-  final Set<String> selected;
-  final ValueChanged<String> onToggle;
+  final Set<ListingCategory> selected;
+  final ValueChanged<ListingCategory> onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -575,7 +576,7 @@ class _CategoryField extends StatelessWidget {
           children: [
             for (final category in createOfferCategories)
               _Pill(
-                label: category,
+                label: category.shortLabel,
                 isSelected: selected.contains(category),
                 onTap: () => onToggle(category),
               ),
@@ -721,7 +722,7 @@ class _ActionsRow extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: onClear,
-          child: const Text(
+          child: Text(
             AppStrings.filtersClearButton,
             style: TextStyle(
               fontWeight: FontWeight.w700,

@@ -13,7 +13,7 @@ import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
 
-const List<String> _weekdayLabels = [
+List<String> get _weekdayLabels => [
   AppStrings.weekdayMon,
   AppStrings.weekdayTue,
   AppStrings.weekdayWed,
@@ -111,7 +111,7 @@ class _ProviderAvailabilityCalendarScreenState
       bottomNavigationBar: const ProviderBottomNav(selectedIndex: 2),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.calendarTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -303,9 +303,9 @@ class _MonthNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final monthName = mkMonthNames[month.month - 1];
+    final name = monthName(month.month);
     final title =
-        '${monthName[0].toUpperCase()}${monthName.substring(1)} '
+        '${name[0].toUpperCase()}${name.substring(1)} '
         '${month.year}';
     return Container(
       width: double.infinity,

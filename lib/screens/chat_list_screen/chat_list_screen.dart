@@ -52,7 +52,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.navMessages,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

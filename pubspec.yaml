@@ -44,6 +44,10 @@ dependencies:
   file_picker: ^8.1.2
   dio: ^5.11.0
   flutter_secure_storage: ^10.3.4
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +65,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # Generates lib/l10n/app_localizations*.dart from the .arb files.
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

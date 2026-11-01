@@ -197,8 +197,9 @@ class _NavBadge extends StatelessWidget {
 /// badge from the one shared `ChatController.instance`.
 const int navMessagesTabIndex = 3;
 
-/// DS/Nav/Tourist — Дома, Пребарај, Резервации, Пораки, Профил.
-const List<BottomNavItem> touristBottomNavItems = [
+/// DS/Nav/Tourist — Дома, Пребарај, Резервации, Пораки, Профил. A getter, so
+/// the labels follow the current language.
+List<BottomNavItem> get touristBottomNavItems => [
   BottomNavItem(icon: Icons.home_outlined, label: AppStrings.navTouristHome),
   BottomNavItem(icon: Icons.search, label: AppStrings.navTouristSearch),
   BottomNavItem(
@@ -210,7 +211,7 @@ const List<BottomNavItem> touristBottomNavItems = [
 ];
 
 /// DS/Nav/Provider — Табла, Понуди, Календар, Пораки, Профил.
-const List<BottomNavItem> providerBottomNavItems = [
+List<BottomNavItem> get providerBottomNavItems => [
   BottomNavItem(
     icon: Icons.insert_chart_outlined_rounded,
     label: AppStrings.navProviderDashboard,

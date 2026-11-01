@@ -239,7 +239,7 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppDimensions.dsRootHeaderGap),
-          const Text(
+          Text(
             AppStrings.homeSubtitle,
             style: TextStyle(
               fontWeight: FontWeight.w400,
@@ -436,7 +436,7 @@ class _CategoryCard extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.homeCategoryCardGap),
             Text(
-              category.value,
+              category.label,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
@@ -465,7 +465,7 @@ class _ListingCard extends StatelessWidget {
         ? AppStrings.wizardPricePerNightSuffix
         : AppStrings.wizardPriceSuffix;
     return '${AppStrings.homePricePrefix}'
-        '${formatMkPrice(listing.price)} $suffix';
+        '${formatPrice(listing.price)} $suffix';
   }
 
   @override

@@ -75,7 +75,7 @@ class ReviewSubmittedScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.successBlockGap),
-                          const Text(
+                          Text(
                             AppStrings.reviewSubmittedHeading,
                             textAlign: TextAlign.center,
                             style: TextStyle(

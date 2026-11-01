@@ -72,14 +72,14 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
     final reservation = widget.reservation;
     final contextLine =
         '${listing.location} · '
-        '${formatMkDateRangeShortWithYear(reservation.startDate, reservation.endDate)}';
+        '${formatDateRangeShortWithYear(reservation.startDate, reservation.endDate)}';
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
       bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.leaveReviewButton,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -156,7 +156,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       AppStrings.leaveReviewQuestion,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -172,7 +172,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     const SizedBox(height: AppDimensions.wizardContentGap),
                     _ReviewTextField(controller: _reviewController),
                     const SizedBox(height: AppDimensions.wizardContentGap),
-                    const Text(
+                    Text(
                       AppStrings.leaveReviewDisclaimer,
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
@@ -251,7 +251,7 @@ class _ReviewTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.leaveReviewTextLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -280,7 +280,7 @@ class _ReviewTextField extends StatelessWidget {
               fontSize: AppDimensions.dsInputFontSize,
               color: AppColors.agroForest950,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: AppStrings.leaveReviewTextPlaceholder,
               hintStyle: TextStyle(
                 fontWeight: FontWeight.w400,

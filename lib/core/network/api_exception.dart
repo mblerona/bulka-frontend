@@ -16,27 +16,23 @@ enum ApiErrorKind {
 /// The one error type services throw, so screens never deal with Dio
 /// directly. [message] is always safe to show to the user.
 class ApiException implements Exception {
+  /// [customMessage] replaces the usual text (e.g. "2FA isn't supported");
+  /// it's a function so it's read in the current language.
   const ApiException({
     required this.kind,
-    required this.message,
     this.statusCode,
     this.errors = const [],
-  });
+    String Function()? customMessage,
+  }) : _customMessage = customMessage;
 
   factory ApiException.fromDio(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return const ApiException(
-          kind: ApiErrorKind.timeout,
-          message: AppStrings.apiErrorTimeout,
-        );
+        return const ApiException(kind: ApiErrorKind.timeout);
       case DioExceptionType.connectionError:
-        return const ApiException(
-          kind: ApiErrorKind.network,
-          message: AppStrings.apiErrorNetwork,
-        );
+        return const ApiException(kind: ApiErrorKind.network);
       default:
         break;
     }
@@ -48,60 +44,60 @@ class ApiException implements Exception {
         : const <ApiError>[];
 
     final ApiErrorKind kind;
-    final String fallback;
     if (status == 401) {
       kind = ApiErrorKind.unauthorized;
-      fallback = AppStrings.apiErrorUnauthorized;
     } else if (status != null && status >= 400 && status < 500) {
       kind = ApiErrorKind.badRequest;
-      fallback = AppStrings.apiErrorInvalidInput;
     } else if (status != null && status >= 500) {
       kind = ApiErrorKind.server;
-      fallback = AppStrings.apiErrorServer;
     } else {
       kind = ApiErrorKind.unknown;
-      fallback = AppStrings.apiErrorUnknown;
     }
-
-    return ApiException(
-      kind: kind,
-      message: _translatedMessage(errors) ?? fallback,
-      statusCode: status,
-      errors: errors,
-    );
+    _logUntranslated(errors);
+    return ApiException(kind: kind, statusCode: status, errors: errors);
   }
 
   /// For a 2xx response whose envelope still says `success: false`.
   factory ApiException.fromEnvelope(ApiResponse<Object?> response) {
-    return ApiException(
-      kind: ApiErrorKind.badRequest,
-      message:
-          _translatedMessage(response.errors) ??
-          AppStrings.apiErrorInvalidInput,
-      errors: response.errors,
-    );
+    _logUntranslated(response.errors);
+    return ApiException(kind: ApiErrorKind.badRequest, errors: response.errors);
   }
 
   final ApiErrorKind kind;
-
-  /// Always in the app's language, never the backend's English text.
-  final String message;
   final int? statusCode;
   final List<ApiError> errors;
+  final String Function()? _customMessage;
 
-  /// The first error the app has its own text for. Errors without a
-  /// translation are logged (debug builds) so they can be added to
-  /// api_error_translator.dart.
-  static String? _translatedMessage(List<ApiError> errors) {
+  /// In the app's current language, never the backend's English text.
+  /// Worked out on every read, so it follows a language switch.
+  String get message {
+    final custom = _customMessage;
+    if (custom != null) return custom();
     for (final error in errors) {
       final translated = translateApiError(error);
       if (translated != null) return translated;
-      debugPrint(
-        '[API] No translation for error ${error.code} '
-        '(field: ${error.field}): ${error.message}',
-      );
     }
-    return null;
+    return switch (kind) {
+      ApiErrorKind.network => AppStrings.apiErrorNetwork,
+      ApiErrorKind.timeout => AppStrings.apiErrorTimeout,
+      ApiErrorKind.unauthorized => AppStrings.apiErrorUnauthorized,
+      ApiErrorKind.badRequest => AppStrings.apiErrorInvalidInput,
+      ApiErrorKind.server => AppStrings.apiErrorServer,
+      ApiErrorKind.unknown => AppStrings.apiErrorUnknown,
+    };
+  }
+
+  /// Debug builds: print errors the app has no text for yet, so they can be
+  /// added to api_error_translator.dart.
+  static void _logUntranslated(List<ApiError> errors) {
+    for (final error in errors) {
+      if (translateApiError(error) == null) {
+        debugPrint(
+          '[API] No translation for error ${error.code} '
+          '(field: ${error.field}): ${error.message}',
+        );
+      }
+    }
   }
 
   @override

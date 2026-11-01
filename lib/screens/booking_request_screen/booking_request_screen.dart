@@ -149,7 +149,7 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
       ),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.reservationFlowTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -176,7 +176,7 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
                       _SelectBox(
                         label: AppStrings.filtersDateLabel,
                         value: _startDate != null && _endDate != null
-                            ? formatMkDateRange(_startDate!, _endDate!)
+                            ? formatDateRange(_startDate!, _endDate!)
                             : AppStrings.filtersDatePlaceholder,
                         onTap: _pickDates,
                       ),
@@ -366,7 +366,7 @@ class _GuestStepperRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             AppStrings.wizardGuestsLabel,
             style: TextStyle(
               fontWeight: FontWeight.w600,

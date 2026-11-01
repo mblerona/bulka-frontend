@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/l10n/locale_controller.dart';
 import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
 import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
@@ -16,7 +17,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedLanguageCode = AppStrings.languageCodeMk;
   bool _notificationsEnabled = true;
 
   Future<void> _handleLogout() async {
@@ -34,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.settingsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -76,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             AppStrings.settingsLanguageRowLabel,
                             style: TextStyle(
                               fontWeight: FontWeight.w400,
@@ -86,10 +86,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           LanguageSwitch(
-                            selectedLanguageCode: _selectedLanguageCode,
+                            selectedLanguageCode:
+                                LocaleController.instance.switchCode,
                             surface: LanguageSwitchSurface.light,
                             onChanged: (code) {
-                              setState(() => _selectedLanguageCode = code);
+                              // Saved app-wide; BulkaApp rebuilds every screen.
+                              LocaleController.instance.setLanguage(code);
                             },
                           ),
                         ],
@@ -113,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: AppDimensions.profileBodyGap),
                     _sectionHeading(AppStrings.settingsPrivacyHeading),
                     const SizedBox(height: AppDimensions.settingsSectionGap),
-                    const Text(
+                    Text(
                       AppStrings.settingsPrivacyDescription,
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
