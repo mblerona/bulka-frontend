@@ -2,10 +2,12 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:bulka_frontend/blocs/app_bloc_providers.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
 import 'package:bulka_frontend/screens/profile_screen/profile_screen.dart';
+import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
 import 'package:bulka_frontend/screens/provider_profile_screen/provider_profile_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
 
@@ -57,12 +59,19 @@ Future<void> _pumpSignedIn(
 }
 
 void main() {
-  setUpAll(loadAppFonts);
+  setUpAll(() async {
+    await loadAppFonts();
+    // The dashboard formats reservation dates (done at startup in the app).
+    await initializeDateFormatting();
+  });
 
   testWidgets('Tourist Home greets the signed-in user', (tester) async {
     await _pumpSignedIn(tester, _tourist, const TouristHomeScreen());
     expect(find.textContaining('Ана'), findsWidgets);
     expect(find.textContaining('Јована'), findsNothing);
+    // Top-level categories from the (fake) backend; sub-categories hidden.
+    expect(find.text('Понуда на храна'), findsOneWidget);
+    expect(find.text('Соби'), findsNothing);
   });
 
   testWidgets('Profile shows the signed-in user', (tester) async {
@@ -71,6 +80,11 @@ void main() {
     expect(find.text('ana@example.com'), findsWidgets);
     expect(find.text('071 222 333'), findsOneWidget);
     expect(find.textContaining('Јована'), findsNothing);
+  });
+
+  testWidgets('Provider Dashboard greets the signed-in user', (tester) async {
+    await _pumpSignedIn(tester, _provider, const ProviderDashboardScreen());
+    expect(find.textContaining('Марко Стојанов'), findsOneWidget);
   });
 
   testWidgets('Provider Profile shows the signed-in user', (tester) async {

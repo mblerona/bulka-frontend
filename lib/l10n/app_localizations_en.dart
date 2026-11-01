@@ -1031,6 +1031,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCategoriesHeading => 'Categories';
 
   @override
+  String get homeCategoriesLoadFailed => 'Couldn\'t load categories.';
+
+  @override
+  String get homeCategoriesRetry => 'Try again';
+
+  @override
   String get homeRecommendedHeading => 'Recommended for you';
 
   @override

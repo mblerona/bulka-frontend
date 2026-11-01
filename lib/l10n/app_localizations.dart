@@ -2050,6 +2050,18 @@ abstract class AppLocalizations {
   /// **'Категории'**
   String get homeCategoriesHeading;
 
+  /// No description provided for @homeCategoriesLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Категориите не можат да се вчитаат.'**
+  String get homeCategoriesLoadFailed;
+
+  /// No description provided for @homeCategoriesRetry.
+  ///
+  /// In mk, this message translates to:
+  /// **'Обиди се повторно'**
+  String get homeCategoriesRetry;
+
   /// No description provided for @homeRecommendedHeading.
   ///
   /// In mk, this message translates to:

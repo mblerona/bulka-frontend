@@ -1034,6 +1034,12 @@ class AppLocalizationsMk extends AppLocalizations {
   String get homeCategoriesHeading => 'Категории';
 
   @override
+  String get homeCategoriesLoadFailed => 'Категориите не можат да се вчитаат.';
+
+  @override
+  String get homeCategoriesRetry => 'Обиди се повторно';
+
+  @override
   String get homeRecommendedHeading => 'Препорачано за вас';
 
   @override

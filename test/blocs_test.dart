@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
+import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
 import 'package:bulka_frontend/blocs/favorites/favorites_bloc.dart';
 import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
@@ -269,6 +270,89 @@ void main() {
       reviews: ListingReviewsState(const []),
     );
     expect(matches.map((l) => l.id), ['cheap']);
+  });
+
+  group('CategoriesBloc', () {
+    CategoriesBloc categoriesWith(Map<String, (int, Object)> responses) {
+      final dio = Dio(BaseOptions(baseUrl: 'https://test'))
+        ..httpClientAdapter = _FakeAdapter(responses);
+      return CategoriesBloc(dio: dio);
+    }
+
+    const categoriesResponse = {
+      'success': true,
+      'data': [
+        {
+          'id': 'stay',
+          'parentCategoryId': null,
+          'code': 'rural-stay',
+          'name': 'Сместување',
+        },
+        {
+          'id': 'rooms',
+          'parentCategoryId': 'stay',
+          'code': 'rooms',
+          'name': 'Соби',
+        },
+        {
+          'id': 'new',
+          'parentCategoryId': null,
+          'code': 'something-new',
+          'name': 'Ново',
+        },
+      ],
+    };
+
+    blocTest<CategoriesBloc, CategoriesState>(
+      'loads the categories; Home shows only the top-level ones',
+      build: () =>
+          categoriesWith({'/api/categories': (200, categoriesResponse)}),
+      act: (bloc) => bloc.add(const CategoriesRequested('mk')),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<CategoriesState>().having(
+          (s) => s.status,
+          'status',
+          CategoriesStatus.loading,
+        ),
+        isA<CategoriesState>().having(
+          (s) => s.status,
+          'status',
+          CategoriesStatus.loaded,
+        ),
+      ],
+      verify: (bloc) {
+        final state = bloc.state;
+        expect(state.languageCode, 'mk');
+        expect(state.categories, hasLength(3));
+        expect(state.topLevel.map((c) => c.name), ['Сместување', 'Ново']);
+        expect(state.topLevel.first.emoji, '🏠');
+        // Unknown codes still get an emoji.
+        expect(state.topLevel.last.emoji, isNotEmpty);
+        expect(state.needsLoadFor('mk'), isFalse);
+        expect(state.needsLoadFor('en'), isTrue);
+      },
+    );
+
+    blocTest<CategoriesBloc, CategoriesState>(
+      'a failed request ends in failed and can be retried',
+      build: () => categoriesWith({}),
+      act: (bloc) => bloc.add(const CategoriesRequested('mk')),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<CategoriesState>().having(
+          (s) => s.status,
+          'status',
+          CategoriesStatus.loading,
+        ),
+        isA<CategoriesState>()
+            .having((s) => s.status, 'status', CategoriesStatus.failed)
+            .having((s) => s.error, 'error', isNotNull),
+      ],
+      verify: (bloc) {
+        expect(bloc.state.needsLoadFor('mk'), isTrue);
+      },
+    );
   });
 
   group('AuthBloc', () {

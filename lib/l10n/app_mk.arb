@@ -325,6 +325,8 @@
   "homeSubtitle": "Пронајдете го вашето следно рурално доживување",
   "homeSearchPlaceholder": "Пребарај дестинации, понуди...",
   "homeCategoriesHeading": "Категории",
+  "homeCategoriesLoadFailed": "Категориите не можат да се вчитаат.",
+  "homeCategoriesRetry": "Обиди се повторно",
   "homeRecommendedHeading": "Препорачано за вас",
   "homePricePrefix": "од ",
   "homeBanner1Title": "До 20% попуст на избрани понуди",

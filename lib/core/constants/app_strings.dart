@@ -401,6 +401,8 @@ class AppStrings {
   static String get homeSubtitle => _s.homeSubtitle;
   static String get homeSearchPlaceholder => _s.homeSearchPlaceholder;
   static String get homeCategoriesHeading => _s.homeCategoriesHeading;
+  static String get homeCategoriesLoadFailed => _s.homeCategoriesLoadFailed;
+  static String get homeCategoriesRetry => _s.homeCategoriesRetry;
   static String get homeRecommendedHeading => _s.homeRecommendedHeading;
   static String get homePricePrefix => _s.homePricePrefix;
   static String get homeBanner1Title => _s.homeBanner1Title;

@@ -325,6 +325,8 @@
   "homeSubtitle": "Find your next rural experience",
   "homeSearchPlaceholder": "Search destinations, offers...",
   "homeCategoriesHeading": "Categories",
+  "homeCategoriesLoadFailed": "Couldn't load categories.",
+  "homeCategoriesRetry": "Try again",
   "homeRecommendedHeading": "Recommended for you",
   "homePricePrefix": "from ",
   "homeBanner1Title": "Up to 20% off selected offers",

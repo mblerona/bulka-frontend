@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,6 +15,43 @@ Future<void> loadAppFonts() async {
     montserrat.addFont(Future.value(ByteData.sublistView(bytes)));
   }
   await montserrat.load();
+}
+
+/// Answers the app's API calls in tests (see `flutter_test_config.dart`).
+/// Unknown paths get a 404.
+class FakeBackendAdapter implements HttpClientAdapter {
+  static const Map<String, Object> responses = {
+    '/api/categories': {
+      'success': true,
+      'data': [
+        {'id': 'c1', 'code': 'rural-stay', 'name': 'Сместување'},
+        {'id': 'c2', 'code': 'gastronomy', 'name': 'Гастрономија'},
+        {'id': 'c3', 'code': 'food-tasting', 'name': 'Понуда на храна'},
+        {'id': 'c4', 'code': 'nature-activities', 'name': 'Активности'},
+        {'id': 'c5', 'code': 'svc-0050', 'name': 'Продавница'},
+        {'id': 'c6', 'parentCategoryId': 'c1', 'code': 'rooms', 'name': 'Соби'},
+      ],
+    },
+  };
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final body = responses[options.path];
+    return ResponseBody.fromString(
+      jsonEncode(body ?? const {'success': false}),
+      body == null ? 404 : 200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 /// A typical phone screen (360×740) instead of the 800×600 test default.

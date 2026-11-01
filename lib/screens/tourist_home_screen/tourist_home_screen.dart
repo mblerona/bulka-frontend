@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/blocs/search/search_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +44,12 @@ class TouristHomeScreen extends StatefulWidget {
 }
 
 class _TouristHomeScreenState extends State<TouristHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories(context);
+  }
+
   Future<void> _openFilters() async {
     final search = context.read<SearchBloc>();
     final result = await showModalBottomSheet<ListingSearchFilter>(
@@ -79,6 +87,19 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
             ? RegistrationProfile.fromAuthUser(user)
             : TouristHomeScreen._sampleProfile);
 
+    // Category names come translated from the backend, so reload them in
+    // the new language.
+    return BlocListener<LocaleBloc, LocaleState>(
+      listenWhen: (previous, current) => previous.locale != current.locale,
+      listener: (context, _) => _loadCategories(context),
+      child: _buildScreen(profile, listings),
+    );
+  }
+
+  Widget _buildScreen(
+    RegistrationProfile profile,
+    List<ProviderListing> listings,
+  ) {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
@@ -360,29 +381,96 @@ class _BannerCard extends StatelessWidget {
   }
 }
 
-/// Data-driven from `touristHomeCategories` — same domain category values
-/// `ProviderListing.category`/the Create Offer wizard use, not a second
-/// taxonomy. No search-results screen exists yet, so tapping a chip is a
-/// clean TODO for now.
+/// Loads the categories in the current language unless they're already
+/// loaded (or loading) in it.
+void _loadCategories(BuildContext context) {
+  final language = context.read<LocaleBloc>().state.locale.languageCode;
+  final categories = context.read<CategoriesBloc>();
+  if (categories.state.needsLoadFor(language)) {
+    categories.add(CategoriesRequested(language));
+  }
+}
+
+/// The top-level categories from `GET /api/categories` (see
+/// [CategoriesBloc]). No search-results screen exists yet, so tapping a
+/// chip is a clean TODO for now.
 class _CategoryRow extends StatelessWidget {
   const _CategoryRow();
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<CategoriesBloc>().state;
+    final categories = state.topLevel;
+
+    if (categories.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.dsBodyHorizontalPadding,
+          vertical: AppDimensions.homeCategoryCardVerticalPadding,
+        ),
+        child: state.status == CategoriesStatus.failed
+            ? _CategoriesLoadFailed(onRetry: () => _loadCategories(context))
+            : const Center(
+                child: SizedBox.square(
+                  dimension: AppDimensions.homeCategoryIconAreaHeight,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.agroGreen600,
+                  ),
+                ),
+              ),
+      );
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.only(
         left: AppDimensions.dsBodyHorizontalPadding,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < touristHomeCategories.length; i++) ...[
-            _CategoryCard(category: touristHomeCategories[i]),
-            if (i != touristHomeCategories.length - 1)
+          for (var i = 0; i < categories.length; i++) ...[
+            _CategoryCard(category: categories[i]),
+            if (i != categories.length - 1)
               const SizedBox(width: AppDimensions.homeCategoryRowGap),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _CategoriesLoadFailed extends StatelessWidget {
+  const _CategoriesLoadFailed({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            AppStrings.homeCategoriesLoadFailed,
+            style: const TextStyle(
+              fontSize: AppDimensions.homeCategoryLabelFontSize,
+              color: AppColors.profileSecondaryText,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onRetry,
+          child: Text(
+            AppStrings.homeCategoriesRetry,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: AppDimensions.homeCategoryLabelFontSize,
+              color: AppColors.agroGreen600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

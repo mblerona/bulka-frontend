@@ -1034,6 +1034,12 @@ class AppLocalizationsSq extends AppLocalizations {
   String get homeCategoriesHeading => 'Kategoritë';
 
   @override
+  String get homeCategoriesLoadFailed => 'Kategoritë nuk mund të ngarkohen.';
+
+  @override
+  String get homeCategoriesRetry => 'Provo përsëri';
+
+  @override
   String get homeRecommendedHeading => 'Të rekomanduara për ju';
 
   @override

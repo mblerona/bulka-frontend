@@ -1,24 +1,49 @@
-import 'package:bulka_frontend/models/listing_category.dart';
-
-/// One category chip on Tourist Home's "Категории" row: a [ListingCategory]
-/// (the same values provider listings use) plus the emoji Figma shows for
-/// it on this screen.
+/// One category from `GET /api/categories`. Tourist Home's "Категории" row
+/// shows the top-level ones (no [parentCategoryId]).
+///
+/// [name] is already translated by the backend (from the `Accept-Language`
+/// header); it falls back to Macedonian where a translation is missing.
 class HomeCategory {
-  const HomeCategory({required this.category, required this.emoji});
+  const HomeCategory({
+    required this.id,
+    required this.code,
+    required this.name,
+    this.parentCategoryId,
+  });
 
-  final ListingCategory category;
-  final String emoji;
+  factory HomeCategory.fromJson(Map<String, dynamic> json) {
+    return HomeCategory(
+      id: json['id'] as String,
+      code: json['code'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      parentCategoryId: json['parentCategoryId'] as String?,
+    );
+  }
 
-  String get label => category.shortLabel;
+  final String id;
+
+  /// Stable backend key, e.g. "rural-stay". Unlike [name], it doesn't
+  /// change with the language.
+  final String code;
+  final String name;
+  final String? parentCategoryId;
+
+  bool get isTopLevel => parentCategoryId == null;
+
+  String get label => name;
+
+  /// The backend has no icons for categories, so the chip's emoji is
+  /// picked by [code].
+  String get emoji => _emojiByCode[code] ?? _defaultEmoji;
+
+  static const String _defaultEmoji = '🌾';
+
+  static const Map<String, String> _emojiByCode = {
+    'rural-stay': '🏠',
+    'gastronomy': '🍽️',
+    'food-tasting': '🧀',
+    'nature-activities': '🌿',
+    // "Shop" / "Продавница".
+    'svc-0050': '🧺',
+  };
 }
-
-/// Same 7 categories, same order, as `createOfferCategories`.
-const List<HomeCategory> touristHomeCategories = [
-  HomeCategory(category: ListingCategory.accommodation, emoji: '🏠'),
-  HomeCategory(category: ListingCategory.gastronomy, emoji: '🍽️'),
-  HomeCategory(category: ListingCategory.farmParticipation, emoji: '🚜'),
-  HomeCategory(category: ListingCategory.directSales, emoji: '🧺'),
-  HomeCategory(category: ListingCategory.farmEducation, emoji: '📚'),
-  HomeCategory(category: ListingCategory.farmRecreation, emoji: '🌿'),
-  HomeCategory(category: ListingCategory.offFarmTours, emoji: '🥾'),
-];
