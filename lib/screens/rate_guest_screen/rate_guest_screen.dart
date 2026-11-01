@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
@@ -6,14 +8,13 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/services/guest_rating_controller.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
 /// Rates the guest of one specific completed [reservation]. Only ever
 /// reached for a `completed`, not-yet-rated reservation — the Dashboard
-/// checks `GuestRatingController.hasRating` before navigating here at
-/// all, and `GuestRatingController.submitRating` re-validates both the
+/// checks `GuestRatingsState.hasRating` before navigating here at
+/// all, and `GuestRatingsBloc` re-validates both the
 /// `completed` status and the no-duplicate rule regardless, so this
 /// screen never needs to reimplement either check itself.
 class RateGuestScreen extends StatefulWidget {
@@ -39,10 +40,12 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
 
   void _handleSubmit() {
     if (!_isValid) return;
-    GuestRatingController.instance.submitRating(
-      reservation: widget.reservation,
-      rating: _rating,
-      note: _noteController.text,
+    context.read<GuestRatingsBloc>().add(
+      GuestRatingSubmitted(
+        reservation: widget.reservation,
+        rating: _rating,
+        note: _noteController.text,
+      ),
     );
     context.pushReplacement(AppRoutes.ratingSaved);
   }

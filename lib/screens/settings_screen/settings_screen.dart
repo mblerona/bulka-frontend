@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/l10n/locale_controller.dart';
-import 'package:bulka_frontend/services/auth_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
@@ -20,9 +21,10 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
 
-  Future<void> _handleLogout() async {
-    await AuthController.instance.logout();
-    if (!mounted) return;
+  /// Logging out finishes in AuthBloc (backend + local tokens); the user
+  /// doesn't have to wait for it.
+  void _handleLogout() {
+    context.read<AuthBloc>().add(const AuthLogoutRequested());
     context.go(AppRoutes.login);
   }
 
@@ -84,12 +86,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           LanguageSwitch(
-                            selectedLanguageCode:
-                                LocaleController.instance.switchCode,
+                            selectedLanguageCode: context
+                                .watch<LocaleBloc>()
+                                .state
+                                .switchCode,
                             surface: LanguageSwitchSurface.light,
                             onChanged: (code) {
                               // Saved app-wide; BulkaApp rebuilds every screen.
-                              LocaleController.instance.setLanguage(code);
+                              context.read<LocaleBloc>().add(
+                                LanguageChanged(code),
+                              );
                             },
                           ),
                         ],

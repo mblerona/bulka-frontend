@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/search/search_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
@@ -12,12 +15,10 @@ import 'package:bulka_frontend/models/promo_banner.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/search_controller.dart' as search;
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 /// Buyer/Tourist "Дома" — the Figma "20 – Buyer · Discover Home" frame.
-/// Listings come straight from `ProviderListingController.recommendedListings`
+/// Listings come straight from `ListingsState.active`
 /// (active listings only) — no separate Tourist-side listing collection.
 /// The search bar opens the filter sheet (→ Search Results) and each
 /// listing card opens Listing Details; category-chip taps remain a clean
@@ -39,25 +40,8 @@ class TouristHomeScreen extends StatefulWidget {
 }
 
 class _TouristHomeScreenState extends State<TouristHomeScreen> {
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    _listingController.addListener(_handleChanged);
-  }
-
-  @override
-  void dispose() {
-    _listingController.removeListener(_handleChanged);
-    super.dispose();
-  }
-
-  void _handleChanged() => setState(() {});
-
   Future<void> _openFilters() async {
-    final current = search.SearchController.instance;
+    final search = context.read<SearchBloc>();
     final result = await showModalBottomSheet<ListingSearchFilter>(
       context: context,
       isScrollControlled: true,
@@ -70,10 +54,10 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.92,
       ),
-      builder: (_) => SearchFiltersSheet(initialFilter: current.filter),
+      builder: (_) => SearchFiltersSheet(initialFilter: search.state.filter),
     );
     if (result == null || !mounted) return;
-    current.applyFilter(result);
+    search.add(SearchFilterApplied(result));
     context.go(AppRoutes.search);
   }
 
@@ -85,7 +69,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final listings = _listingController.recommendedListings;
+    final listings = context.watch<ListingsBloc>().state.active;
 
     return Scaffold(
       backgroundColor: AppColors.white,

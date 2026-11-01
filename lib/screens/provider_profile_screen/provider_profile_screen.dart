@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
@@ -9,8 +12,6 @@ import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/collapsible_checklist.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -47,20 +48,19 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   // rather than the Figma mock's literal "ВЕРИФИКУВАН" state.
   static const bool _isVerified = false;
 
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
-  final ListingReviewController _reviewController =
-      ListingReviewController.instance;
+  // Read here; `build` watches the same blocs so the screen rebuilds.
+  ListingsState get _listings => context.read<ListingsBloc>().state;
+  ListingReviewsState get _reviews => context.read<ListingReviewsBloc>().state;
 
-  int get _activeOffersCount => _listingController.activeListingsCount;
+  int get _activeOffersCount => _listings.activeCount;
 
   // Average of active listings' own *effective* ratings (the real review
   // average where reviews exist, same as everywhere else in the app) — 0
   // if none are rated yet.
   double get _averageRating {
-    final ratings = _listingController.listings
+    final ratings = _listings.listings
         .where((l) => l.status == ListingStatus.active)
-        .map((l) => _reviewController.effectiveRating(l))
+        .map((l) => _reviews.effectiveRating(l))
         .whereType<double>()
         .toList();
     if (ratings.isEmpty) return 0;
@@ -113,8 +113,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _listingController.addListener(_handleListingsChanged);
-    _reviewController.addListener(_handleListingsChanged);
     _savedName = _profile.fullName;
     _savedPhone = _profile.phone;
     _savedOfferName = '';
@@ -163,12 +161,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     _savedContacts = _contactValues;
   }
 
-  void _handleListingsChanged() => setState(() {});
-
   @override
   void dispose() {
-    _listingController.removeListener(_handleListingsChanged);
-    _reviewController.removeListener(_handleListingsChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _offerNameController.dispose();
@@ -333,6 +327,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ListingsBloc>();
+    context.watch<ListingReviewsBloc>();
     final isLegalEntity = _subjectTypeIndex == 1;
     return Scaffold(
       backgroundColor: AppColors.white,

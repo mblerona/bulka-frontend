@@ -28,14 +28,16 @@ void main() {
       jsonDecode(File(_template).readAsStringSync()) as Map<String, dynamic>;
   final b = StringBuffer()
     ..writeln('// GENERATED from lib/l10n/app_mk.arb by')
-    ..writeln('// `dart run tool/gen_app_strings.dart` — edit the .arb files in')
+    ..writeln(
+      '// `dart run tool/gen_app_strings.dart` — edit the .arb files in',
+    )
     ..writeln('// lib/l10n/ (mk is the template), not the getters below. The')
     ..writeln('// constants at the bottom are kept as-is when regenerating.')
-    ..writeln("import 'package:bulka_frontend/core/l10n/locale_controller.dart';")
+    ..writeln("import 'package:bulka_frontend/core/l10n/app_locale.dart';")
     ..writeln("import 'package:bulka_frontend/l10n/app_localizations.dart';")
     ..writeln()
     ..writeln(
-      '/// All user-facing text, in the language picked in [LocaleController].',
+      '/// All user-facing text, in the language picked in `LocaleBloc`.',
     )
     ..writeln('///')
     ..writeln(
@@ -48,9 +50,7 @@ void main() {
     ..writeln('class AppStrings {')
     ..writeln('  AppStrings._();')
     ..writeln()
-    ..writeln(
-      '  static AppLocalizations get _s => LocaleController.instance.strings;',
-    )
+    ..writeln('  static AppLocalizations get _s => AppLocale.strings;')
     ..writeln();
 
   var count = 0;

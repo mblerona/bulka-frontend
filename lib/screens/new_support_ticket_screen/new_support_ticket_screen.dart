@@ -1,11 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/support_tickets/support_tickets_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/support_attachment.dart';
-import 'package:bulka_frontend/services/support_ticket_controller.dart';
 import 'package:bulka_frontend/widgets/dashed_border_box.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -148,15 +149,16 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
 
   void _handleSubmit() {
     if (!_isValid) return;
-    SupportTicketController.instance.createTicket(
-      category: _categories[_categoryIndex],
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      attachment: _attachment,
+    context.read<SupportTicketsBloc>().add(
+      SupportTicketCreated(
+        category: _categories[_categoryIndex],
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        attachment: _attachment,
+      ),
     );
-    // The new ticket is now first in SupportTicketController's shared
-    // list — My Tickets renders from that same list, so popping back to it
-    // shows the new ticket immediately without any extra plumbing.
+    // My Tickets watches SupportTicketsBloc, so it shows the new ticket
+    // (first in the list) as soon as we're back.
     Navigator.of(context).pop();
   }
 

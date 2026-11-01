@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/search/search_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -8,7 +12,6 @@ import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -44,8 +47,9 @@ const List<double?> _ratingOptions = [null, 3.0, 4.0, 4.5];
 const List<int> _guestCountOptions = [1, 2, 3, 4, 5];
 
 class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
+  /// The sheet works on a draft filter, so it doesn't need to rebuild when
+  /// listings change; it reads them as needed.
+  ListingsState get _listings => context.read<ListingsBloc>().state;
 
   late final ListingSearchFilter _filter;
   late final TextEditingController _keywordController;
@@ -59,7 +63,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
       ..addListener(
         () => setState(() => _filter.keyword = _keywordController.text),
       );
-    final bounds = _listingController.activePriceBounds;
+    final bounds = _listings.activePriceBounds;
     _priceRange = RangeValues(
       _filter.minPrice ?? bounds.min,
       _filter.maxPrice ?? bounds.max,
@@ -72,12 +76,16 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
     super.dispose();
   }
 
-  int get _resultCount => _listingController.searchListings(_filter).length;
+  int get _resultCount => searchListings(
+    filter: _filter,
+    listings: _listings,
+    reviews: context.read<ListingReviewsBloc>().state,
+  ).length;
 
   void _handleClose() => Navigator.of(context).pop();
 
   void _handleClear() {
-    final bounds = _listingController.activePriceBounds;
+    final bounds = _listings.activePriceBounds;
     setState(() {
       _filter.reset();
       _keywordController.text = '';
@@ -86,7 +94,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
   }
 
   void _handleApply() {
-    final bounds = _listingController.activePriceBounds;
+    final bounds = _listings.activePriceBounds;
     final applied = _filter.copy()
       ..minPrice = _filter.minPrice != null && _filter.minPrice! <= bounds.min
           ? null
@@ -106,7 +114,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
   }
 
   Future<void> _pickLocation() async {
-    final locations = _listingController.activeLocations;
+    final locations = _listings.activeLocations;
     final selected = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.white,
@@ -184,7 +192,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bounds = _listingController.activePriceBounds;
+    final bounds = _listings.activePriceBounds;
     return SafeArea(
       top: false,
       child: Padding(

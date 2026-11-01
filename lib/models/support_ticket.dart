@@ -37,7 +37,7 @@ enum TicketStatus {
 }
 
 /// A support ticket. Shaped to map directly onto a future support API
-/// response so the mock data + local creation in `SupportTicketController`
+/// response so the mock data + local creation in `SupportTicketsBloc`
 /// can be swapped for real fetched/created records without changing this
 /// model or anything that reads it.
 class SupportTicket {

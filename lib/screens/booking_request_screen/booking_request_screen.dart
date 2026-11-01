@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -8,8 +12,6 @@ import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/availability_status.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/services/availability_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
@@ -41,9 +43,9 @@ class BookingRequestScreen extends StatefulWidget {
 }
 
 class _BookingRequestScreenState extends State<BookingRequestScreen> {
-  final AvailabilityController _availability = AvailabilityController.instance;
-  final ReservationController _reservationController =
-      ReservationController.instance;
+  /// Set when this screen sends its booking, so the listener below only
+  /// reacts to the reservation this screen created.
+  bool _submitted = false;
 
   DateTime? _startDate;
   DateTime? _endDate;
@@ -56,17 +58,25 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
   bool get _canSubmit =>
       _startDate != null && _endDate != null && _dateError == null;
 
-  /// Reuses `AvailabilityController.statusForDate` (already shared by the
-  /// Provider Availability Calendar) day-by-day over the picked range —
-  /// no separate availability logic exists here.
+  /// Reuses `AvailabilityState.statusFor` (also behind the Provider
+  /// Availability Calendar) day-by-day over the picked range — no separate
+  /// availability logic exists here.
   bool _hasUnavailableDay(DateTime start, DateTime end) {
+    final availability = context.read<AvailabilityBloc>().state;
+    final listings = context.read<ListingsBloc>().state;
+    final reservations = context.read<ReservationsBloc>().state;
     for (
       var day = start;
       day.isBefore(end);
       day = day.add(const Duration(days: 1))
     ) {
-      if (_availability.statusForDate(widget.listing.id, day) !=
-          AvailabilityStatus.available) {
+      final status = availability.statusFor(
+        widget.listing.id,
+        day,
+        listings: listings,
+        reservations: reservations,
+      );
+      if (status != AvailabilityStatus.available) {
         return true;
       }
     }
@@ -111,24 +121,45 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
   }
 
   void _handleSubmit() {
-    if (!_canSubmit) return;
-    final reservation = _reservationController.createReservation(
-      listing: widget.listing,
-      guestName: mockTouristGuestName,
-      startDate: _startDate!,
-      endDate: _endDate!,
-      guestCount: _guestCount,
+    if (!_canSubmit || _submitted) return;
+    _submitted = true;
+    context.read<ReservationsBloc>().add(
+      ReservationRequested(
+        listing: widget.listing,
+        guestName: mockTouristGuestName,
+        startDate: _startDate!,
+        endDate: _endDate!,
+        guestCount: _guestCount,
+      ),
     );
-    // Clear this tab (Home or Search) so coming back to it doesn't show
-    // this form again, then show the confirmation under Reservations.
+  }
+
+  /// The booking was created: clear this tab (Home or Search) so coming
+  /// back to it doesn't show this form again, then show the confirmation
+  /// under Reservations.
+  void _handleReservationCreated(
+    BuildContext context,
+    ReservationsState state,
+  ) {
     resetTabThenGo(
       AppRoutes.listingTabRoot(context),
-      AppRoutes.reservationConfirmation(reservation.id),
+      AppRoutes.reservationConfirmation(state.lastCreated!.id),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    return BlocListener<ReservationsBloc, ReservationsState>(
+      listenWhen: (previous, current) =>
+          _submitted &&
+          current.lastCreated != null &&
+          current.lastCreated != previous.lastCreated,
+      listener: _handleReservationCreated,
+      child: _buildScreen(context),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     final listing = widget.listing;
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,

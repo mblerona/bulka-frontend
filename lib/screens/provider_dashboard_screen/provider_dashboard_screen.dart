@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
@@ -6,9 +10,6 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/services/guest_rating_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
@@ -22,28 +23,10 @@ class ProviderDashboardScreen extends StatefulWidget {
 }
 
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
-  final ReservationController _reservationController =
-      ReservationController.instance;
-  final GuestRatingController _ratingController =
-      GuestRatingController.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    _listingController.addListener(_handleChanged);
-    _reservationController.addListener(_handleChanged);
-    _ratingController.addListener(_handleChanged);
-  }
-
-  @override
-  void dispose() {
-    _listingController.removeListener(_handleChanged);
-    _reservationController.removeListener(_handleChanged);
-    _ratingController.removeListener(_handleChanged);
-    super.dispose();
-  }
+  // Read here; `build` watches the same blocs so the screen rebuilds.
+  ListingsState get _listings => context.read<ListingsBloc>().state;
+  ReservationsState get _reservations => context.read<ReservationsBloc>().state;
+  GuestRatingsState get _ratings => context.read<GuestRatingsBloc>().state;
 
   /// Only navigates into the rating form for a reservation that hasn't
   /// been rated yet — Figma has no "already rated" visual state, so
@@ -51,18 +34,18 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   /// below); this just makes sure a second tap can't re-open the form and
   /// attempt a duplicate submission.
   void _handleRateGuest(Reservation reservation) {
-    if (_ratingController.hasRating(reservation.id)) return;
+    if (_ratings.hasRating(reservation.id)) return;
     context.push(AppRoutes.rateGuest(reservation.id));
   }
 
-  void _handleChanged() => setState(() {});
-
   @override
   Widget build(BuildContext context) {
-    final listings = _listingController.listings;
+    context.watch<GuestRatingsBloc>();
+    final listings = context.watch<ListingsBloc>().state.listings;
     final greetingName = listings.isNotEmpty ? listings.first.title : '';
-    final pending = _reservationController.pendingReservations;
-    final completed = _reservationController.completedReservations;
+    final reservations = context.watch<ReservationsBloc>().state;
+    final pending = reservations.pending;
+    final completed = reservations.completed;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -101,7 +84,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     Row(
                       children: [
                         _CounterCard(
-                          value: '${_listingController.activeListingsCount}',
+                          value: '${_listings.activeCount}',
                           label: AppStrings.dashboardActiveListingsLabel,
                           valueColor: AppColors.agroInk500,
                         ),
@@ -109,8 +92,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           width: AppDimensions.dashboardCounterCardGap,
                         ),
                         _CounterCard(
-                          value:
-                              '${_listingController.pendingReviewListingsCount}',
+                          value: '${_listings.pendingReviewCount}',
                           label: AppStrings.dashboardPendingReviewListingsLabel,
                           valueColor: AppColors.dashboardPendingReviewAccent,
                         ),
@@ -118,8 +100,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           width: AppDimensions.dashboardCounterCardGap,
                         ),
                         _CounterCard(
-                          value:
-                              '${_reservationController.monthlyReservationsCount}',
+                          value: '${_reservations.monthlyCount}',
                           label: AppStrings.dashboardMonthlyReservationsLabel,
                           valueColor: AppColors.agroInk500,
                         ),
@@ -134,10 +115,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       _ReservationCard(
                         reservation: pending[i],
                         actions: _PendingActions(
-                          onAccept: () => _reservationController
-                              .acceptReservation(pending[i].id),
-                          onReject: () => _reservationController
-                              .rejectReservation(pending[i].id),
+                          onAccept: () => context.read<ReservationsBloc>().add(
+                            ReservationAccepted(pending[i].id),
+                          ),
+                          onReject: () => context.read<ReservationsBloc>().add(
+                            ReservationRejected(pending[i].id),
+                          ),
                         ),
                       ),
                       if (i != pending.length - 1)
@@ -156,7 +139,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         // TODO: once a design exists for an "already
                         // rated" state, show it here instead of the
                         // still-tappable "Оцени гостин" for reservations
-                        // where `_ratingController.hasRating(...)` is
+                        // where `_ratings.hasRating(...)` is
                         // already true (e.g. a rated indicator/"view
                         // rating" action) — for now the button always
                         // reads "Оцени гостин", but `_handleRateGuest`

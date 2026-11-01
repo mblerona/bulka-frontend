@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,7 +11,6 @@ import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/photo_grid.dart';
@@ -33,8 +34,6 @@ class CreateOfferWizardScreen extends StatefulWidget {
 }
 
 class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
   final CreateListingDraft _draft = CreateListingDraft();
 
   int _currentStep = 0;
@@ -148,7 +147,7 @@ class _CreateOfferWizardScreenState extends State<CreateOfferWizardScreen> {
   }
 
   void _handlePublish() {
-    _listingController.createListing(_draft);
+    context.read<ListingsBloc>().add(ListingCreated(_draft));
     context.pushReplacement(AppRoutes.offerPublished);
   }
 

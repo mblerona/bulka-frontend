@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bulka_frontend/blocs/app_bloc_providers.dart';
 import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
 
 /// [keyboardHeight] simulates the on-screen keyboard being open, which is
@@ -16,7 +17,13 @@ Future<void> _pumpAt(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetViewInsets);
-  await tester.pumpWidget(const MaterialApp(home: EmailVerificationScreen()));
+  // Screens read the app's blocs, so they need the same providers.
+  await tester.pumpWidget(
+    const AppBlocProviders(
+      initialLocale: Locale('mk'),
+      child: MaterialApp(home: EmailVerificationScreen()),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 

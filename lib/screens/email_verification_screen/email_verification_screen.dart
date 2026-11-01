@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -35,8 +35,6 @@ class EmailVerificationScreen extends StatefulWidget {
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final _codeController = TextEditingController();
-  bool _isVerifying = false;
-  bool _isResending = false;
 
   /// A function, not the text itself, so a message on screen follows a
   /// language switch.
@@ -50,7 +48,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     super.dispose();
   }
 
-  Future<void> _verify() async {
+  void _verify() {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
       setState(
@@ -58,48 +56,72 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       );
       return;
     }
-
-    setState(() {
-      _isVerifying = true;
-      _errorMessage = null;
-    });
-    try {
-      await AuthController.instance.verifyEmail(email: _email, code: code);
-      if (!mounted) return;
-      // The app-wide messenger, so the message stays visible on Login.
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(AppStrings.emailVerificationSuccess)),
-        );
-      context.go(AppRoutes.loginWithEmail(_email));
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isVerifying = false;
-        _errorMessage = () => e.message;
-      });
-    }
+    setState(() => _errorMessage = null);
+    context.read<AuthBloc>().add(
+      AuthEmailVerificationRequested(email: _email, code: code),
+    );
   }
 
-  Future<void> _resendEmail() async {
-    setState(() => _isResending = true);
-    String message;
-    try {
-      await AuthController.instance.resendEmailVerification(_email);
-      message = AppStrings.emailVerificationResent;
-    } on ApiException catch (e) {
-      message = e.message;
-    }
-    if (!mounted) return;
-    setState(() => _isResending = false);
+  void _resendEmail() {
+    context.read<AuthBloc>().add(AuthVerificationEmailResendRequested(_email));
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    // The app-wide messenger, so a message stays visible after navigating.
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _handleAuthResult(BuildContext context, AuthState state) {
+    final succeeded = state.status == AuthOperationStatus.succeeded;
+    final failed = state.status == AuthOperationStatus.failed;
+    switch (state.operation) {
+      case AuthOperation.verifyEmail when succeeded:
+        _showSnackBar(context, AppStrings.emailVerificationSuccess);
+        context.go(AppRoutes.loginWithEmail(_email));
+      case AuthOperation.verifyEmail when failed:
+        final error = state.error!;
+        setState(() => _errorMessage = () => error.message);
+      case AuthOperation.resendVerification when succeeded:
+        _showSnackBar(context, AppStrings.emailVerificationResent);
+      case AuthOperation.resendVerification when failed:
+        _showSnackBar(context, state.error!.message);
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Each button is disabled while its own request runs.
+    final isVerifying = context.select(
+      (AuthBloc bloc) => bloc.state.isInProgress(AuthOperation.verifyEmail),
+    );
+    final isResending = context.select(
+      (AuthBloc bloc) =>
+          bloc.state.isInProgress(AuthOperation.resendVerification),
+    );
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          (current.operation == AuthOperation.verifyEmail ||
+              current.operation == AuthOperation.resendVerification) &&
+          (current.status != previous.status ||
+              current.operation != previous.operation),
+      listener: _handleAuthResult,
+      child: _buildScreen(
+        context,
+        isVerifying: isVerifying,
+        isResending: isResending,
+      ),
+    );
+  }
+
+  Widget _buildScreen(
+    BuildContext context, {
+    required bool isVerifying,
+    required bool isResending,
+  }) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
       body: SafeArea(
@@ -201,12 +223,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     ],
                     PrimaryButton(
                       label: AppStrings.emailVerificationSubmitButton,
-                      onPressed: _isVerifying ? null : _verify,
+                      onPressed: isVerifying ? null : _verify,
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
                     SecondaryButton(
                       label: AppStrings.emailVerificationResendButton,
-                      onPressed: _isResending ? null : _resendEmail,
+                      onPressed: isResending ? null : _resendEmail,
                     ),
                     const SizedBox(height: AppDimensions.emailVerificationGap),
                     GestureDetector(

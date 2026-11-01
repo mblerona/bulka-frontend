@@ -15,14 +15,14 @@ import 'package:bulka_frontend/widgets/secondary_button.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 /// The Figma "25 – Buyer · Booking Confirmed" frame — reached only after
-/// `ReservationController.createReservation` has already created a real
+/// `ReservationsBloc` (`ReservationRequested`) has already created a real
 /// [reservation]; this screen never creates one itself, only displays the
 /// completed result.
 ///
 /// Per the app's actual reservation lifecycle, a Tourist booking always
 /// starts `pending` (the same Provider Dashboard accept/reject queue every
 /// other reservation already goes through — see
-/// `ReservationController.createReservation`'s own doc comment), so the
+/// `ReservationsBloc`'s booking handler), so the
 /// heading/subtitle text is deliberately NOT Figma's literal "Резервацијата
 /// е потврдена!" (which would misrepresent a still-pending booking as
 /// provider-approved) — only the wording differs; the layout/styling below

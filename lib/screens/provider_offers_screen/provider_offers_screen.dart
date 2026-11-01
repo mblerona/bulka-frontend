@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
@@ -6,8 +9,6 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/ago_label.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
@@ -37,34 +38,15 @@ class ProviderOffersScreen extends StatefulWidget {
 }
 
 class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
-  final ProviderListingController _controller =
-      ProviderListingController.instance;
-  final ListingReviewController _reviewController =
-      ListingReviewController.instance;
-
   // null == "Сите" (all) — local UI state, since only this screen cares
   // which filter is currently selected.
   ListingStatus? _selectedFilter;
 
   @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_handleControllerChanged);
-    _reviewController.addListener(_handleControllerChanged);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_handleControllerChanged);
-    _reviewController.removeListener(_handleControllerChanged);
-    super.dispose();
-  }
-
-  void _handleControllerChanged() => setState(() {});
-
-  @override
   Widget build(BuildContext context) {
-    final listings = _controller.filteredListings(status: _selectedFilter);
+    final listings = context.watch<ListingsBloc>().state.filtered(
+      status: _selectedFilter,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -109,8 +91,9 @@ class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
                     for (var i = 0; i < listings.length; i++) ...[
                       _ListingCard(
                         listing: listings[i],
-                        onReactivate: () =>
-                            _controller.reactivateListing(listings[i].id),
+                        onReactivate: () => context.read<ListingsBloc>().add(
+                          ListingReactivated(listings[i].id),
+                        ),
                       ),
                       if (i != listings.length - 1)
                         const SizedBox(height: AppDimensions.offersBodyGap),
@@ -201,12 +184,14 @@ class _ListingCard extends StatelessWidget {
   final ProviderListing listing;
   final VoidCallback onReactivate;
 
-  String? get _infoLine {
+  /// Call from `build`: it subscribes to the reviews.
+  String? _infoLine(BuildContext context) {
     switch (listing.status) {
       case ListingStatus.active:
-        final rating = ListingReviewController.instance.effectiveRating(
-          listing,
-        );
+        final rating = context
+            .watch<ListingReviewsBloc>()
+            .state
+            .effectiveRating(listing);
         final ratingText = rating != null
             ? ' · ${rating.toStringAsFixed(1)} ★'
             : '';
@@ -252,6 +237,7 @@ class _ListingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final action = _buildAction();
+    final infoLine = _infoLine(context);
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
@@ -314,10 +300,10 @@ class _ListingCard extends StatelessWidget {
                     color: AppColors.profileSecondaryText,
                   ),
                 ),
-                if (_infoLine != null) ...[
+                if (infoLine != null) ...[
                   const SizedBox(height: AppDimensions.offersCardInfoGap),
                   Text(
-                    _infoLine!,
+                    infoLine,
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: AppDimensions.offersCardMetaFontSize,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
@@ -8,7 +10,6 @@ import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
@@ -22,7 +23,7 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// screen's own tokens almost entirely — see the AppDimensions section
 /// this screen's own values live under.
 ///
-/// `ListingReviewController.submitReview` independently re-validates both
+/// `ListingReviewsBloc` independently re-validates both
 /// eligibility (`status == completed`) and the no-duplicate-review rule
 /// regardless of what the caller already checked, so this screen never
 /// needs to reimplement either.
@@ -54,12 +55,14 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
 
   void _handleSubmit() {
     if (!_isValid) return;
-    ListingReviewController.instance.submitReview(
-      listing: widget.listing,
-      reservation: widget.reservation,
-      authorName: mockTouristGuestName,
-      rating: _rating,
-      comment: _reviewController.text,
+    context.read<ListingReviewsBloc>().add(
+      ListingReviewSubmitted(
+        listing: widget.listing,
+        reservation: widget.reservation,
+        authorName: mockTouristGuestName,
+        rating: _rating,
+        comment: _reviewController.text,
+      ),
     );
     context.pushReplacement(AppRoutes.reviewSubmitted);
   }

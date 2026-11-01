@@ -25,7 +25,8 @@ flutter test test/widget_test.dart  # Run single test file
 **Core structure**:
 - `lib/core/constants/` — `AppColors` and `AppStrings` (all user-facing text; `AppStrings` is generated and returns the current language)
 - `lib/l10n/` — translations: `app_mk.arb` (template), `app_en.arb`, `app_sq.arb`, plus the generated `app_localizations*.dart`
-- `lib/core/l10n/locale_controller.dart` — current language (MK/SQ/EN), saved choice, phone language on first launch
+- `lib/blocs/<feature>/` — app state, one Bloc per feature (see State management)
+- `lib/core/l10n/app_locale.dart` — the current language for code without a `BuildContext` (`AppStrings`, API headers, `intl`); only `LocaleBloc` changes it
 - `lib/core/theme/` — `AppTheme.lightTheme` with Montserrat font
 - `lib/models/` — `UserRole` enum (`buyer`, `owner`)
 - `lib/screens/` — one folder per screen (e.g. `splash_screen/`, `choose_role_screen/`)
@@ -37,7 +38,13 @@ flutter test test/widget_test.dart  # Run single test file
 - To leave a tab cleared before jumping elsewhere (e.g. after booking), use `resetTabThenGo`.
 - New screens also get a `DevScreenEntry` in `lib/dev/dev_launcher_screen.dart`; `test/all_screens_localized_test.dart` then checks it in every language.
 
-**State management**: None yet — plain `StatefulWidget` where needed.
+**State management**: `flutter_bloc`, full Blocs with events (no Cubits).
+- One feature per folder in `lib/blocs/<feature>/`: `<feature>_bloc.dart` with `part` files `<feature>_event.dart` (a `sealed` event class, events named in the past tense: `ListingCreated`, `AuthLoginRequested`) and `<feature>_state.dart` (an immutable state with lookup helpers like `byId`). Mock seed data lives in `<feature>_mock_data.dart` until that feature uses the backend; API calls live in the bloc itself (no repositories).
+- All blocs are created once in `AppBlocProviders` (`lib/blocs/app_bloc_providers.dart`), above the router. Read them with `context.read<XBloc>()`, rebuild with `context.watch`/`BlocBuilder`/`BlocSelector`; never keep a bloc in a global.
+- Blocs don't depend on each other. Logic that needs two features is a pure function taking both states (`searchListings`, `AvailabilityState.statusFor`).
+- Request/response flows (login, register, booking) end in a state the screen reacts to with a `BlocListener` (e.g. `AuthState.operation` + `status`, `ReservationsState.lastCreated`) — events don't return values.
+- Form fields and other purely local UI state stay in `StatefulWidget`/`setState`.
+- Bloc tests use `bloc_test` (`test/blocs_test.dart`).
 
 ## Conventions
 

@@ -2,10 +2,10 @@
 // `dart run tool/gen_app_strings.dart` — edit the .arb files in
 // lib/l10n/ (mk is the template), not the getters below. The
 // constants at the bottom are kept as-is when regenerating.
-import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:bulka_frontend/core/l10n/app_locale.dart';
 import 'package:bulka_frontend/l10n/app_localizations.dart';
 
-/// All user-facing text, in the language picked in [LocaleController].
+/// All user-facing text, in the language picked in `LocaleBloc`.
 ///
 /// Translated text is a getter (not `const`), so it always returns the
 /// current language. Text that's the same in every language (symbols,
@@ -13,7 +13,7 @@ import 'package:bulka_frontend/l10n/app_localizations.dart';
 class AppStrings {
   AppStrings._();
 
-  static AppLocalizations get _s => LocaleController.instance.strings;
+  static AppLocalizations get _s => AppLocale.strings;
 
   static String get splashTitle => _s.splashTitle;
   static String get splashSubtitle => _s.splashSubtitle;

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:bulka_frontend/core/l10n/app_locale.dart';
 import 'package:bulka_frontend/core/network/api_environment.dart';
 import 'package:bulka_frontend/core/network/auth_interceptor.dart';
 import 'package:bulka_frontend/core/network/token_storage.dart';
@@ -32,8 +32,7 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          options.headers['Accept-Language'] =
-              LocaleController.instance.locale.languageCode;
+          options.headers['Accept-Language'] = AppLocale.current.languageCode;
           handler.next(options);
         },
       ),

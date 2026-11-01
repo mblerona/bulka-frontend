@@ -36,7 +36,7 @@ class BottomNavBar extends StatelessWidget {
   /// Tab index -> unread count. A tab is only badged when its count is > 0.
   /// Not part of [BottomNavItem] because it's runtime state, not static tab
   /// data — e.g. the "Пораки" tab's badge comes from
-  /// `ChatController.instance.totalUnreadMessages`.
+  /// `ChatState.totalUnreadMessages`.
   final Map<int, int> badgeCounts;
 
   @override
@@ -194,7 +194,7 @@ class _NavBadge extends StatelessWidget {
 
 /// Index of the "Пораки" tab — identical in both [touristBottomNavItems]
 /// and [providerBottomNavItems], which is what lets both roles' nav bars
-/// badge from the one shared `ChatController.instance`.
+/// badge from the one shared `ChatBloc`.
 const int navMessagesTabIndex = 3;
 
 /// DS/Nav/Tourist — Дома, Пребарај, Резервации, Пораки, Профил. A getter, so

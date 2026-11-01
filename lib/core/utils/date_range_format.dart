@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 // Month names come from `intl` in the app's current language
-// (`Intl.defaultLocale`, set by LocaleController), e.g. "август" /
+// (`Intl.defaultLocale`, set by `AppLocale`), e.g. "август" /
 // "August" / "gusht". The day/range shapes are the same in every language.
 
 /// Full month name as it's written on its own, e.g. the Provider

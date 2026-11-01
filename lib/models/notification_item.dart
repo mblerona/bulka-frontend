@@ -1,6 +1,6 @@
 /// A single in-app notification. Shaped to map directly onto a future
 /// notifications API response (id/title/message/timestamp/isRead) so the
-/// mock data in [NotificationsController] can be swapped for real fetched
+/// mock data in `NotificationsBloc` can be swapped for real fetched
 /// records without changing this model or anything that reads it.
 class NotificationItem {
   const NotificationItem({

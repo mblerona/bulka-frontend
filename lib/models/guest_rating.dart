@@ -2,7 +2,7 @@
 ///
 /// `guestName`/`listingName` are denormalized copies of the reservation's
 /// own fields at rating time — convenient for any future UI that lists
-/// ratings without needing to re-join against `ReservationController`,
+/// ratings without needing to re-join against `ReservationsBloc`,
 /// not a second source of truth (the rating is always looked up and
 /// created via the originating `Reservation`, never entered by hand).
 class GuestRating {

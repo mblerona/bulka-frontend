@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/search/search_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
@@ -11,17 +15,13 @@ import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/services/search_controller.dart' as search;
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
-/// The Figma "22 – Buyer · Search Results" frame — reads exclusively from
-/// `search.SearchController.instance` (the applied `ListingSearchFilter`
-/// and its live `matchingListings`, itself always
-/// `ProviderListingController.searchListings(filter)`), so this screen
-/// never filters anything itself and never holds its own copy of the
-/// result set. Reachable only after applying filters from
+/// The Figma "22 – Buyer · Search Results" frame — shows the filter in
+/// `SearchBloc` and the listings `searchListings` matches with it, so this
+/// screen never filters anything itself and never holds its own copy of
+/// the result set. Reachable only after applying filters from
 /// `TouristHomeScreen`'s search bar.
 class SearchResultsScreen extends StatefulWidget {
   const SearchResultsScreen({super.key});
@@ -31,25 +31,10 @@ class SearchResultsScreen extends StatefulWidget {
 }
 
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
-  final search.SearchController _search = search.SearchController.instance;
-  final ListingReviewController _reviewController =
-      ListingReviewController.instance;
+  ListingSearchFilter get _filter => context.read<SearchBloc>().state.filter;
 
-  @override
-  void initState() {
-    super.initState();
-    _search.addListener(_handleChanged);
-    _reviewController.addListener(_handleChanged);
-  }
-
-  @override
-  void dispose() {
-    _search.removeListener(_handleChanged);
-    _reviewController.removeListener(_handleChanged);
-    super.dispose();
-  }
-
-  void _handleChanged() => setState(() {});
+  void _applyFilter(ListingSearchFilter filter) =>
+      context.read<SearchBloc>().add(SearchFilterApplied(filter));
 
   Future<void> _openFilters() async {
     final result = await showModalBottomSheet<ListingSearchFilter>(
@@ -64,29 +49,33 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.92,
       ),
-      builder: (_) => SearchFiltersSheet(initialFilter: _search.filter),
+      builder: (_) => SearchFiltersSheet(initialFilter: _filter),
     );
-    if (result != null) _search.applyFilter(result);
+    if (result != null && mounted) _applyFilter(result);
   }
 
   void _toggleCategory(ListingCategory category) {
-    final updated = _search.filter.copy();
+    final updated = _filter.copy();
     if (!updated.categories.remove(category)) {
       updated.categories.add(category);
     }
-    _search.applyFilter(updated);
+    _applyFilter(updated);
   }
 
   void _toggleQuickRating() {
-    final updated = _search.filter.copy();
+    final updated = _filter.copy();
     updated.minRating = updated.minRating == 4.0 ? null : 4.0;
-    _search.applyFilter(updated);
+    _applyFilter(updated);
   }
 
   @override
   Widget build(BuildContext context) {
-    final filter = _search.filter;
-    final listings = _search.matchingListings;
+    final filter = context.watch<SearchBloc>().state.filter;
+    final listings = searchListings(
+      filter: filter,
+      listings: context.watch<ListingsBloc>().state,
+      reviews: context.watch<ListingReviewsBloc>().state,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
@@ -466,8 +455,8 @@ class _MapButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       // TODO: push MapViewScreen once the map architecture is approved —
-      // it will read the exact same `search.SearchController.instance`
-      // state (filter + matchingListings), no second search triggered.
+      // it will read the exact same `SearchBloc` filter and
+      // `searchListings` results, no second search triggered.
       onTap: () {},
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -528,10 +517,13 @@ class _ResultListingCard extends StatelessWidget {
     return '${formatPrice(listing.price)} $suffix';
   }
 
-  String get _metaLine {
+  /// Call from `build`: it subscribes to the reviews.
+  String _metaLine(BuildContext context) {
     final reservations =
         '${listing.reservationCount} ${AppStrings.resultsReservationsSuffix}';
-    final rating = ListingReviewController.instance.effectiveRating(listing);
+    final rating = context.watch<ListingReviewsBloc>().state.effectiveRating(
+      listing,
+    );
     if (rating == null) return reservations;
     return '$reservations · ${rating.toStringAsFixed(1)} ★';
   }
@@ -622,7 +614,7 @@ class _ResultListingCard extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.offersCardInfoGap),
                   Text(
-                    _metaLine,
+                    _metaLine(context),
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: AppDimensions.offersCardMetaFontSize,

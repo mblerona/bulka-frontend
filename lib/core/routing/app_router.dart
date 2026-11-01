@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/dev/dev_launcher_screen.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
@@ -36,8 +39,6 @@ import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
 import 'package:bulka_frontend/screens/terms_privacy_screen/terms_privacy_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
 import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
 import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 
 /// The app's router. Debug builds start on the dev screen launcher,
@@ -195,7 +196,7 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
                   GoRoute(
                     path: ':reservationId/confirmation',
                     builder: (context, state) =>
-                        _withReservationAndListing(state, (r, l) {
+                        _withReservationAndListing(context, state, (r, l) {
                           return ReservationConfirmationScreen(
                             reservation: r,
                             listing: l,
@@ -205,7 +206,7 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
                   GoRoute(
                     path: ':reservationId/review',
                     builder: (context, state) =>
-                        _withReservationAndListing(state, (r, l) {
+                        _withReservationAndListing(context, state, (r, l) {
                           return LeaveReviewScreen(reservation: r, listing: l);
                         }),
                   ),
@@ -252,10 +253,10 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
                   GoRoute(
                     path: 'rate-guest/:reservationId',
                     builder: (context, state) {
-                      final reservation = ReservationController.instance
-                          .reservationById(
-                            state.pathParameters['reservationId']!,
-                          );
+                      final reservation = context
+                          .read<ReservationsBloc>()
+                          .state
+                          .byId(state.pathParameters['reservationId']!);
                       return reservation == null
                           ? const RouteNotFoundScreen()
                           : RateGuestScreen(reservation: reservation);
@@ -293,6 +294,7 @@ List<RouteBase> _listingRoutes() => [
   GoRoute(
     path: 'listings/:listingId',
     builder: (context, state) => _withListing(
+      context,
       state,
       (listing) => ListingDetailsScreen(listing: listing),
     ),
@@ -300,6 +302,7 @@ List<RouteBase> _listingRoutes() => [
       GoRoute(
         path: 'book',
         builder: (context, state) => _withListing(
+          context,
           state,
           (listing) => BookingRequestScreen(listing: listing),
         ),
@@ -309,26 +312,28 @@ List<RouteBase> _listingRoutes() => [
 ];
 
 Widget _withListing(
+  BuildContext context,
   GoRouterState state,
   Widget Function(ProviderListing listing) build,
 ) {
-  final listing = ProviderListingController.instance.listingById(
+  final listing = context.read<ListingsBloc>().state.byId(
     state.pathParameters['listingId']!,
   );
   return listing == null ? const RouteNotFoundScreen() : build(listing);
 }
 
 Widget _withReservationAndListing(
+  BuildContext context,
   GoRouterState state,
   Widget Function(Reservation reservation, ProviderListing listing) build,
 ) {
-  final reservation = ReservationController.instance.reservationById(
+  final reservation = context.read<ReservationsBloc>().state.byId(
     state.pathParameters['reservationId']!,
   );
   final listingId = reservation?.listingId;
   final listing = listingId == null
       ? null
-      : ProviderListingController.instance.listingById(listingId);
+      : context.read<ListingsBloc>().state.byId(listingId);
   if (reservation == null || listing == null) {
     return const RouteNotFoundScreen();
   }

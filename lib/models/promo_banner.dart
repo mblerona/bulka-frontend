@@ -20,9 +20,9 @@ class PromoBanner {
 
 /// Local/mock seed data only, matching the 3 example banners in the Figma
 /// "20 – Buyer · Discover Home" frame exactly (copy and colors). Isolated
-/// here the same way `ProviderListingController._mockListings()` isolates
-/// its own seed — nothing else reads/mutates banners yet, so a full
-/// `ChangeNotifier` singleton isn't needed; swapping this for a backend
+/// here the same way `listings_mock_data.dart` isolates the listings'
+/// seed — nothing else reads/mutates banners yet, so a bloc for them
+/// isn't needed yet; swapping this for a backend
 /// fetch later only touches this list, not the widgets that render it.
 List<PromoBanner> get mockPromoBanners => [
   PromoBanner(

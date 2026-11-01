@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/services/auth_controller.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -35,53 +35,60 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
   bool _agreedToTerms = false;
   bool _agreedToPrivacy = false;
   bool _agreedToResponsibilities = false;
-  bool _isSubmitting = false;
 
   /// A function, not the text itself, so a message on screen follows a
   /// language switch.
   String Function()? _errorMessage;
 
-  bool get _canSubmit =>
-      !_isSubmitting &&
-      _agreedToTerms &&
-      _agreedToPrivacy &&
-      _agreedToResponsibilities;
+  bool get _allAgreed =>
+      _agreedToTerms && _agreedToPrivacy && _agreedToResponsibilities;
 
-  Future<void> _handleSubmit() async {
+  void _handleSubmit() {
     final profile = widget.profile;
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-    try {
-      final needsVerification = await AuthController.instance.register(
+    setState(() => _errorMessage = null);
+    context.read<AuthBloc>().add(
+      AuthRegistrationRequested(
         role: profile.role,
         firstName: profile.firstName,
         lastName: profile.lastName,
         email: profile.email,
         phone: profile.phone,
         password: widget.password,
-      );
-      if (!mounted) return;
-      setState(() => _isSubmitting = false);
-      if (needsVerification) {
-        context.push(AppRoutes.registerVerify, extra: profile);
+      ),
+    );
+  }
+
+  void _handleAuthResult(BuildContext context, AuthState state) {
+    if (state.status == AuthOperationStatus.succeeded) {
+      if (state.emailVerificationRequired) {
+        context.push(AppRoutes.registerVerify, extra: widget.profile);
       } else {
         // Account is already active: registration doesn't sign in, so the
         // user logs in with their new credentials.
         context.go(AppRoutes.login);
       }
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isSubmitting = false;
-        _errorMessage = () => e.message;
-      });
+    } else if (state.status == AuthOperationStatus.failed) {
+      final error = state.error!;
+      setState(() => _errorMessage = () => error.message);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Disabled while the request runs, so it can't be sent twice.
+    final isSubmitting = context.select(
+      (AuthBloc bloc) => bloc.state.isInProgress(AuthOperation.register),
+    );
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          current.operation == AuthOperation.register &&
+          current.status != previous.status,
+      listener: _handleAuthResult,
+      child: _buildScreen(context, canSubmit: !isSubmitting && _allAgreed),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, {required bool canSubmit}) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
       body: Column(
@@ -135,7 +142,7 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
                     ],
                     PrimaryButton(
                       label: AppStrings.termsPrivacySubmitButton,
-                      onPressed: _canSubmit ? _handleSubmit : null,
+                      onPressed: canSubmit ? _handleSubmit : null,
                     ),
                   ],
                 ),

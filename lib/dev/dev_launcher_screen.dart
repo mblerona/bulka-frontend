@@ -1,4 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
@@ -10,13 +16,10 @@ import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/reservation.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
-import 'package:bulka_frontend/services/chat_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
 
 /// Debug-only screen picker. Lists every real screen and opens it through
 /// its real route (so tab screens appear inside their tab shell, as in the
-/// app) with the real singleton controllers/state.
+/// app) with the real app-wide blocs.
 ///
 /// Only registered as a route in debug builds (see `app_router.dart`), so
 /// it never ships in a release build.
@@ -40,82 +43,95 @@ class DevLauncherScreen extends StatelessWidget {
     for (final section in _sections) ...section.entries,
   ];
 
-  static ProviderListing get _firstAccommodation => ProviderListingController
-      .instance
-      .recommendedListings
+  static ProviderListing _firstAccommodation(BuildContext context) => context
+      .read<ListingsBloc>()
+      .state
+      .active
       .firstWhere((l) => categoryRequiresPrice(l.category));
 
-  static String _seedMockBooking({required String guestName}) {
-    return ReservationController.instance
-        .createReservation(
-          listing: _firstAccommodation,
-          guestName: guestName,
-          startDate: DateTime.now().add(const Duration(days: 10)),
-          endDate: DateTime.now().add(const Duration(days: 13)),
-          guestCount: 2,
-        )
-        .id;
+  /// Books the first accommodation listing and returns the new
+  /// reservation's id, once [ReservationsBloc] has created it.
+  static Future<String> _seedMockBooking(
+    BuildContext context, {
+    required String guestName,
+  }) async {
+    final bloc = context.read<ReservationsBloc>();
+    final created = bloc.stream.firstWhere((s) => s.lastCreated != null);
+    bloc.add(
+      ReservationRequested(
+        listing: _firstAccommodation(context),
+        guestName: guestName,
+        startDate: DateTime.now().add(const Duration(days: 10)),
+        endDate: DateTime.now().add(const Duration(days: 13)),
+        guestCount: 2,
+      ),
+    );
+    return (await created).lastCreated!.id;
   }
 
   static final List<_DevScreenSection> _sections = [
     _DevScreenSection('Onboarding / Auth', [
-      DevScreenEntry.route('Splash & Language', () => AppRoutes.splash),
-      DevScreenEntry.route('Login', () => AppRoutes.login),
-      DevScreenEntry.route('Forgot Password', () => AppRoutes.forgotPassword),
-      DevScreenEntry.route('Register', () => AppRoutes.register),
+      DevScreenEntry.route('Splash & Language', (_) => AppRoutes.splash),
+      DevScreenEntry.route('Login', (_) => AppRoutes.login),
+      DevScreenEntry.route('Forgot Password', (_) => AppRoutes.forgotPassword),
+      DevScreenEntry.route('Register', (_) => AppRoutes.register),
       DevScreenEntry.route(
         'Terms & Privacy',
-        () => AppRoutes.registerTerms,
+        (_) => AppRoutes.registerTerms,
         // Empty password on purpose: submitting from here is rejected by
         // the backend instead of creating a real dev@example.com account.
         extra: const SignUpData(profile: _devProfile, password: ''),
       ),
       DevScreenEntry.route(
         'Email Verification',
-        () => AppRoutes.registerVerify,
+        (_) => AppRoutes.registerVerify,
       ),
     ]),
     _DevScreenSection('Profiles', [
-      DevScreenEntry.route('Profile · Tourist', () => AppRoutes.profile),
+      DevScreenEntry.route('Profile · Tourist', (_) => AppRoutes.profile),
       DevScreenEntry.route(
         'Profile · Provider',
-        () => AppRoutes.providerProfile,
+        (_) => AppRoutes.providerProfile,
       ),
     ]),
     _DevScreenSection('Tourist', [
-      DevScreenEntry.route('Home · Tourist', () => AppRoutes.home),
+      DevScreenEntry.route('Home · Tourist', (_) => AppRoutes.home),
       DevScreenEntry.widget(
         'Search Filters (Sheet) · Tourist',
         (_) => const _SearchFiltersPreviewScreen(),
       ),
-      DevScreenEntry.route('Search Results · Tourist', () => AppRoutes.search),
+      DevScreenEntry.route('Search Results · Tourist', (_) => AppRoutes.search),
       DevScreenEntry.route(
         'Listing Details (first active listing) · Tourist',
-        () =>
+        (context) =>
             '${AppRoutes.home}/listings/'
-            '${ProviderListingController.instance.recommendedListings.first.id}',
+            '${context.read<ListingsBloc>().state.active.first.id}',
       ),
       DevScreenEntry.route(
         'Booking Request (first accommodation listing) · Tourist',
-        () => '${AppRoutes.home}/listings/${_firstAccommodation.id}/book',
+        (context) =>
+            '${AppRoutes.home}/listings/${_firstAccommodation(context).id}/book',
       ),
       DevScreenEntry.route(
         'Reservation Confirmation (mock booking) · Tourist',
-        () => AppRoutes.reservationConfirmation(
-          _seedMockBooking(guestName: 'Дев Тестовски'),
+        (context) async => AppRoutes.reservationConfirmation(
+          await _seedMockBooking(context, guestName: 'Дев Тестовски'),
         ),
       ),
       DevScreenEntry.route(
         'My Reservations (seeds one mock booking) · Tourist',
-        () {
-          _seedMockBooking(guestName: mockTouristGuestName);
+        (context) async {
+          await _seedMockBooking(context, guestName: mockTouristGuestName);
           return AppRoutes.reservations;
         },
       ),
       DevScreenEntry.route(
         'Leave Review (first completed reservation) · Tourist',
-        () => AppRoutes.leaveReview(
-          ReservationController.instance.reservations
+        (context) => AppRoutes.leaveReview(
+          context
+              .read<ReservationsBloc>()
+              .state
+              .reservations
               .firstWhere(
                 (r) =>
                     r.status == ReservationStatus.completed &&
@@ -126,63 +142,67 @@ class DevLauncherScreen extends StatelessWidget {
       ),
       DevScreenEntry.route(
         'Review Submitted · Tourist',
-        () => AppRoutes.reviewSubmitted,
+        (_) => AppRoutes.reviewSubmitted,
       ),
     ]),
     _DevScreenSection('Provider', [
-      DevScreenEntry.route('Dashboard · Provider', () => AppRoutes.dashboard),
-      DevScreenEntry.route('Offers · Provider', () => AppRoutes.offers),
+      DevScreenEntry.route('Dashboard · Provider', (_) => AppRoutes.dashboard),
+      DevScreenEntry.route('Offers · Provider', (_) => AppRoutes.offers),
       DevScreenEntry.route(
         'Availability Calendar · Provider',
-        () => AppRoutes.calendar,
+        (_) => AppRoutes.calendar,
       ),
       DevScreenEntry.route(
         'Create Offer Wizard · Provider',
-        () => AppRoutes.newOffer,
+        (_) => AppRoutes.newOffer,
       ),
       DevScreenEntry.route(
         'Offer Published (Success) · Provider',
-        () => AppRoutes.offerPublished,
+        (_) => AppRoutes.offerPublished,
       ),
       DevScreenEntry.route(
         'Rate Guest (first completed reservation) · Provider',
-        () => AppRoutes.rateGuest(
-          ReservationController.instance.completedReservations.first.id,
+        (context) => AppRoutes.rateGuest(
+          context.read<ReservationsBloc>().state.completed.first.id,
         ),
       ),
       DevScreenEntry.route(
         'Rating Saved · Provider',
-        () => AppRoutes.ratingSaved,
+        (_) => AppRoutes.ratingSaved,
       ),
     ]),
     _DevScreenSection('Messaging', [
-      DevScreenEntry.route('Chat List', () => AppRoutes.messages),
+      DevScreenEntry.route('Chat List', (_) => AppRoutes.messages),
       DevScreenEntry.route(
         'Chat Thread (first mock conversation)',
-        () => AppRoutes.chat(ChatController.instance.conversations.first.id),
+        (context) => AppRoutes.chat(
+          context.read<ChatBloc>().state.conversations.first.id,
+        ),
       ),
     ]),
     _DevScreenSection('Support', [
-      DevScreenEntry.route('My Tickets', () => AppRoutes.tickets),
-      DevScreenEntry.route('New Support Ticket', () => AppRoutes.newTicket),
+      DevScreenEntry.route('My Tickets', (_) => AppRoutes.tickets),
+      DevScreenEntry.route('New Support Ticket', (_) => AppRoutes.newTicket),
     ]),
     _DevScreenSection('Other', [
-      DevScreenEntry.route('Notifications', () => AppRoutes.notifications),
-      DevScreenEntry.route('Settings', () => AppRoutes.settings),
+      DevScreenEntry.route('Notifications', (_) => AppRoutes.notifications),
+      DevScreenEntry.route('Settings', (_) => AppRoutes.settings),
       DevScreenEntry.route(
         'Unknown route (Not Found)',
-        () => '/does-not-exist',
+        (_) => '/does-not-exist',
       ),
     ]),
   ];
 
-  void _open(BuildContext context, DevScreenEntry entry) {
+  Future<void> _open(BuildContext context, DevScreenEntry entry) async {
     final location = entry.location;
-    if (location != null) {
-      context.push(location(), extra: entry.extra);
-    } else {
+    if (location == null) {
       Navigator.of(context).push(MaterialPageRoute(builder: entry.builder!));
+      return;
     }
+    final path = await location(context);
+    if (!context.mounted) return;
+    context.push(path, extra: entry.extra);
   }
 
   @override
@@ -231,10 +251,11 @@ class _DevScreenSection {
 /// aren't routes (the filter sheet), a widget pushed directly.
 class DevScreenEntry {
   /// [location] runs when the entry is opened, so it can seed mock data
-  /// first (e.g. create a booking and return its confirmation route).
+  /// first (e.g. create a booking and return its confirmation route), using
+  /// the blocs from [BuildContext].
   const DevScreenEntry.route(
     this.label,
-    String Function() this.location, {
+    FutureOr<String> Function(BuildContext context) this.location, {
     this.extra,
   }) : builder = null;
 
@@ -243,7 +264,7 @@ class DevScreenEntry {
       extra = null;
 
   final String label;
-  final String Function()? location;
+  final FutureOr<String> Function(BuildContext context)? location;
   final Object? extra;
   final WidgetBuilder? builder;
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
+import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/chat_conversation.dart';
 import 'package:bulka_frontend/models/chat_message.dart';
-import 'package:bulka_frontend/services/chat_controller.dart';
 
 class ChatThreadScreen extends StatefulWidget {
   const ChatThreadScreen({super.key, required this.conversationId});
@@ -16,37 +18,36 @@ class ChatThreadScreen extends StatefulWidget {
 }
 
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
-  final ChatController _controller = ChatController.instance;
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_handleControllerChanged);
     // Chat List already marks read at tap time; this covers opening the
     // thread directly (e.g. /messages/:id). After the first frame, because
     // the chat list underneath is built in the same frame and listens to
     // the controller. A no-op once nothing is unread.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _controller.markConversationRead(widget.conversationId);
+      if (mounted) {
+        context.read<ChatBloc>().add(ConversationRead(widget.conversationId));
+      }
     });
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_handleControllerChanged);
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _handleControllerChanged() => setState(() {});
-
   void _handleSend() {
     final text = _inputController.text;
     if (text.trim().isEmpty) return;
-    _controller.sendMessage(widget.conversationId, text);
+    context.read<ChatBloc>().add(
+      ChatMessageSent(conversationId: widget.conversationId, text: text),
+    );
     _inputController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -60,7 +61,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final conversation = _controller.conversationById(widget.conversationId);
+    final conversation = context.watch<ChatBloc>().state.byId(
+      widget.conversationId,
+    );
+    // E.g. an old /messages/:id link.
+    if (conversation == null) return const RouteNotFoundScreen();
     final messages = conversation.messages;
 
     return Scaffold(

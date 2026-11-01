@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
@@ -123,10 +124,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
-            selectedLanguageCode: LocaleController.instance.switchCode,
+            selectedLanguageCode: context.watch<LocaleBloc>().state.switchCode,
             onLanguageChanged: (code) {
               // Saved app-wide; BulkaApp rebuilds every screen.
-              LocaleController.instance.setLanguage(code);
+              context.read<LocaleBloc>().add(LanguageChanged(code));
             },
           ),
           Expanded(

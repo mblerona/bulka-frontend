@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
-import 'package:bulka_frontend/services/chat_controller.dart';
 import 'package:bulka_frontend/widgets/bottom_nav_bar.dart';
 
 /// The Tourist tabs: one shared [BottomNavBar] under every Tourist screen.
@@ -88,10 +89,9 @@ class _TabsScaffold extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       // The Messages tab shows the shared unread-messages badge.
-      bottomNavigationBar: ListenableBuilder(
-        listenable: ChatController.instance,
-        builder: (context, _) {
-          final unreadCount = ChatController.instance.totalUnreadMessages;
+      bottomNavigationBar: BlocSelector<ChatBloc, ChatState, int>(
+        selector: (state) => state.totalUnreadMessages,
+        builder: (context, unreadCount) {
           return BottomNavBar(
             items: items,
             selectedIndex: tabOfBranch[navigationShell.currentIndex],

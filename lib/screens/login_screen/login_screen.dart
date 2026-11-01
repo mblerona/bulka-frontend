@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/user_role.dart';
-import 'package:bulka_frontend/services/auth_controller.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -32,7 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
     text: widget.initialEmail,
   );
   final _passwordController = TextEditingController();
-  bool _isSubmitting = false;
 
   /// A function, not the text itself, so a message on screen follows a
   /// language switch.
@@ -45,41 +45,52 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSubmit() async {
+  void _handleSubmit() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
       setState(() => _errorMessage = () => AppStrings.loginErrorEmptyFields);
       return;
     }
+    setState(() => _errorMessage = null);
+    context.read<AuthBloc>().add(
+      AuthLoginRequested(email: email, password: password),
+    );
+  }
 
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-    try {
-      final user = await AuthController.instance.login(
-        email: email,
-        password: password,
-      );
-      if (!mounted) return;
-      context.go(switch (user.role) {
+  /// Signed in: go to the account's side of the app. Failed: show why.
+  void _handleAuthResult(BuildContext context, AuthState state) {
+    if (state.status == AuthOperationStatus.succeeded) {
+      context.go(switch (state.user!.role) {
         UserRole.buyer => AppRoutes.home,
         UserRole.owner => AppRoutes.dashboard,
       });
-    } on ApiException catch (e) {
-      if (!mounted) return;
+    } else if (state.status == AuthOperationStatus.failed) {
+      final error = state.error!;
       setState(() {
-        _isSubmitting = false;
-        _errorMessage = () => e.kind == ApiErrorKind.unauthorized
+        _errorMessage = () => error.kind == ApiErrorKind.unauthorized
             ? AppStrings.loginErrorInvalidCredentials
-            : e.message;
+            : error.message;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Disabled while the request runs, so it can't be sent twice.
+    final isSubmitting = context.select(
+      (AuthBloc bloc) => bloc.state.isInProgress(AuthOperation.login),
+    );
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          current.operation == AuthOperation.login &&
+          current.status != previous.status,
+      listener: _handleAuthResult,
+      child: _buildScreen(context, isSubmitting),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, bool isSubmitting) {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
@@ -89,10 +100,10 @@ class _LoginScreenState extends State<LoginScreen> {
             titleFontSize: AppDimensions.loginTitleFontSize,
             bottomPadding: AppDimensions.loginHeaderBottomPadding,
             contentGap: AppDimensions.loginHeaderRowGap,
-            selectedLanguageCode: LocaleController.instance.switchCode,
+            selectedLanguageCode: context.watch<LocaleBloc>().state.switchCode,
             onLanguageChanged: (code) {
               // Saved app-wide; BulkaApp rebuilds every screen.
-              LocaleController.instance.setLanguage(code);
+              context.read<LocaleBloc>().add(LanguageChanged(code));
             },
           ),
           Expanded(
@@ -158,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                     PrimaryButton(
                       label: AppStrings.loginSubmitButton,
-                      onPressed: _isSubmitting ? null : _handleSubmit,
+                      onPressed: isSubmitting ? null : _handleSubmit,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     SecondaryButton(

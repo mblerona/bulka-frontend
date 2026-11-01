@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bulka_frontend/blocs/app_bloc_providers.dart';
 import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
 
 Future<void> _pumpAt(WidgetTester tester, Size size) async {
@@ -8,7 +9,13 @@ Future<void> _pumpAt(WidgetTester tester, Size size) async {
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(const MaterialApp(home: SplashScreen()));
+  // Screens read the app's blocs, so they need the same providers.
+  await tester.pumpWidget(
+    const AppBlocProviders(
+      initialLocale: Locale('mk'),
+      child: MaterialApp(home: SplashScreen()),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -18,9 +25,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('no overflow at 320x568 (very short reference)', (
-    tester,
-  ) async {
+  testWidgets('no overflow at 320x568 (very short reference)', (tester) async {
     await _pumpAt(tester, const Size(320, 568));
     expect(tester.takeException(), isNull);
   });

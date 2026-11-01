@@ -10,7 +10,7 @@ import 'package:bulka_frontend/models/listing_category.dart';
 ///
 /// `minPrice`/`maxPrice` are null when unrestricted (both ends of the
 /// active price range) rather than always carrying concrete numbers —
-/// `ProviderListingController.activePriceBounds` supplies the real numbers
+/// `ListingsState.activePriceBounds` supplies the real numbers
 /// a slider needs to display, so this model never has to guess or freeze
 /// them itself; a backend-provided min/max would replace that getter
 /// without this model changing at all.

@@ -1,8 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/l10n/locale_controller.dart';
+import 'package:bulka_frontend/core/l10n/app_locale.dart';
 import 'package:bulka_frontend/core/routing/app_router.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/main.dart';
@@ -15,17 +19,15 @@ import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservati
 import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
 import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
 
 import 'test_helpers.dart';
 
 void main() {
   setUpAll(loadAppFonts);
 
-  setUp(() async {
+  setUp(() {
     SharedPreferences.setMockInitialValues({'app.languageCode': 'mk'});
-    await LocaleController.instance.load();
+    AppLocale.apply(const Locale('mk'));
   });
 
   Future<GoRouter> pumpAt(WidgetTester tester, String location) async {
@@ -41,12 +43,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  String firstListingId() =>
-      ProviderListingController.instance.recommendedListings.first.id;
+  /// A bloc from the running app.
+  T bloc<T extends StateStreamableSource<Object?>>(WidgetTester tester) =>
+      tester.element(find.byType(Navigator).first).read<T>();
 
   testWidgets('each tab keeps its own history', (tester) async {
     final router = await pumpAt(tester, AppRoutes.home);
-    router.push('${AppRoutes.home}/listings/${firstListingId()}');
+    final listingId = bloc<ListingsBloc>(tester).state.active.first.id;
+    router.push('${AppRoutes.home}/listings/$listingId');
     await tester.pumpAndSettle();
     expect(find.byType(ListingDetailsScreen), findsOneWidget);
 
@@ -72,25 +76,32 @@ void main() {
   testWidgets('after booking, the Home tab no longer shows the booking form', (
     tester,
   ) async {
-    final listing = ProviderListingController.instance.recommendedListings
-        .firstWhere((l) => categoryRequiresPrice(l.category));
-    final reservation = ReservationController.instance.createReservation(
-      listing: listing,
-      guestName: 'Test',
-      startDate: DateTime.now().add(const Duration(days: 30)),
-      endDate: DateTime.now().add(const Duration(days: 32)),
-      guestCount: 1,
-    );
     await usePhoneScreen(tester);
     // resetTabThenGo uses the app-wide router, as the booking screen does.
-    appRouter.go('${AppRoutes.home}/listings/${listing.id}/book');
+    appRouter.go(AppRoutes.home);
     await tester.pumpWidget(BulkaApp(router: appRouter));
+    await tester.pumpAndSettle();
+    final listing = bloc<ListingsBloc>(
+      tester,
+    ).state.active.firstWhere((l) => categoryRequiresPrice(l.category));
+    appRouter.go('${AppRoutes.home}/listings/${listing.id}/book');
     await tester.pumpAndSettle();
     expect(find.byType(BookingRequestScreen), findsOneWidget);
 
+    final reservations = bloc<ReservationsBloc>(tester)
+      ..add(
+        ReservationRequested(
+          listing: listing,
+          guestName: 'Test',
+          startDate: DateTime.now().add(const Duration(days: 30)),
+          endDate: DateTime.now().add(const Duration(days: 32)),
+          guestCount: 1,
+        ),
+      );
+    await tester.pump();
     resetTabThenGo(
       AppRoutes.home,
-      AppRoutes.reservationConfirmation(reservation.id),
+      AppRoutes.reservationConfirmation(reservations.state.lastCreated!.id),
     );
     await tester.pumpAndSettle();
     expect(find.byType(ReservationConfirmationScreen), findsOneWidget);
