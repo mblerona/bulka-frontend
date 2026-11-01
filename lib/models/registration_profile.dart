@@ -1,3 +1,4 @@
+import 'package:bulka_frontend/models/auth_user.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 
 /// Carries the data collected at registration forward through the
@@ -15,6 +16,17 @@ class RegistrationProfile {
     this.role = UserRole.buyer,
     this.businessName,
   });
+
+  /// The signed-in account's details, for screens that show the user's own
+  /// profile. The backend doesn't store a city, so it starts empty.
+  factory RegistrationProfile.fromAuthUser(AuthUser user) {
+    return RegistrationProfile(
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone ?? '',
+      role: user.role ?? UserRole.buyer,
+    );
+  }
 
   final String fullName;
   final String email;

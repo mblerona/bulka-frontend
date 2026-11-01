@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,8 +25,8 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key, this.profile});
 
-  /// Null shows the sample provider (e.g. from the dev launcher or the
-  /// bottom nav, before real profile data exists).
+  /// Null shows the signed-in user (or the sample provider when nobody is
+  /// signed in, e.g. from the dev launcher).
   final RegistrationProfile? profile;
 
   @override
@@ -35,13 +36,16 @@ class ProviderProfileScreen extends StatefulWidget {
 class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   static const List<ListingCategory> _categories = ListingCategory.values;
 
-  RegistrationProfile get _profile =>
-      widget.profile ??
-      RegistrationProfile(
-        fullName: AppStrings.providerExampleName,
-        email: AppStrings.providerExampleEmail,
-        phone: AppStrings.providerExamplePhone,
-      );
+  RegistrationProfile get _profile {
+    if (widget.profile case final profile?) return profile;
+    final user = context.read<AuthBloc>().state.user;
+    if (user != null) return RegistrationProfile.fromAuthUser(user);
+    return RegistrationProfile(
+      fullName: AppStrings.providerExampleName,
+      email: AppStrings.providerExampleEmail,
+      phone: AppStrings.providerExamplePhone,
+    );
+  }
 
   // No verification system exists yet, so a freshly-registered provider
   // hasn't actually been verified by anyone — default to "not verified"

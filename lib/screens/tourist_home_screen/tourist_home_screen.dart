@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/search/search_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,16 +25,17 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// listing card opens Listing Details; category-chip taps remain a clean
 /// TODO callback pending a category search/results destination.
 class TouristHomeScreen extends StatefulWidget {
-  const TouristHomeScreen({
-    super.key,
-    this.profile = const RegistrationProfile(
-      fullName: 'Јована Јованова',
-      email: 'jovana@example.com',
-      phone: '070 123 456',
-    ),
-  });
+  const TouristHomeScreen({super.key, this.profile});
 
-  final RegistrationProfile profile;
+  /// Null shows the signed-in user (or the sample guest when nobody is
+  /// signed in, e.g. from the dev launcher).
+  final RegistrationProfile? profile;
+
+  static const RegistrationProfile _sampleProfile = RegistrationProfile(
+    fullName: 'Јована Јованова',
+    email: 'jovana@example.com',
+    phone: '070 123 456',
+  );
 
   @override
   State<TouristHomeScreen> createState() => _TouristHomeScreenState();
@@ -61,8 +63,8 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     context.go(AppRoutes.search);
   }
 
-  String get _firstName {
-    final trimmed = widget.profile.fullName.trim();
+  String _firstNameOf(RegistrationProfile profile) {
+    final trimmed = profile.fullName.trim();
     if (trimmed.isEmpty) return '';
     return trimmed.split(RegExp(r'\s+')).first;
   }
@@ -70,12 +72,18 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final listings = context.watch<ListingsBloc>().state.active;
+    final user = context.select((AuthBloc bloc) => bloc.state.user);
+    final profile =
+        widget.profile ??
+        (user != null
+            ? RegistrationProfile.fromAuthUser(user)
+            : TouristHomeScreen._sampleProfile);
 
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          _HomeHeader(greetingName: _firstName),
+          _HomeHeader(greetingName: _firstNameOf(profile)),
           Expanded(
             child: SafeArea(
               top: false,
