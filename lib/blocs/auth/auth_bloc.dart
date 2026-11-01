@@ -29,6 +29,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegistrationRequested>(_onRegistrationRequested);
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
     on<AuthVerificationEmailResendRequested>(_onResendRequested);
+    on<AuthSessionRestoreRequested>(_onSessionRestoreRequested);
+    on<AuthPasswordResetCodeRequested>(_onPasswordResetCodeRequested);
+    on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthSessionExpired>(_onSessionExpired);
   }
@@ -78,6 +81,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         'lastName': lastName,
         'displayName': '$firstName $lastName',
         'phone': event.phone.trim(),
+        if (event.role == UserRole.owner)
+          'businessName': event.businessName?.trim() ?? '',
         'acceptedTerms': true,
         'acceptedPrivacy': true,
       });
@@ -120,6 +125,91 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _postWithoutAuth('/api/auth/resend-email-verification', {
         'email': event.email.trim(),
+      });
+      emit(state.succeeded());
+    } on ApiException catch (e) {
+      emit(state.failed(e));
+    }
+  }
+
+  /// Signs the user back in with the saved tokens by loading
+  /// `GET /api/users/me` (same `user` shape as the login response). An
+  /// expired access token is refreshed by [AuthInterceptor] on the way.
+  /// Fails when there are no tokens or they no longer work; the user then
+  /// logs in normally.
+  Future<void> _onSessionRestoreRequested(
+    AuthSessionRestoreRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state.isLoggedIn) return;
+    emit(state.started(AuthOperation.restoreSession));
+    if (!await _hasSavedSession()) {
+      emit(state.failed(const ApiException(kind: ApiErrorKind.unauthorized)));
+      return;
+    }
+    try {
+      final Response<Object?> response;
+      try {
+        response = await _dio.get<Object?>('/api/users/me');
+      } on DioException catch (e) {
+        throw ApiException.fromDio(e);
+      }
+      final json = response.data;
+      if (json is! Map<String, dynamic>) {
+        throw const ApiException(kind: ApiErrorKind.unknown);
+      }
+      final envelope = ApiResponse<Object?>.fromJson(json, (data) => data);
+      final data = envelope.data;
+      if (!envelope.success || data is! Map<String, dynamic>) {
+        throw ApiException.fromEnvelope(envelope);
+      }
+      emit(state.succeeded(user: AuthUser.fromJson(data)));
+    } on ApiException catch (e) {
+      // Tokens that were rejected are useless; keep them after e.g. a
+      // network error so the next app start can try again.
+      if (e.kind == ApiErrorKind.unauthorized) await _tokenStorage.clear();
+      emit(state.failed(e));
+    }
+  }
+
+  /// Secure storage can fail to open (e.g. a reset Android keystore); that
+  /// just means there's no session to restore.
+  Future<bool> _hasSavedSession() async {
+    try {
+      return await _tokenStorage.readRefreshToken() != null;
+    } catch (e) {
+      debugPrint('[Auth] Could not read the saved session: $e');
+      return false;
+    }
+  }
+
+  /// Forgot password: the backend emails a reset code.
+  Future<void> _onPasswordResetCodeRequested(
+    AuthPasswordResetCodeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.started(AuthOperation.requestPasswordReset));
+    try {
+      await _postWithoutAuth('/api/auth/forgot-password', {
+        'email': event.email.trim(),
+      });
+      emit(state.succeeded());
+    } on ApiException catch (e) {
+      emit(state.failed(e));
+    }
+  }
+
+  /// Sets the new password. Doesn't sign the user in.
+  Future<void> _onPasswordResetRequested(
+    AuthPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.started(AuthOperation.resetPassword));
+    try {
+      await _postWithoutAuth('/api/auth/reset-password', {
+        'email': event.email.trim(),
+        'code': event.code.trim(),
+        'password': event.newPassword,
       });
       emit(state.succeeded());
     } on ApiException catch (e) {

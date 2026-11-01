@@ -4,26 +4,26 @@ _Rural tourism app for Macedonia (Flutter). This page summarizes what has been b
 
 ## Where we left off
 
-Last worked on: **the entire Tourist/Buyer side, end to end** — Home → Search Filters → Search Results → Listing Details → Booking → Reservation Confirmation → My Reservations → Leave Review → Review Submitted, plus a full audit/rewire of `TouristBottomNav` so all 5 tabs actually work. This closes the "Tourist has no shell" gap that was the top item here last time. Short-point summary below (see "Tourist/Buyer flow" section for detail); next up, whenever we pick this back up:
+Last worked on: **the start of real backend integration** — the app now makes real HTTP calls against the hosted API instead of every action being local-only state. Login, registration (Buyer + Provider), `GET /api/users/me`, and logout are wired for real; the Tourist/Buyer and Provider flows from the previous round are otherwise untouched. Short-point summary below (see "Backend / Auth Integration" section for full detail); next up, whenever we pick this back up:
 
-- **Map View is the single biggest unfinished piece.** "Карта" on Search Results is a `TODO` — building a *real* interactive map needs a package decision + `ProviderListing` coordinates + a way to collect them in the Create Offer wizard, none of which exist yet. Explicitly not faked with random coordinates. See "Known gaps" for the exact minimal plan once we're ready to pick a package.
-- **Rejected/cancelled reservations are stored but not shown anywhere on My Reservations.** Product behavior for this is genuinely undecided (not a Figma gap — a real open question), flagged with a `TODO` right at the filtering point in `tourist_my_reservations_screen.dart`. Don't fold them into Upcoming/Past without deciding this first.
-- **No "already reviewed" visual state exists**, same shape as the Provider "already rated" gap from last time — the action is disabled/dimmed (reusing the non-bookable-category pattern from Listing Details) rather than inventing a badge.
-- **No Reservation Details screen exists** — "Прегледај детали" on My Reservations' upcoming cards is a real, styled, but inert `TODO`.
-- **Settings, Notifications, My Tickets/New Ticket still have no real navigation entry point** for either role — only the Dev Launcher reaches them. Unchanged from last time.
-- **Three explicit `TODO` actions remain on the Provider Offers screen** ("Уреди", "Уреди и поднеси повторно") — still blocked on an Edit Listing screen that doesn't exist. Unchanged from last time.
+- **Real Buyer and Provider logins both now route correctly.** Confirmed role strings: `"Admin"` (no destination), `"Buyer"`, and `"Provider"`. **Critical, confirmed live:** a real Provider account's `roles` was `["Buyer", "Provider"]`, not just `["Provider"]` — a Provider account is apparently also a Buyer. `mapBackendRoleToUserRole` (`lib/models/backend_role_mapper.dart`) checks for `"Provider"` first via `List.contains` specifically because of this — an iterate-and-return-on-first-match approach would have routed every real Provider account to Tourist Home instead of the Provider Dashboard, since `"Buyer"` is listed first.
+- **Session now restores on app restart.** `SplashScreen` kicks off `SessionController.restoreSession()` in the background (`initState`) and awaits it when "Продолжи" is tapped — a stored token that still works routes straight to Tourist Home/Provider Dashboard; anything else (nothing stored, or the stored token no longer works) falls through to Login exactly as before.
+- **Token refresh and 401 handling are both fully real now.** `ApiClient` has a `QueuedInterceptor` that reacts to any 401 by calling `SessionController.attemptTokenRefresh`, which calls the now-confirmed `POST /api/auth/refresh` and, on success, retries the original request transparently with the new token. **Confirmed live: the backend rotates the refresh token on every use** — the response hands back a brand-new `refreshToken` that must overwrite the old one, which this does via the same `_applyAuthenticatedSession` tail end `login` uses. On any failure (no stored refresh token, or the backend call itself fails), it forces a clean local logout instead of leaving the app believing it's still authenticated.
+- **Flutter Web is blocked against the real hosted backend by CORS** (no `Access-Control-Allow-Origin` on the backend's preflight response) — all backend-integration testing has to happen on Android or Windows desktop, not Chrome/web, until the backend owner adds a CORS policy.
+- Carried over, unchanged from the Tourist/Buyer round: Map View is still the biggest unfinished *product* piece (see "Known gaps"), rejected/cancelled reservations still aren't shown on My Reservations, no Reservation Details screen, Settings/Notifications/My Tickets still have no real nav entry point, and the 2 Provider Offers `TODO` actions are still blocked on an Edit Listing screen.
 - Everything below this point reflects the actual current state of the code, not just intentions — cross-check `lib/` if anything here looks stale.
 
 ## Status at a glance
 
 | Screen | Status | Notes |
 |---|---|---|
-| Splash & Language | ✅ Implemented | Vertically responsive on short devices |
-| Login | ✅ Implemented | Google sign-in button is UI-only |
-| Forgot Password | ✅ Implemented | "Send code" is UI-only |
-| Register | ✅ Implemented | Submit gated on Terms checkbox |
-| Terms & Privacy Acceptance | ✅ Implemented | Submit gated on all 3 consents |
-| Email Verification | ✅ Implemented (with a temporary dev button, see below) | "Resend" is UI-only |
+| Splash & Language | ✅ Implemented, **real backend call** | Vertically responsive on short devices; "Продолжи" now attempts `SessionController.restoreSession()` first and routes straight to Tourist Home/Provider Dashboard on a still-valid stored session, falling back to Login otherwise |
+| Login | ✅ Implemented, **real backend auth** | `POST /api/auth/login` for real; role-based routing exists but can't reach Buyer/Provider yet (see "Where we left off"); Google sign-in button still UI-only |
+| Forgot Password | ✅ Implemented, **real backend call** | "Send code" calls `POST /api/auth/forgot-password` for real, then opens the new Reset Password screen |
+| Reset Password | ✅ Implemented, **real backend call**, **not a Figma screen** | Code + new password calls `POST /api/auth/reset-password` for real; built from existing app primitives like `BookingRequestScreen` since no Figma frame defines this step |
+| Register | ✅ Implemented | Submit gated on Terms checkbox; now collects first/last/display name (+ business name for Provider) needed by the real register endpoints |
+| Terms & Privacy Acceptance | ✅ Implemented, **real backend call** | Submit gated on all 3 consents; "ПРИФАТИ И ПРОДОЛЖИ" now calls `POST /api/auth/register/buyer` or `.../provider` for real (see "Backend / Auth Integration") |
+| Email Verification | ✅ Implemented, **real backend calls** | Now has a real code-entry field + "ПОТВРДИ" calling `POST /api/auth/verify-email` for real; "Resend" now calls `POST /api/auth/resend-email-verification` for real too. Temporary dev button removed. |
 | Profile (Tourist) | ✅ Implemented | Pre-filled from registration data; Save gated on an actual edit; now hosts `TouristBottomNav` (`selectedIndex: 4`) |
 | Profile (Provider · Физичко лице) | ✅ Implemented | Active Offers/Average Rating stat cards now derive from real listing + review data |
 | Profile Setup (Provider · Правно лице) | ✅ Implemented | Full alternate screen (logo upload, business fields) shown when the subject-type toggle is set to "Правно лице" |
@@ -56,7 +56,7 @@ Last worked on: **the entire Tourist/Buyer side, end to end** — Home → Searc
 | Edit Listing screen | ❌ Not started | Blocks 2 Offers-screen actions |
 | Reservation Details screen | ❌ Not started | Blocks 1 My Reservations action ("Прегледај детали") |
 | Real Map View / coordinates | ❌ Not started | Needs a package + `ProviderListing` lat/lng decision — see "Known gaps" |
-| Backend / API integration | ❌ Not started | All actions are local UI state only |
+| Backend / API integration | 🟡 Started — auth only | Login, Buyer/Provider registration, `GET /api/users/me`, and logout call the real hosted API (`https://agro.finki.net.mk`); every other screen/feature is still local UI state only |
 
 All screens above were built directly from the team's Figma file ("Rural Tourism"), matched frame-by-frame — colors, typography, spacing, and assets pulled from Figma via MCP rather than eyeballed.
 
@@ -66,16 +66,19 @@ The original registration flow is unchanged and still the only "start to finish"
 
 ```mermaid
 flowchart TD
-    Splash["Splash & Language"] -->|Продолжи| Login
+    Splash["Splash & Language"] -->|"Продолжи, no/expired session"| Login
+    Splash -->|"Продолжи, session restored"| RestoredHome["Tourist Home / Provider Dashboard"]
     Login -->|Заборавена лозинка?| ForgotPassword["Forgot Password"]
+    ForgotPassword -->|ИСПРАТИ КОД succeeds| ResetPassword["Reset Password"]
+    ResetPassword -->|РЕСЕТИРАЈ ЛОЗИНКА succeeds| Login
     Login -->|Регистрирајте се| Register
     ForgotPassword -->|Најавете се| Login
     Register -->|Веќе имате сметка?| Login
     Register -->|РЕГИСТРИРАЈ СЕ enabled| Terms["Terms & Privacy"]
     Terms -->|ПРИФАТИ И ПРОДОЛЖИ enabled| EmailVerify["Email Verification"]
     EmailVerify -->|Промени е-пошта| Register
-    EmailVerify -->|"Продолжи (привремено), role = Гостин"| Profile["Profile · Tourist"]
-    EmailVerify -->|"Продолжи (привремено), role = Понудувач"| ProviderProfile["Profile · Provider"]
+    EmailVerify -->|"ПОТВРДИ succeeds, role = Гостин"| Profile["Profile · Tourist"]
+    EmailVerify -->|"ПОТВРДИ succeeds, role = Понудувач"| ProviderProfile["Profile · Provider"]
     ProviderProfile -->|"Тип на субјект = Правно лице"| ProviderLegal["Profile Setup · Правно лице"]
 ```
 
@@ -148,7 +151,7 @@ Solid arrows are real, working `Navigator` transitions. Dashed arrows exist only
 Solid green background, logo, title/subtitle, language switch (MK/SQ/EN), CTA. Vertically responsive (Galaxy S8+ / 360×740 tested). Covered by `test/splash_screen_responsive_test.dart`.
 
 **Login / Forgot Password / Register / Terms & Privacy / Email Verification**
-Unchanged since the last update. Register's role toggle drives which Profile screen Email Verification's temporary dev button routes to.
+**This round**: Login, Register, Terms & Privacy, Email Verification (verify + resend), and now Forgot/Reset Password all make real backend calls — see "Backend / Auth Integration" below for the full detail. Register's role toggle still drives which Profile screen Email Verification routes to after a real successful verify.
 
 **Profile · Tourist** (`lib/screens/profile_screen/`)
 Pre-filled from `RegistrationProfile`; Save disabled until an actual edit is made; Reservations/Favorite Places hardcoded at 0 (no such system exists yet). **This round**: gained `bottomNavigationBar: TouristBottomNav(selectedIndex: 4)` — it previously had none at all and was a dead end reachable only via the Dev Launcher.
@@ -202,7 +205,33 @@ Unchanged since the last update.
 **Dev Screen Launcher** (`lib/dev/dev_launcher_screen.dart`) — debug-only, not a Figma screen
 Grew substantially this round — every new Tourist screen has its own entry (Home, Search Filters sheet standalone, Search Results, Listing Details, Booking Request, Reservation Confirmation, My Reservations, Leave Review, Review Submitted), several seeding real mock data on tap (e.g. creating a real `pending`/`completed` reservation) so the screen isn't empty when opened in isolation. Still wired the same way, zero effect on release builds.
 
+## Backend / Auth Integration (this round)
+
+The API contract is `backend/swagger.json` (gitignored — kept locally, not in the repo), fetched from the hosted **AgroEco Mobile API**. It documents **request schemas only** — no response schemas, no status codes beyond 200, and no role enum anywhere — so every response shape below was confirmed against the real live backend (`https://agro.finki.net.mk`) before being typed, never guessed from the spec alone.
+
+- **Login** (`POST /api/auth/login`) — real request/response, confirmed live. Requires header `X-Client-Type: mobile`; response is `{ success, data: { accessToken, accessTokenExpiresAtUtc, refreshToken, user, twoFactorChallenge, webSession }, errors, traceId }`. `user` matches `AuthUser` exactly. 2FA (`twoFactorChallenge` non-null) is detected and treated as "login not completed" rather than crashing, but isn't implemented — out of scope so far. A failed login due to an unverified email is also confirmed live: 403, `errors: [{ code: "AUTH_EMAIL_NOT_VERIFIED", message: "Email is not verified." }]` — `LoginScreen` detects that specific code (`SessionController.emailNotVerified`) and redirects straight to `EmailVerificationScreen` instead of just showing the message inline. A real **Buyer** login is now confirmed too: `roles: ["Buyer"]`, `emailVerified: true`, plus `phone`/`phoneCompletionRequired`/`providerQuestionnaireRequired` on `user` that weren't visible on the Admin account — a real Buyer login now routes all the way to Tourist Home for the first time. The curl used to get this included a `rememberMe` field in the request body, but it isn't part of `LoginRequest`'s documented schema (`additionalProperties: false`), so it was left out rather than added on a guess.
+- **Registration** (`POST /api/auth/register/buyer` / `.../provider`) — real request and response, both confirmed live via a real Swagger UI call. `TermsPrivacyScreen` is where the call actually fires (the first point terms/privacy consent exists). Buyer's `data` decodes into `RegisterResult` (`{ userId, status, emailVerificationRequired }`); Provider's decodes into the separate `ProviderRegisterResult` (`{ userId, providerProfileId, userStatus, providerProfileStatus, emailVerificationRequired }`) — deliberately not shared with Buyer's model since the status field is named differently (`status` vs. `userStatus`). Both observed responses mean "go verify your email next" (`status`/`userStatus: "PendingVerification"`, `emailVerificationRequired: true`), so both branches proceed straight to Email Verification — no token/session is established by registration itself, and no raw-response debug dialog remains.
+- **Email verification** (`POST /api/auth/verify-email`, `POST /api/auth/resend-email-verification`) — real requests; `resend`'s response is fully confirmed live (`{ sent: true }`, decodes into `ResendEmailVerificationResult`). `verify`'s *failure* envelope is confirmed live (400, `{ code: "AUTH_EMAIL_VERIFICATION_INVALID", message: "Invalid verification code." }`), but its *success* `data` hasn't actually been observed yet (no real code tried) — `AuthRepository.verifyEmail` deliberately leaves it untyped, same as `registerProvider` before its response was confirmed; the UI only needs success/failure, not any field inside `data`. `EmailVerificationScreen` now has a real code-entry field wired to `verifyEmail` and a real "Resend" button wired to `resendEmailVerification`; the old "Продолжи (привремено)" stand-in button is gone.
+- **Forgot/reset password** (`POST /api/auth/forgot-password`, `POST /api/auth/reset-password`) — real requests, neither response confirmed live yet (both untyped in `AuthRepository`, same pattern as `verifyEmail`'s unconfirmed success case — the UI only needs success/failure). `ForgotPasswordScreen`'s "Send code" now calls `forgotPassword` for real and opens the new `ResetPasswordScreen` (code + new password + confirm, client-side-only match check) on success, which calls `resetPassword` and returns to Login. `ResetPasswordScreen` is **not a Figma screen** — built from existing app primitives (same composition as `ForgotPasswordScreen`) since no frame defines this step; reconcile against a real frame if one ever gets designed.
+- **Token refresh** (`POST /api/auth/refresh`) — real request and response, both confirmed live. Response decodes into `LoginResponseData` directly — it's exactly the same shape as login's. **Confirmed live: the backend rotates the refresh token on every use** (the response's `refreshToken` was a different value from the one sent in the request), so `AuthRepository.refreshToken`/`SessionController.attemptTokenRefresh` were deliberately left as a no-op until this was confirmed — calling it without being able to persist the new refresh token would have silently broken the session for real. `SessionController.attemptTokenRefresh` is registered with `ApiClient` as its 401 handler (a `QueuedInterceptor`, so a burst of concurrent 401s triggers exactly one refresh attempt) and now actually refreshes + retries transparently on success, or forces a local logout on any failure. Also powers `restoreSession` for free: a stored access token that's expired by the time the app restarts gets silently refreshed mid-restore rather than forcing a fresh login.
+- **Current user** (`GET /api/users/me`) — confirmed live to return exactly the same `AuthUser` shape as login's `user` object; no separate model needed.
+- **Logout** (`POST /api/auth/logout`) — takes `{ refreshToken }` (the request body's schema is actually shared with `/api/auth/refresh` in the OpenAPI contract — `RefreshRequest`, not a logout-specific one), no `Authorization` header (the refresh token itself identifies the session). Response is now fully confirmed live too: `{ loggedOut: true }`, decodes into `LogoutResult`. Implemented as **best-effort**: the backend call's success/failure is irrelevant to whether the local session gets cleared — it always does. Wired to Settings' "Одjава", which calls `SessionController.logout()` and disables itself while the call is in flight (to avoid a double-tap firing two concurrent logout calls), then navigates to Login regardless of backend outcome.
+- **Base URL**: `ApiEnvironment.baseUrl` defaults to `https://agro.finki.net.mk`, overridable via `--dart-define=API_BASE_URL=...`.
+- **Not implemented yet, on purpose**: `/api/auth/invitations/accept` (no UI/entry point anywhere in the app for it), `/api/auth/external/complete` (not even documented in the local `backend/swagger.json` — may need a fresh pull from the live Swagger UI; also blocked on the still-UI-only Google sign-in button, which needs real OAuth SDK integration).
+
 ## Architecture / design system
+
+**New this round — backend integration (`lib/core/network/`, `lib/services/`, `lib/models/`):**
+- **`ApiClient`** (`api_client.dart`) — single shared `Dio` singleton. Holds two interceptors: `_AuthHeaderInterceptor` attaches `Authorization: Bearer <token>` to every call except a hardcoded public-path exclusion list (login, both register endpoints, verify-email, resend-verification, forgot/reset-password, refresh, logout), and `_RefreshOnUnauthorizedInterceptor` (a `QueuedInterceptor`, so a burst of concurrent requests that all 401 at once triggers exactly one refresh attempt, not one per request) reacts to a 401 from any other path by calling a registered refresh handler and either retrying the original request (on success) or letting the 401 through (on anything else). Both interceptors read the token/call the refresh handler via provider callbacks `SessionController` registers on construction, specifically to avoid a `core` → `services` import cycle.
+- **`ApiEnvironment`** (`api_environment.dart`) — the one place `baseUrl` is defined.
+- **`ApiResponse<T>`** (`api_response.dart`) / **`ApiErrorItem`**/**`ApiException`**/**`ApiExceptionKind`** (`api_exception.dart`) — generic decode of the backend's one confirmed envelope shape (`success`/`data`/`errors`/`traceId`), and the one exception type the rest of the app ever catches for a failed call. `ApiException.hasErrorCode(code)` lets a caller react to one specific confirmed backend error code (e.g. `AUTH_EMAIL_NOT_VERIFIED`) without matching on free-form `message` text.
+- **`ApiErrorMapper`** (`api_error_mapper.dart`) — the single place a `DioException` is turned into an `ApiException`; maps HTTP status → `ApiExceptionKind`, prefers the backend's own error message, falls back to a Macedonian `AppStrings` message otherwise (never shows raw Dio text to a user).
+- **`TokenStorage`** (`token_storage.dart`) — wraps `flutter_secure_storage`; the only thing that touches it. Stores access token, refresh token, and access-token expiry; never a password.
+- **`AuthRepository`** (`lib/services/auth_repository.dart`) — all `/api/auth/*` and `/api/users/me` HTTP calls: `login`, `registerBuyer`, `registerProvider`, `getCurrentUser`, `logout`.
+- **`SessionController`** (`lib/services/session_controller.dart`) — `ChangeNotifier` singleton, same pattern as every other controller in the app; the one source of truth for `currentUser`/`isAuthenticated`/`appRole`/`isLoading`/`errorMessage`/`emailNotVerified`. `refreshCurrentUser()` exists but isn't called from anywhere yet. `restoreSession()` is new — called from `SplashScreen` on every app start, it re-populates `currentUser` from a stored token via `GET /api/users/me` without requiring a fresh login. `attemptTokenRefresh()` is new too — registered with `ApiClient` as its 401 handler, it calls the now-confirmed `POST /api/auth/refresh` and applies the (rotated) tokens on success, or forces a local logout on any failure (see "Backend / Auth Integration").
+- **`AuthUser`, `LoginRequest`, `LoginResponseData`, `BuyerRegisterRequest`, `ProviderRegisterRequest`, `RegisterResult`, `ProviderRegisterResult`, `ResendEmailVerificationResult`** (`lib/models/`) — request/response models, field names matching the confirmed live JSON exactly. `RegisterResult`/`ProviderRegisterResult` are kept as two separate classes rather than one shared type, since the two confirmed responses name their status field differently (`status` vs. `userStatus`). `AuthUser` now also has `phone`/`phoneCompletionRequired`/`providerQuestionnaireRequired`, confirmed on a real Buyer login; `LoginResponseData` has a `webSession` field too, kept untyped (only ever observed as `null`). `LogoutResult` (`lib/models/`) is new too — logout's response is now fully confirmed and typed, same as everything else here.
+- **`mapBackendRoleToUserRole`** (`lib/models/backend_role_mapper.dart`) — the one centralized place a raw backend role string maps to this app's `UserRole`; now maps the confirmed `"Buyer"` to `UserRole.buyer` and `"Admin"` to `null` (no Admin destination exists) — Provider's real role string is still unconfirmed, see "Where we left off".
+- **`RegistrationProfile`** extended with `firstName`/`lastName`/`displayName`/`password`/`businessName`, carried from `RegisterScreen` to `TermsPrivacyScreen` only (nothing downstream reads them) — `password` is never logged and is discarded once those two screens are left.
 
 **From the Rate Guest round:**
 - **`lib/widgets/xfile_image.dart`** — **`Image.file`/`FileImage` (both backed by `dart:io`) hard-fail on Flutter Web** — the browser has no real filesystem. `XFileImage`/`xfileImageProvider` branch on `kIsWeb`: `Image.network`/`NetworkImage` on web (a picked file's `.path` is a `blob:` URL there), `Image.file`/`FileImage` everywhere else. Used everywhere the app renders a locally-picked image, including every new Tourist card/gallery this round.
@@ -227,13 +256,12 @@ Grew substantially this round — every new Tourist screen has its own entry (Ho
 ## Known gaps / not yet implemented
 
 **Carried over from before:**
-- **No backend or API wiring anywhere.** Every "submit"/"save"/"send"/"publish"/"rate"/"review"/"book" action across every screen is local state only, with a `TODO` marking where a real API call would go.
+- **Backend/API wiring exists only for auth so far** (login, Buyer/Provider registration, `/api/users/me`, logout — see "Backend / Auth Integration"). Every other "submit"/"save"/"send"/"publish"/"rate"/"review"/"book" action across every other screen is still local state only, with a `TODO` marking where a real API call would go.
 - **Most of the older secondary screens still have no real navigation entry point.** Settings, Notifications, My Tickets, and New Ticket are only reachable via the Dev Screen Launcher (debug builds only) or each other's internal navigation.
 - **No "already rated" visual treatment** on Provider Dashboard's "Оцени гостин" (unchanged from last time) — the exact same shape of gap now also exists for Tourist's "Остави рецензија" (see below), so there are now two places waiting on the same kind of design.
 - **No Edit Listing screen** — blocks "Уреди"/"Уреди и поднеси повторно" on Provider Offers.
 - **Verification status** on the Provider profile is still hardcoded to "not verified."
 - **Choose Role screen** still has no Figma frame implemented.
-- **Temporary dev button** on Email Verification still needs removal once real email verification exists.
 - **Everything is lost on app restart** — no persistence layer exists for any in-memory singleton (now including Tourist searches/reviews/favorites/reservations too).
 - Test coverage is still limited to the Splash screen's responsive-layout behavior.
 
@@ -249,17 +277,24 @@ Grew substantially this round — every new Tourist screen has its own entry (Ho
 - **Category filter chips in the Search Filters sheet are multi-select** — a judgment call (Figma's mockup only shows one example chip highlighted, not a stated interaction rule), not an explicit spec. Worth double-checking against the real prototype if that ever gets clarified.
 - **Location/date pickers in the Search Filters sheet are custom-built**, not literal Figma "open state" reproductions (Figma only shows the closed field) — a location bottom-sheet list and Flutter's built-in `showDateRangePicker`, themed to match.
 
+**New this round (Backend / Auth Integration):**
+- **Flutter Web can't reach the real backend** — `agro.finki.net.mk` sends no CORS headers, so every request from Chrome/web fails at the browser's preflight check before it reaches the app. Backend-integration testing must happen on Android or Windows desktop until the backend adds a CORS policy for the app's web origin(s).
+- **`turnstileToken` is always sent as an empty string** (`AuthRepository`'s `_placeholderTurnstileToken`) — confirmed to reach real credential validation rather than being rejected outright, but not a real Cloudflare Turnstile integration.
+
 ## Confusing / worth knowing before touching this again
 
 Things that aren't bugs, but aren't obvious from reading the code cold either:
 
 - **The Figma file has a second, entirely different "01–14" numbered frame set** (Splash, Choose Role, Home, Filter, Property Detail, Calendar Picker, Availability, Booking Confirmation, Messages, Profile Edit, Map View) using a completely different visual design system — different green (`#118e43` vs. the app's real `agro-forest-950`), different fonts/tokens, an MK/AL/EN language switch styled nothing like the real one. **None of the implemented app is based on these** — they're an earlier, superseded design pass. If a frame link ever resolves to one of these, it's the wrong one; the real design system is the "20–27 – Buyer ·"/equivalent Provider-numbered frames.
 - **`BookingRequestScreen` has no Figma design at all.** It was built from existing app primitives (the filter sheet's date picker, the wizard's capacity stepper) because no current-design frame defines a date/guest-count input step between Listing Details and the booking confirmation. If a real frame for this ever gets designed, this screen should be reconciled against it rather than assumed correct forever.
+- **`ResetPasswordScreen` has no Figma design either**, for the same reason — built from `ForgotPasswordScreen`'s own composition (icon/heading/fields/button) since no frame defines a code + new-password step. Same rule: reconcile against a real frame if one ever gets designed, rather than assuming this is final.
 - **Guest count in the search filter is a *minimum threshold* ("2+"), not an exact headcount** — conceptually different from `Reservation.guestCount` (a real booking's exact number of guests), even though both render as "N гости" in different places. Don't conflate the two if extending either.
 - **Villa Zdravkovski's displayed rating visibly changed from 4.8 to 5.0** the moment review-based rating aggregation shipped, with no user action involved — it already had 2 seeded reviews (5, 5) that were previously disconnected from the displayed number. This is correct (the review collection is now the one authoritative source), not a regression, but it can look like one if you're comparing screenshots before/after.
 - **`ListingDetailsScreen`/`BookingRequestScreen`'s selected nav tab depends on where the user came from** (`originTabIndex`, 0 from Home / 1 from Search Results), not a fixed value. Any *new* entry point into either screen needs to explicitly pass the right origin — the default is 0, which will silently look right coming from Home and silently wrong coming from anywhere else.
 - **`ChatListScreen` has no bottom nav for either role**, on purpose (pre-existing, unchanged) — it's a push-only destination. "Messages → another tab" works by using its own back button (which returns to whichever navbar-equipped screen opened it), not by tapping a tab from inside Messages itself.
 - **"Оценка" (rating) vs. "Број на гости" (guest count) in the filter sheet were originally either/or in the spec, then both were confirmed needed** — the sheet keeps both as separate rows on purpose; don't "simplify" this back down to one without checking history first.
+- **`backend/swagger.json` documents request schemas only — zero response schemas, zero non-200 status codes, no role enum, no `servers` entry anywhere in the whole document.** Every response shape used in this app (login's envelope, `AuthUser`'s fields, the error envelope's `success`/`errors`/`traceId` shape) was confirmed by making a real call against the live backend and reading the actual response — never inferred from the spec. Keep doing this for every new endpoint; the spec alone isn't sufficient.
+- **The hosted backend's base URL (`https://agro.finki.net.mk`) was found by inspecting the Swagger UI URL the team was given, not from `backend/swagger.json` itself** (which has no `servers` entry) — if that host ever changes, there's nothing in the OpenAPI doc that would tell you; it has to come from whoever hosts the backend.
 
 ## Running the project
 

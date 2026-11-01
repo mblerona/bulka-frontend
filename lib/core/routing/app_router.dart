@@ -31,6 +31,7 @@ import 'package:bulka_frontend/screens/rate_guest_screen/rate_guest_screen.dart'
 import 'package:bulka_frontend/screens/rating_saved_screen/rating_saved_screen.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservation_confirmation_screen.dart';
+import 'package:bulka_frontend/screens/reset_password_screen/reset_password_screen.dart';
 import 'package:bulka_frontend/screens/review_submitted_screen/review_submitted_screen.dart';
 import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
 import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
@@ -89,6 +90,18 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
       GoRoute(
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
+        routes: [
+          GoRoute(
+            path: 'reset',
+            // The email the code was sent to; without it, start over.
+            redirect: (context, state) =>
+                (state.uri.queryParameters['email'] ?? '').isEmpty
+                ? AppRoutes.forgotPassword
+                : null,
+            builder: (context, state) =>
+                ResetPasswordScreen(email: state.uri.queryParameters['email']!),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.register,

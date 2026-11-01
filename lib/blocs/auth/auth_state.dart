@@ -7,6 +7,9 @@ enum AuthOperation {
   register,
   verifyEmail,
   resendVerification,
+  restoreSession,
+  requestPasswordReset,
+  resetPassword,
   logout,
   sessionExpired,
 }

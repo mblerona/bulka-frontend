@@ -54,6 +54,7 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
         email: profile.email,
         phone: profile.phone,
         password: widget.password,
+        businessName: profile.businessName,
       ),
     );
   }

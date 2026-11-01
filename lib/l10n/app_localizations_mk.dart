@@ -175,6 +175,49 @@ class AppLocalizationsMk extends AppLocalizations {
   String get forgotPasswordFooterPrompt => 'Се сетивте на лозинката? ';
 
   @override
+  String get resetPasswordTitle => 'Нова лозинка';
+
+  @override
+  String get resetPasswordHeading => 'Внесете нова лозинка';
+
+  @override
+  String get resetPasswordSubheading =>
+      'Внесете го кодот што ви го испративме по е-пошта и изберете нова лозинка.';
+
+  @override
+  String get resetPasswordCodeLabel => 'Код за ресетирање';
+
+  @override
+  String get resetPasswordCodePlaceholder => 'Внесете го кодот од е-поштата';
+
+  @override
+  String get resetPasswordNewPasswordLabel => 'Нова лозинка';
+
+  @override
+  String get resetPasswordSubmitButton => 'РЕСЕТИРАЈ ЛОЗИНКА';
+
+  @override
+  String get resetPasswordSuccess =>
+      'Лозинката е успешно променета. Најавете се.';
+
+  @override
+  String get registerBusinessNameLabel => 'Име на бизнисот';
+
+  @override
+  String get registerBusinessNamePlaceholder => 'Агро Еко Фарма ДООЕЛ';
+
+  @override
+  String get registerErrorBusinessName => 'Внесете го името на бизнисот.';
+
+  @override
+  String get apiErrorBusinessNameRequired =>
+      'Името на бизнисот е задолжително.';
+
+  @override
+  String get apiErrorEmailNotVerified =>
+      'Е-поштата сè уште не е потврдена. Внесете го кодот што ви го испративме.';
+
+  @override
   String get registerTitle => 'Регистрација';
 
   @override

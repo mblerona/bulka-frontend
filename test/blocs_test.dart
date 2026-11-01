@@ -371,6 +371,89 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
+      'restoring a saved session loads the user',
+      // The handlers await the (fake) HTTP request.
+      wait: const Duration(milliseconds: 50),
+      build: () => authWith({
+        '/api/users/me': (200, {'success': true, 'data': userJson}),
+      }),
+      setUp: () {
+        tokens.access = 'access';
+        tokens.refresh = 'refresh';
+      },
+      act: (bloc) => bloc.add(const AuthSessionRestoreRequested()),
+      verify: (bloc) {
+        expect(bloc.state.status, AuthOperationStatus.succeeded);
+        expect(bloc.state.user!.role, UserRole.owner);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'restoring without saved tokens fails without a request',
+      build: () => authWith({}),
+      act: (bloc) => bloc.add(const AuthSessionRestoreRequested()),
+      verify: (bloc) {
+        expect(bloc.state.operation, AuthOperation.restoreSession);
+        expect(bloc.state.status, AuthOperationStatus.failed);
+        expect(bloc.state.isLoggedIn, isFalse);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'forgot password and reset password succeed',
+      // The handlers await the (fake) HTTP request.
+      wait: const Duration(milliseconds: 50),
+      build: () => authWith({
+        '/api/auth/forgot-password': (200, {'success': true}),
+        '/api/auth/reset-password': (200, {'success': true}),
+      }),
+      act: (bloc) async {
+        bloc.add(const AuthPasswordResetCodeRequested('ana@example.com'));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(bloc.state.operation, AuthOperation.requestPasswordReset);
+        expect(bloc.state.status, AuthOperationStatus.succeeded);
+        bloc.add(
+          const AuthPasswordResetRequested(
+            email: 'ana@example.com',
+            code: '123456',
+            newPassword: 'Secret1!',
+          ),
+        );
+      },
+      verify: (bloc) {
+        expect(bloc.state.operation, AuthOperation.resetPassword);
+        expect(bloc.state.status, AuthOperationStatus.succeeded);
+        expect(bloc.state.isLoggedIn, isFalse);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'an unverified email is reported by its error code',
+      // The handlers await the (fake) HTTP request.
+      wait: const Duration(milliseconds: 50),
+      build: () => authWith({
+        '/api/auth/login': (
+          403,
+          {
+            'success': false,
+            'errors': [
+              {'code': 'AUTH_EMAIL_NOT_VERIFIED', 'message': 'Not verified.'},
+            ],
+          },
+        ),
+      }),
+      act: (bloc) =>
+          bloc.add(const AuthLoginRequested(email: 'a@b.c', password: 'x')),
+      verify: (bloc) {
+        expect(bloc.state.status, AuthOperationStatus.failed);
+        expect(
+          bloc.state.error!.hasErrorCode('AUTH_EMAIL_NOT_VERIFIED'),
+          isTrue,
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
       'logout clears the user and the tokens, even if the request fails',
       // The handlers await the (fake) HTTP request.
       wait: const Duration(milliseconds: 50),

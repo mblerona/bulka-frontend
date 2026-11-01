@@ -16,6 +16,8 @@ String? translateApiError(ApiError error) {
       return AppStrings.loginErrorInvalidCredentials;
     case 'AUTH_EMAIL_VERIFICATION_INVALID':
       return AppStrings.apiErrorVerificationCodeInvalid;
+    case 'AUTH_EMAIL_NOT_VERIFIED':
+      return AppStrings.apiErrorEmailNotVerified;
     case 'VALIDATION_REQUIRED':
       return _requiredMessage(field);
     case 'VALIDATION_INVALID':
@@ -31,6 +33,7 @@ String? _requiredMessage(String? field) => switch (field) {
   'email' => AppStrings.apiErrorEmailRequired,
   'firstName' => AppStrings.apiErrorFirstNameRequired,
   'lastName' => AppStrings.apiErrorLastNameRequired,
+  'businessName' => AppStrings.apiErrorBusinessNameRequired,
   'phone' => AppStrings.apiErrorPhoneRequired,
   'password' => AppStrings.apiErrorPasswordRequired,
   'code' => AppStrings.apiErrorCodeRequired,

@@ -68,6 +68,10 @@ class ApiException implements Exception {
   final List<ApiError> errors;
   final String Function()? _customMessage;
 
+  /// Whether the backend sent an error with this `code`, e.g.
+  /// `AUTH_EMAIL_NOT_VERIFIED`.
+  bool hasErrorCode(String code) => errors.any((e) => e.code == code);
+
   /// In the app's current language, never the backend's English text.
   /// Worked out on every read, so it follows a language switch.
   String get message {

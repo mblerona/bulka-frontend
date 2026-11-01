@@ -7,6 +7,7 @@ import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
+import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/widgets/form_error_text.dart';
@@ -67,6 +68,23 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     } else if (state.status == AuthOperationStatus.failed) {
       final error = state.error!;
+      if (error.hasErrorCode('AUTH_EMAIL_NOT_VERIFIED')) {
+        // Right password, but the email was never confirmed: go type in
+        // the code. That screen only needs the email.
+        setState(() => _errorMessage = null);
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(error.message)));
+        context.push(
+          AppRoutes.registerVerify,
+          extra: RegistrationProfile(
+            fullName: '',
+            email: _emailController.text.trim(),
+            phone: '',
+          ),
+        );
+        return;
+      }
       setState(() {
         _errorMessage = () => error.kind == ApiErrorKind.unauthorized
             ? AppStrings.loginErrorInvalidCredentials

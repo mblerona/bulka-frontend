@@ -174,6 +174,49 @@ class AppLocalizationsSq extends AppLocalizations {
   String get forgotPasswordFooterPrompt => 'E kujtuat fjalëkalimin? ';
 
   @override
+  String get resetPasswordTitle => 'Fjalëkalim i ri';
+
+  @override
+  String get resetPasswordHeading => 'Shkruani një fjalëkalim të ri';
+
+  @override
+  String get resetPasswordSubheading =>
+      'Shkruani kodin që ju dërguam me email dhe zgjidhni një fjalëkalim të ri.';
+
+  @override
+  String get resetPasswordCodeLabel => 'Kodi i rivendosjes';
+
+  @override
+  String get resetPasswordCodePlaceholder => 'Shkruani kodin nga email-i';
+
+  @override
+  String get resetPasswordNewPasswordLabel => 'Fjalëkalimi i ri';
+
+  @override
+  String get resetPasswordSubmitButton => 'RIVENDOS FJALËKALIMIN';
+
+  @override
+  String get resetPasswordSuccess =>
+      'Fjalëkalimi u ndryshua. Ju lutemi kyçuni.';
+
+  @override
+  String get registerBusinessNameLabel => 'Emri i biznesit';
+
+  @override
+  String get registerBusinessNamePlaceholder => 'Agro Eko Ferma SHPK';
+
+  @override
+  String get registerErrorBusinessName => 'Shkruani emrin e biznesit.';
+
+  @override
+  String get apiErrorBusinessNameRequired =>
+      'Emri i biznesit është i detyrueshëm.';
+
+  @override
+  String get apiErrorEmailNotVerified =>
+      'Email-i juaj ende nuk është konfirmuar. Shkruani kodin që ju dërguam.';
+
+  @override
   String get registerTitle => 'Regjistrimi';
 
   @override

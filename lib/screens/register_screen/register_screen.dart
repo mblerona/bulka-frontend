@@ -28,6 +28,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
 
   final _nameController = TextEditingController();
+  final _businessNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -45,6 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Extend this with any future field-validation requirements; today
   // accepting the terms is the only gate on submission.
   bool get _canSubmit => _agreedToTerms;
+
+  bool get _isProvider => _selectedRoleIndex == 1;
 
   static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
@@ -69,6 +72,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (profile.firstName.isEmpty || profile.lastName.isEmpty) {
       return () => AppStrings.registerErrorFullName;
     }
+    if (profile.role == UserRole.owner &&
+        (profile.businessName ?? '').isEmpty) {
+      return () => AppStrings.registerErrorBusinessName;
+    }
     if (!_emailPattern.hasMatch(profile.email)) {
       return () => AppStrings.registerErrorEmail;
     }
@@ -89,7 +96,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       fullName: _nameController.text.trim(),
       email: _emailController.text.trim(),
       phone: _phoneController.text.trim(),
-      role: _selectedRoleIndex == 0 ? UserRole.buyer : UserRole.owner,
+      role: _isProvider ? UserRole.owner : UserRole.buyer,
+      businessName: _isProvider ? _businessNameController.text.trim() : null,
     );
     final error = _validate(profile);
     setState(() => _errorMessage = error);
@@ -104,6 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _businessNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -163,6 +172,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       hintText: AppStrings.registerNamePlaceholder,
                       controller: _nameController,
                     ),
+                    if (_isProvider) ...[
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                      LabeledTextField(
+                        label: AppStrings.registerBusinessNameLabel,
+                        hintText: AppStrings.registerBusinessNamePlaceholder,
+                        controller: _businessNameController,
+                      ),
+                    ],
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
                       label: AppStrings.emailLabel,

@@ -25,6 +25,12 @@ abstract final class AppRoutes {
   static const tickets = '/tickets';
   static const newTicket = '/tickets/new';
 
+  /// Reset Password for the account the reset code was emailed to.
+  static String resetPassword(String email) => Uri(
+    path: '$forgotPassword/reset',
+    queryParameters: {'email': email},
+  ).toString();
+
   /// Login with the email field already filled in.
   static String loginWithEmail(String email) =>
       Uri(path: login, queryParameters: {'email': email}).toString();

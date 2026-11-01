@@ -400,6 +400,84 @@ abstract class AppLocalizations {
   /// **'Се сетивте на лозинката? '**
   String get forgotPasswordFooterPrompt;
 
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In mk, this message translates to:
+  /// **'Нова лозинка'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordHeading.
+  ///
+  /// In mk, this message translates to:
+  /// **'Внесете нова лозинка'**
+  String get resetPasswordHeading;
+
+  /// No description provided for @resetPasswordSubheading.
+  ///
+  /// In mk, this message translates to:
+  /// **'Внесете го кодот што ви го испративме по е-пошта и изберете нова лозинка.'**
+  String get resetPasswordSubheading;
+
+  /// No description provided for @resetPasswordCodeLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Код за ресетирање'**
+  String get resetPasswordCodeLabel;
+
+  /// No description provided for @resetPasswordCodePlaceholder.
+  ///
+  /// In mk, this message translates to:
+  /// **'Внесете го кодот од е-поштата'**
+  String get resetPasswordCodePlaceholder;
+
+  /// No description provided for @resetPasswordNewPasswordLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Нова лозинка'**
+  String get resetPasswordNewPasswordLabel;
+
+  /// No description provided for @resetPasswordSubmitButton.
+  ///
+  /// In mk, this message translates to:
+  /// **'РЕСЕТИРАЈ ЛОЗИНКА'**
+  String get resetPasswordSubmitButton;
+
+  /// No description provided for @resetPasswordSuccess.
+  ///
+  /// In mk, this message translates to:
+  /// **'Лозинката е успешно променета. Најавете се.'**
+  String get resetPasswordSuccess;
+
+  /// No description provided for @registerBusinessNameLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Име на бизнисот'**
+  String get registerBusinessNameLabel;
+
+  /// No description provided for @registerBusinessNamePlaceholder.
+  ///
+  /// In mk, this message translates to:
+  /// **'Агро Еко Фарма ДООЕЛ'**
+  String get registerBusinessNamePlaceholder;
+
+  /// No description provided for @registerErrorBusinessName.
+  ///
+  /// In mk, this message translates to:
+  /// **'Внесете го името на бизнисот.'**
+  String get registerErrorBusinessName;
+
+  /// No description provided for @apiErrorBusinessNameRequired.
+  ///
+  /// In mk, this message translates to:
+  /// **'Името на бизнисот е задолжително.'**
+  String get apiErrorBusinessNameRequired;
+
+  /// No description provided for @apiErrorEmailNotVerified.
+  ///
+  /// In mk, this message translates to:
+  /// **'Е-поштата сè уште не е потврдена. Внесете го кодот што ви го испративме.'**
+  String get apiErrorEmailNotVerified;
+
   /// No description provided for @registerTitle.
   ///
   /// In mk, this message translates to:

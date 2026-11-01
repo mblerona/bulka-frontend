@@ -13,6 +13,7 @@ class RegistrationProfile {
     required this.phone,
     this.city = '',
     this.role = UserRole.buyer,
+    this.businessName,
   });
 
   final String fullName;
@@ -20,6 +21,9 @@ class RegistrationProfile {
   final String phone;
   final String city;
   final UserRole role;
+
+  /// Provider ([UserRole.owner]) accounts only; null for Tourists.
+  final String? businessName;
 
   /// The backend wants first and last name separately; the form has one
   /// field. The first word is the first name, the rest is the last name.
@@ -43,6 +47,7 @@ class RegistrationProfile {
       phone: phone ?? this.phone,
       city: city ?? this.city,
       role: role,
+      businessName: businessName,
     );
   }
 }

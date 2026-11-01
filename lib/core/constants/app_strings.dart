@@ -72,6 +72,23 @@ class AppStrings {
   static String get forgotPasswordSubheading => _s.forgotPasswordSubheading;
   static String get forgotPasswordSubmitButton => _s.forgotPasswordSubmitButton;
   static String get forgotPasswordFooterPrompt => _s.forgotPasswordFooterPrompt;
+  static String get resetPasswordTitle => _s.resetPasswordTitle;
+  static String get resetPasswordHeading => _s.resetPasswordHeading;
+  static String get resetPasswordSubheading => _s.resetPasswordSubheading;
+  static String get resetPasswordCodeLabel => _s.resetPasswordCodeLabel;
+  static String get resetPasswordCodePlaceholder =>
+      _s.resetPasswordCodePlaceholder;
+  static String get resetPasswordNewPasswordLabel =>
+      _s.resetPasswordNewPasswordLabel;
+  static String get resetPasswordSubmitButton => _s.resetPasswordSubmitButton;
+  static String get resetPasswordSuccess => _s.resetPasswordSuccess;
+  static String get registerBusinessNameLabel => _s.registerBusinessNameLabel;
+  static String get registerBusinessNamePlaceholder =>
+      _s.registerBusinessNamePlaceholder;
+  static String get registerErrorBusinessName => _s.registerErrorBusinessName;
+  static String get apiErrorBusinessNameRequired =>
+      _s.apiErrorBusinessNameRequired;
+  static String get apiErrorEmailNotVerified => _s.apiErrorEmailNotVerified;
   static String get registerTitle => _s.registerTitle;
   static String get registerRoleLabel => _s.registerRoleLabel;
   static String get registerRoleGuest => _s.registerRoleGuest;

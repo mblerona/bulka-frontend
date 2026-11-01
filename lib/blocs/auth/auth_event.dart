@@ -19,6 +19,7 @@ final class AuthRegistrationRequested extends AuthEvent {
     required this.email,
     required this.phone,
     required this.password,
+    this.businessName,
   });
 
   final UserRole role;
@@ -27,6 +28,34 @@ final class AuthRegistrationRequested extends AuthEvent {
   final String email;
   final String phone;
   final String password;
+
+  /// Provider ([UserRole.owner]) accounts only.
+  final String? businessName;
+}
+
+/// On app start: signs the user back in with the saved tokens, if any.
+final class AuthSessionRestoreRequested extends AuthEvent {
+  const AuthSessionRestoreRequested();
+}
+
+/// Forgot password: emails a reset code to [email].
+final class AuthPasswordResetCodeRequested extends AuthEvent {
+  const AuthPasswordResetCodeRequested(this.email);
+
+  final String email;
+}
+
+/// Sets a new password using the code from the reset email.
+final class AuthPasswordResetRequested extends AuthEvent {
+  const AuthPasswordResetRequested({
+    required this.email,
+    required this.code,
+    required this.newPassword,
+  });
+
+  final String email;
+  final String code;
+  final String newPassword;
 }
 
 /// The code from the verification email.

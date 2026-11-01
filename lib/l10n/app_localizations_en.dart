@@ -175,6 +175,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordFooterPrompt => 'Remembered your password? ';
 
   @override
+  String get resetPasswordTitle => 'New password';
+
+  @override
+  String get resetPasswordHeading => 'Enter a new password';
+
+  @override
+  String get resetPasswordSubheading =>
+      'Enter the code we emailed you and choose a new password.';
+
+  @override
+  String get resetPasswordCodeLabel => 'Reset code';
+
+  @override
+  String get resetPasswordCodePlaceholder => 'Enter the code from the email';
+
+  @override
+  String get resetPasswordNewPasswordLabel => 'New password';
+
+  @override
+  String get resetPasswordSubmitButton => 'RESET PASSWORD';
+
+  @override
+  String get resetPasswordSuccess =>
+      'Your password was changed. Please log in.';
+
+  @override
+  String get registerBusinessNameLabel => 'Business name';
+
+  @override
+  String get registerBusinessNamePlaceholder => 'Agro Eco Farm LLC';
+
+  @override
+  String get registerErrorBusinessName => 'Enter your business name.';
+
+  @override
+  String get apiErrorBusinessNameRequired => 'Business name is required.';
+
+  @override
+  String get apiErrorEmailNotVerified =>
+      'Your email isn\'t confirmed yet. Enter the code we sent you.';
+
+  @override
   String get registerTitle => 'Sign up';
 
   @override

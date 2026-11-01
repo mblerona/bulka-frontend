@@ -74,6 +74,10 @@ class DevLauncherScreen extends StatelessWidget {
       DevScreenEntry.route('Splash & Language', (_) => AppRoutes.splash),
       DevScreenEntry.route('Login', (_) => AppRoutes.login),
       DevScreenEntry.route('Forgot Password', (_) => AppRoutes.forgotPassword),
+      DevScreenEntry.route(
+        'Reset Password',
+        (_) => AppRoutes.resetPassword('dev@example.com'),
+      ),
       DevScreenEntry.route('Register', (_) => AppRoutes.register),
       DevScreenEntry.route(
         'Terms & Privacy',

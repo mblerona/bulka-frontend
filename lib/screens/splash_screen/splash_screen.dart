@@ -5,7 +5,9 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
+import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,8 +18,57 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  /// Continue was tapped before the saved session was checked; move on as
+  /// soon as the check finishes.
+  bool _waitingForSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Checked in the background while the user picks a language, so
+    // Continue usually doesn't have to wait.
+    context.read<AuthBloc>().add(const AuthSessionRestoreRequested());
+  }
+
+  void _handleContinue() {
+    final auth = context.read<AuthBloc>().state;
+    if (auth.isInProgress(AuthOperation.restoreSession)) {
+      setState(() => _waitingForSession = true);
+      return;
+    }
+    _goNext(auth);
+  }
+
+  /// Signed in again: straight to the account's side of the app.
+  /// Otherwise: Login.
+  void _goNext(AuthState auth) {
+    final user = auth.user;
+    if (user == null) {
+      context.push(AppRoutes.login);
+      return;
+    }
+    context.go(switch (user.role) {
+      UserRole.buyer => AppRoutes.home,
+      UserRole.owner => AppRoutes.dashboard,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          _waitingForSession &&
+          current.operation == AuthOperation.restoreSession &&
+          current.status != AuthOperationStatus.inProgress,
+      listener: (context, state) {
+        setState(() => _waitingForSession = false);
+        _goNext(state);
+      },
+      child: _buildScreen(context),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.agroGreen700,
       body: SafeArea(
@@ -54,6 +105,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   // Saved app-wide; BulkaApp rebuilds every screen.
                   context.read<LocaleBloc>().add(LanguageChanged(code));
                 },
+                onContinuePressed: _waitingForSession ? null : _handleContinue,
               );
 
               // Absolute floor: fixed text/controls + smallest logo, with the
@@ -87,11 +139,15 @@ class _SplashContent extends StatelessWidget {
     required this.logoSize,
     required this.selectedLanguageCode,
     required this.onLanguageChanged,
+    required this.onContinuePressed,
   });
 
   final double logoSize;
   final String selectedLanguageCode;
   final ValueChanged<String> onLanguageChanged;
+
+  /// Null while the saved session is still being checked.
+  final VoidCallback? onContinuePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +215,7 @@ class _SplashContent extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () => context.push(AppRoutes.login),
+            onPressed: onContinuePressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.agroGreen100,
               foregroundColor: AppColors.agroForest950,
