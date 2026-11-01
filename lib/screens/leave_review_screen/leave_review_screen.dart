@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -6,9 +10,6 @@ import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/review_submitted_screen/review_submitted_screen.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
@@ -22,7 +23,7 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// screen's own tokens almost entirely — see the AppDimensions section
 /// this screen's own values live under.
 ///
-/// `ListingReviewController.submitReview` independently re-validates both
+/// `ListingReviewsBloc` independently re-validates both
 /// eligibility (`status == completed`) and the no-duplicate-review rule
 /// regardless of what the caller already checked, so this screen never
 /// needs to reimplement either.
@@ -54,16 +55,16 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
 
   void _handleSubmit() {
     if (!_isValid) return;
-    ListingReviewController.instance.submitReview(
-      listing: widget.listing,
-      reservation: widget.reservation,
-      authorName: mockTouristGuestName,
-      rating: _rating,
-      comment: _reviewController.text,
+    context.read<ListingReviewsBloc>().add(
+      ListingReviewSubmitted(
+        listing: widget.listing,
+        reservation: widget.reservation,
+        authorName: mockTouristGuestName,
+        rating: _rating,
+        comment: _reviewController.text,
+      ),
     );
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ReviewSubmittedScreen()),
-    );
+    context.pushReplacement(AppRoutes.reviewSubmitted);
   }
 
   @override
@@ -72,14 +73,13 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
     final reservation = widget.reservation;
     final contextLine =
         '${listing.location} · '
-        '${formatMkDateRangeShortWithYear(reservation.startDate, reservation.endDate)}';
+        '${formatDateRangeShortWithYear(reservation.startDate, reservation.endDate)}';
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.leaveReviewButton,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -156,7 +156,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       AppStrings.leaveReviewQuestion,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -172,7 +172,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     const SizedBox(height: AppDimensions.wizardContentGap),
                     _ReviewTextField(controller: _reviewController),
                     const SizedBox(height: AppDimensions.wizardContentGap),
-                    const Text(
+                    Text(
                       AppStrings.leaveReviewDisclaimer,
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
@@ -251,7 +251,7 @@ class _ReviewTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.leaveReviewTextLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -280,7 +280,7 @@ class _ReviewTextField extends StatelessWidget {
               fontSize: AppDimensions.dsInputFontSize,
               color: AppColors.agroForest950,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: AppStrings.leaveReviewTextPlaceholder,
               hintStyle: TextStyle(
                 fontWeight: FontWeight.w400,

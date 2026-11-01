@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/rating_saved_screen/rating_saved_screen.dart';
-import 'package:bulka_frontend/services/guest_rating_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
 /// Rates the guest of one specific completed [reservation]. Only ever
 /// reached for a `completed`, not-yet-rated reservation — the Dashboard
-/// checks `GuestRatingController.hasRating` before navigating here at
-/// all, and `GuestRatingController.submitRating` re-validates both the
+/// checks `GuestRatingsState.hasRating` before navigating here at
+/// all, and `GuestRatingsBloc` re-validates both the
 /// `completed` status and the no-duplicate rule regardless, so this
 /// screen never needs to reimplement either check itself.
 class RateGuestScreen extends StatefulWidget {
@@ -39,14 +40,14 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
 
   void _handleSubmit() {
     if (!_isValid) return;
-    GuestRatingController.instance.submitRating(
-      reservation: widget.reservation,
-      rating: _rating,
-      note: _noteController.text,
+    context.read<GuestRatingsBloc>().add(
+      GuestRatingSubmitted(
+        reservation: widget.reservation,
+        rating: _rating,
+        note: _noteController.text,
+      ),
     );
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const RatingSavedScreen()),
-    );
+    context.pushReplacement(AppRoutes.ratingSaved);
   }
 
   @override
@@ -54,15 +55,14 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
     final reservation = widget.reservation;
     final contextLine =
         '${reservation.listingName} · '
-        '${formatMkDateRange(reservation.startDate, reservation.endDate)} '
+        '${formatDateRange(reservation.startDate, reservation.endDate)} '
         '${reservation.startDate.year}';
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const ProviderBottomNav(selectedIndex: 0),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.rateGuestTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -140,7 +140,7 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       AppStrings.rateGuestQuestion,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -156,7 +156,7 @@ class _RateGuestScreenState extends State<RateGuestScreen> {
                     const SizedBox(height: AppDimensions.wizardContentGap),
                     _NoteField(controller: _noteController),
                     const SizedBox(height: AppDimensions.wizardContentGap),
-                    const Text(
+                    Text(
                       AppStrings.rateGuestHelperText,
                       style: TextStyle(
                         fontWeight: FontWeight.w400,
@@ -235,7 +235,7 @@ class _NoteField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.rateGuestNoteLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -264,7 +264,7 @@ class _NoteField extends StatelessWidget {
               fontSize: AppDimensions.dsInputFontSize,
               color: AppColors.agroForest950,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: AppStrings.rateGuestNotePlaceholder,
               hintStyle: TextStyle(
                 fontWeight: FontWeight.w400,

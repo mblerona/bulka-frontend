@@ -6,13 +6,6 @@ import 'package:bulka_frontend/models/user_role.dart';
 ///
 /// [city] only applies to the Tourist profile; it's not collected at
 /// registration and is filled in by the user on that screen itself.
-///
-/// [firstName]/[lastName]/[displayName]/[password]/[businessName] exist only
-/// to carry the real `/api/auth/register/*` request fields from
-/// `RegisterScreen` to `TermsPrivacyScreen` (the point where terms/privacy
-/// are actually accepted, which is when the real registration call fires) —
-/// nothing downstream of that call reads them. [password] is never logged
-/// and is discarded once the registration screens are left.
 class RegistrationProfile {
   const RegistrationProfile({
     required this.fullName,
@@ -20,10 +13,6 @@ class RegistrationProfile {
     required this.phone,
     this.city = '',
     this.role = UserRole.buyer,
-    this.firstName = '',
-    this.lastName = '',
-    this.displayName = '',
-    this.password = '',
     this.businessName,
   });
 
@@ -33,13 +22,18 @@ class RegistrationProfile {
   final String city;
   final UserRole role;
 
-  final String firstName;
-  final String lastName;
-  final String displayName;
-  final String password;
-
-  /// Provider-only; null for a Buyer registration.
+  /// Provider ([UserRole.owner]) accounts only; null for Tourists.
   final String? businessName;
+
+  /// The backend wants first and last name separately; the form has one
+  /// field. The first word is the first name, the rest is the last name.
+  String get firstName => _nameParts.first;
+  String get lastName => _nameParts.skip(1).join(' ');
+
+  List<String> get _nameParts {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    return parts.isEmpty ? const [''] : parts;
+  }
 
   RegistrationProfile copyWith({
     String? fullName,
@@ -53,10 +47,6 @@ class RegistrationProfile {
       phone: phone ?? this.phone,
       city: city ?? this.city,
       role: role,
-      firstName: firstName,
-      lastName: lastName,
-      displayName: displayName,
-      password: password,
       businessName: businessName,
     );
   }

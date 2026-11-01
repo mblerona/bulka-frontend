@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:bulka_frontend/blocs/favorites/favorites_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_review.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/screens/booking_request_screen/booking_request_screen.dart';
-import 'package:bulka_frontend/services/favorites_controller.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
@@ -22,84 +23,49 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// takes it directly rather than looking anything up by title.
 ///
 /// [listing] is only the *initial* value: [_ListingDetailsScreenState._listing]
-/// re-resolves it by id from `ProviderListingController.instance` on every
+/// re-resolves it by id from `ListingsBloc` on every
 /// rebuild (falling back to the constructor value if it's ever no longer
 /// in the list), so this never holds a second, potentially-stale copy of
 /// the listing's data.
 class ListingDetailsScreen extends StatefulWidget {
-  const ListingDetailsScreen({
-    super.key,
-    required this.listing,
-    this.originTabIndex = 0,
-  });
+  const ListingDetailsScreen({super.key, required this.listing});
 
   final ProviderListing listing;
-
-  /// Which Tourist navbar tab actually led here — `TouristHomeScreen`'s
-  /// cards pass 0, `SearchResultsScreen`'s cards pass 1 — so the navbar
-  /// below highlights the section the user is really in rather than
-  /// always defaulting to "Дома" regardless of entry point. Threaded
-  /// through to `BookingRequestScreen` too, since the user is still
-  /// mid-browse there (only `ReservationConfirmationScreen` onward
-  /// switches to the Reservations section, once a reservation actually
-  /// exists).
-  final int originTabIndex;
 
   @override
   State<ListingDetailsScreen> createState() => _ListingDetailsScreenState();
 }
 
 class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
-  final FavoritesController _favorites = FavoritesController.instance;
-  final ListingReviewController _reviewController =
-      ListingReviewController.instance;
-
   final PageController _photoController = PageController();
   int _photoIndex = 0;
 
   @override
-  void initState() {
-    super.initState();
-    _listingController.addListener(_handleChanged);
-    _favorites.addListener(_handleChanged);
-    _reviewController.addListener(_handleChanged);
-  }
-
-  @override
   void dispose() {
-    _listingController.removeListener(_handleChanged);
-    _favorites.removeListener(_handleChanged);
-    _reviewController.removeListener(_handleChanged);
     _photoController.dispose();
     super.dispose();
   }
 
-  void _handleChanged() => setState(() {});
-
-  ProviderListing get _listing => _listingController.listings.firstWhere(
-    (l) => l.id == widget.listing.id,
-    orElse: () => widget.listing,
-  );
-
   @override
   Widget build(BuildContext context) {
-    final listing = _listing;
-    final reviews = _reviewController.reviewsForListing(listing.id);
+    final listing =
+        context.watch<ListingsBloc>().state.byId(widget.listing.id) ??
+        widget.listing;
+    final reviews = context.watch<ListingReviewsBloc>().state.forListing(
+      listing.id,
+    );
     final presentAmenities = ListingAmenity.values
         .where(listing.amenities.contains)
         .toList();
-    final isFavorite = _favorites.isFavorite(listing.id);
+    final isFavorite = context.watch<FavoritesBloc>().state.isFavorite(
+      listing.id,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: TouristBottomNav(
-        selectedIndex: widget.originTabIndex,
-      ),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.detailsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -119,7 +85,9 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
                           _HeroGallery(
                             listing: listing,
                             isFavorite: isFavorite,
-                            onFavoriteTap: () => _favorites.toggle(listing.id),
+                            onFavoriteTap: () => context
+                                .read<FavoritesBloc>()
+                                .add(FavoriteToggled(listing.id)),
                             pageController: _photoController,
                             currentIndex: _photoIndex,
                             onPageChanged: (i) =>
@@ -141,10 +109,7 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
                       ),
                     ),
                   ),
-                  _BookingFooter(
-                    listing: listing,
-                    originTabIndex: widget.originTabIndex,
-                  ),
+                  _BookingFooter(listing: listing),
                 ],
               ),
             ),
@@ -155,10 +120,13 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
   }
 }
 
-String _ratingReservationsLine(ProviderListing listing) {
+/// Call from a `build` method: it subscribes to the reviews.
+String _ratingReservationsLine(BuildContext context, ProviderListing listing) {
   final reservations =
       '${listing.reservationCount} ${AppStrings.resultsReservationsSuffix}';
-  final rating = ListingReviewController.instance.effectiveRating(listing);
+  final rating = context.watch<ListingReviewsBloc>().state.effectiveRating(
+    listing,
+  );
   if (rating == null) return reservations;
   return '★ ${rating.toStringAsFixed(1)} · $reservations';
 }
@@ -314,7 +282,7 @@ class _TitleBlock extends StatelessWidget {
               ),
             ),
             child: Text(
-              listing.category,
+              listing.category?.shortLabel ?? '',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: AppDimensions.wizardChipFontSize,
@@ -342,7 +310,7 @@ class _TitleBlock extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.detailsTitleBlockGap),
           Text(
-            _ratingReservationsLine(listing),
+            _ratingReservationsLine(context, listing),
             style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: AppDimensions.detailsRatingLineFontSize,
@@ -389,30 +357,32 @@ class _HostRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppDimensions.wizardAmenityRowGap),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${AppStrings.detailsHostPrefix}${listing.title}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: AppDimensions.detailsHostNameFontSize,
-                  color: AppColors.agroForest950,
-                ),
-              ),
-              if (listing.hostSinceYear != null) ...[
-                const SizedBox(height: AppDimensions.chatListContentGap),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  '${AppStrings.detailsHostSincePrefix}${listing.hostSinceYear}',
+                  '${AppStrings.detailsHostPrefix}${listing.title}',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: AppDimensions.detailsHostSinceFontSize,
-                    color: AppColors.profileSecondaryText,
+                    fontWeight: FontWeight.w700,
+                    fontSize: AppDimensions.detailsHostNameFontSize,
+                    color: AppColors.agroForest950,
                   ),
                 ),
+                if (listing.hostSinceYear != null) ...[
+                  const SizedBox(height: AppDimensions.chatListContentGap),
+                  Text(
+                    '${AppStrings.detailsHostSincePrefix}${listing.hostSinceYear}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: AppDimensions.detailsHostSinceFontSize,
+                      color: AppColors.profileSecondaryText,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ],
       ),
@@ -436,7 +406,7 @@ class _DescriptionSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.detailsAboutHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -476,7 +446,7 @@ class _AmenitiesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.detailsAmenitiesHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -495,12 +465,14 @@ class _AmenitiesSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppDimensions.wizardAmenityRowGap),
-                Text(
-                  amenities[i].label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: AppDimensions.detailsAmenityLabelFontSize,
-                    color: AppColors.agroForest950,
+                Expanded(
+                  child: Text(
+                    amenities[i].label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: AppDimensions.detailsAmenityLabelFontSize,
+                      color: AppColors.agroForest950,
+                    ),
                   ),
                 ),
               ],
@@ -530,7 +502,7 @@ class _LocationSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.detailsLocationHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -590,7 +562,7 @@ class _ReviewsSection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            _ratingReservationsLine(listing),
+            _ratingReservationsLine(context, listing),
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: AppDimensions.detailsSectionHeadingFontSize,
@@ -648,16 +620,15 @@ class _ReviewCard extends StatelessWidget {
 }
 
 class _BookingFooter extends StatelessWidget {
-  const _BookingFooter({required this.listing, required this.originTabIndex});
+  const _BookingFooter({required this.listing});
 
   final ProviderListing listing;
-  final int originTabIndex;
 
   String get _priceLabel {
     final suffix = categoryRequiresPrice(listing.category)
         ? AppStrings.wizardPricePerNightSuffix
         : AppStrings.wizardPriceSuffix;
-    return '${formatMkPrice(listing.price)} $suffix';
+    return '${formatPrice(listing.price)} $suffix';
   }
 
   // The check-in/check-out + nightly-price booking flow only makes sense
@@ -698,7 +669,7 @@ class _BookingFooter extends StatelessWidget {
                 ),
                 const SizedBox(height: AppDimensions.chatListContentGap),
                 Text(
-                  _ratingReservationsLine(listing),
+                  _ratingReservationsLine(context, listing),
                   style: const TextStyle(
                     fontWeight: FontWeight.w400,
                     fontSize: AppDimensions.detailsFooterMetaFontSize,
@@ -710,14 +681,7 @@ class _BookingFooter extends StatelessWidget {
           ),
           GestureDetector(
             onTap: _bookable
-                ? () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => BookingRequestScreen(
-                        listing: listing,
-                        originTabIndex: originTabIndex,
-                      ),
-                    ),
-                  )
+                ? () => context.push(AppRoutes.booking(context, listing.id))
                 // TODO: this category has no booking flow/design yet —
                 // only accommodation listings book via check-in/check-out
                 // dates today.
@@ -733,7 +697,7 @@ class _BookingFooter extends StatelessWidget {
                   color: AppColors.agroGreen600,
                   borderRadius: BorderRadius.circular(AppDimensions.dsRadiusMd),
                 ),
-                child: const Text(
+                child: Text(
                   AppStrings.detailsReserveButton,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,

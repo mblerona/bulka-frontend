@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/network/api_exception.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
-import 'package:bulka_frontend/services/auth_repository.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
-/// **Not a Figma screen** — like `BookingRequestScreen`, built from existing
-/// app primitives (the same icon/heading/field/button composition as
-/// `ForgotPasswordScreen`) because no current-design frame defines a
-/// code + new-password entry step. Reconcile against a real frame if one
-/// is ever designed; for now this exists purely to connect
-/// `POST /api/auth/reset-password` for real.
+/// Second step of Forgot Password: the code from the email plus the new
+/// password. On success the user goes to Login with their email filled in.
+///
+/// Not a Figma screen: it reuses Forgot Password's layout, since no design
+/// exists for this step yet.
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key, required this.email});
 
-  /// Carried forward from [ForgotPasswordScreen] — the account the reset
-  /// code was sent to. Not editable here; changing it would mean starting
-  /// the forgot-password request over.
+  /// The account the reset code was sent to.
   final String email;
 
   @override
@@ -28,101 +27,92 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  final AuthRepository _authRepository = AuthRepository();
-  final TextEditingController _codeController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final _codeController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
-  bool _isSubmitting = false;
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    for (final c in [
-      _codeController,
-      _passwordController,
-      _confirmPasswordController,
-    ]) {
-      c.addListener(_onFieldChanged);
-    }
-  }
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
   @override
   void dispose() {
-    for (final c in [
-      _codeController,
-      _passwordController,
-      _confirmPasswordController,
-    ]) {
-      c.removeListener(_onFieldChanged);
-      c.dispose();
-    }
+    _codeController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _onFieldChanged() {
-    if (mounted) setState(() {});
+  /// Same password rules the backend enforces (see RegisterScreen).
+  static bool _isStrongPassword(String password) {
+    return password.length >= 8 &&
+        RegExp(r'\p{Lu}', unicode: true).hasMatch(password) &&
+        RegExp(r'\d').hasMatch(password) &&
+        RegExp(r'[^\p{L}\p{N}]', unicode: true).hasMatch(password);
   }
 
-  bool get _canSubmit =>
-      !_isSubmitting &&
-      _codeController.text.trim().isNotEmpty &&
-      _passwordController.text.isNotEmpty &&
-      _confirmPasswordController.text.isNotEmpty;
-
-  /// `POST /api/auth/reset-password`'s response isn't confirmed live yet
-  /// (see `AuthRepository.resetPassword`), but the UI doesn't need
-  /// anything from it — a successful call just means the password changed,
-  /// so this always returns to `LoginScreen` on success regardless of what
-  /// `data` actually contains. The password-match check below is purely
-  /// client-side (never sent to the backend) and doesn't depend on any
-  /// confirmed response shape.
-  Future<void> _handleSubmit() async {
-    if (!_canSubmit) return;
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() => _errorMessage = AppStrings.resetPasswordMismatchError);
-      return;
+  String Function()? _validate() {
+    if (_codeController.text.trim().isEmpty) {
+      return () => AppStrings.emailVerificationErrorEmptyCode;
     }
+    if (!_isStrongPassword(_passwordController.text)) {
+      return () => AppStrings.registerErrorPasswordRules;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      return () => AppStrings.registerErrorPasswordMismatch;
+    }
+    return null;
+  }
 
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    try {
-      await _authRepository.resetPassword(
+  void _handleSubmit() {
+    final error = _validate();
+    setState(() => _errorMessage = error);
+    if (error != null) return;
+    context.read<AuthBloc>().add(
+      AuthPasswordResetRequested(
         email: widget.email,
-        code: _codeController.text.trim(),
-        password: _passwordController.text,
-      );
-      if (!mounted) return;
+        code: _codeController.text,
+        newPassword: _passwordController.text,
+      ),
+    );
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.resetPasswordSuccessMessage)),
-      );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isSubmitting = false;
-        _errorMessage = e.message;
-      });
+  void _handleAuthResult(BuildContext context, AuthState state) {
+    if (state.status == AuthOperationStatus.succeeded) {
+      // The app-wide messenger, so the message stays visible on Login.
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(AppStrings.resetPasswordSuccess)),
+        );
+      context.go(AppRoutes.loginWithEmail(widget.email));
+    } else if (state.status == AuthOperationStatus.failed) {
+      final error = state.error!;
+      setState(() => _errorMessage = () => error.message);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Disabled while the request runs, so it can't be sent twice.
+    final isSubmitting = context.select(
+      (AuthBloc bloc) => bloc.state.isInProgress(AuthOperation.resetPassword),
+    );
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          current.operation == AuthOperation.resetPassword &&
+          current.status != previous.status,
+      listener: _handleAuthResult,
+      child: _buildScreen(context, isSubmitting),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, bool isSubmitting) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.resetPasswordTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -154,9 +144,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         size: AppDimensions.forgotPasswordIconSize,
                       ),
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     Text(
                       AppStrings.resetPasswordHeading,
                       style: const TextStyle(
@@ -176,9 +164,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         color: AppColors.agroInk500,
                       ),
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     Text(
                       widget.email,
                       style: const TextStyle(
@@ -187,56 +173,35 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         color: AppColors.agroGreen700,
                       ),
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     LabeledTextField(
                       label: AppStrings.resetPasswordCodeLabel,
                       hintText: AppStrings.resetPasswordCodePlaceholder,
                       keyboardType: TextInputType.number,
                       controller: _codeController,
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     LabeledTextField(
                       label: AppStrings.resetPasswordNewPasswordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
                       controller: _passwordController,
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     LabeledTextField(
                       label: AppStrings.registerConfirmPasswordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
                       controller: _confirmPasswordController,
                     ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     if (_errorMessage != null) ...[
-                      const SizedBox(
-                        height: AppDimensions.forgotPasswordBodyGap,
-                      ),
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: AppDimensions.dsFooterFontSize,
-                          color: AppColors.settingsDangerColor,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
-                    if (_isSubmitting) ...[
-                      const Center(child: CircularProgressIndicator()),
+                      FormErrorText(_errorMessage!()),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(
                       label: AppStrings.resetPasswordSubmitButton,
-                      onPressed: _canSubmit ? _handleSubmit : null,
+                      onPressed: isSubmitting ? null : _handleSubmit,
                     ),
                   ],
                 ),

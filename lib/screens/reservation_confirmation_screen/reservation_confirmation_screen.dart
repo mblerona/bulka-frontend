@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_router.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -6,23 +9,20 @@ import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
-import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 /// The Figma "25 – Buyer · Booking Confirmed" frame — reached only after
-/// `ReservationController.createReservation` has already created a real
+/// `ReservationsBloc` (`ReservationRequested`) has already created a real
 /// [reservation]; this screen never creates one itself, only displays the
 /// completed result.
 ///
 /// Per the app's actual reservation lifecycle, a Tourist booking always
 /// starts `pending` (the same Provider Dashboard accept/reject queue every
 /// other reservation already goes through — see
-/// `ReservationController.createReservation`'s own doc comment), so the
+/// `ReservationsBloc`'s booking handler), so the
 /// heading/subtitle text is deliberately NOT Figma's literal "Резервацијата
 /// е потврдена!" (which would misrepresent a still-pending booking as
 /// provider-approved) — only the wording differs; the layout/styling below
@@ -40,21 +40,12 @@ class ReservationConfirmationScreen extends StatelessWidget {
   int get _nights =>
       reservation.endDate.difference(reservation.startDate).inDays;
 
-  void _backToHome(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const TouristHomeScreen()),
-      (route) => false,
-    );
-  }
+  // Clear the Reservations tab first, so it doesn't reopen on this screen.
+  void _backToHome(BuildContext context) =>
+      resetTabThenGo(AppRoutes.reservations, AppRoutes.home);
 
-  // Same stack-clearing rationale as `_backToHome` — the booking form is
-  // already submitted, so there's no path back to it from here either.
-  void _viewMyReservations(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const TouristMyReservationsScreen()),
-      (route) => false,
-    );
-  }
+  void _viewMyReservations(BuildContext context) =>
+      context.go(AppRoutes.reservations);
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +67,6 @@ class ReservationConfirmationScreen extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.beigeBackground,
-        bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
         body: Column(
           children: [
             ScreenHeader(
@@ -173,7 +163,7 @@ class _SuccessBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.successBlockGap),
-            const Text(
+            Text(
               AppStrings.bookingRequestSentHeading,
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -183,7 +173,7 @@ class _SuccessBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.successBlockGap),
-            const Text(
+            Text(
               AppStrings.bookingRequestSentSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -309,7 +299,7 @@ class _TripDetailsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.tripDetailsHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -320,12 +310,12 @@ class _TripDetailsSection extends StatelessWidget {
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
             AppStrings.checkInLabel,
-            formatMkDateShort(reservation.startDate),
+            formatDateShort(reservation.startDate),
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
             AppStrings.checkOutLabel,
-            formatMkDateShort(reservation.endDate),
+            formatDateShort(reservation.endDate),
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(AppStrings.wizardGuestsLabel, _guestsValue),
@@ -364,7 +354,7 @@ class _PriceBreakdownSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.paymentDetailsHeading,
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -374,14 +364,14 @@ class _PriceBreakdownSection extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
-            '${formatMkPrice(nightlyPrice)} ${AppStrings.wizardPriceSuffix} '
+            '${formatPrice(nightlyPrice)} ${AppStrings.wizardPriceSuffix} '
                 'x $nights $nightsWord',
-            '${formatMkPrice(subtotal)} ${AppStrings.wizardPriceSuffix}',
+            '${formatPrice(subtotal)} ${AppStrings.wizardPriceSuffix}',
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           _detailRow(
             AppStrings.serviceFeeLabel,
-            '${formatMkPrice(serviceFee)} ${AppStrings.wizardPriceSuffix}',
+            '${formatPrice(serviceFee)} ${AppStrings.wizardPriceSuffix}',
           ),
           const SizedBox(height: AppDimensions.detailsAmenityListGap),
           Container(height: 1, color: AppColors.agroBorder300),
@@ -389,7 +379,7 @@ class _PriceBreakdownSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 AppStrings.totalLabel,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
@@ -398,7 +388,7 @@ class _PriceBreakdownSection extends StatelessWidget {
                 ),
               ),
               Text(
-                '${formatMkPrice(total)} ${AppStrings.wizardPriceSuffix}',
+                '${formatPrice(total)} ${AppStrings.wizardPriceSuffix}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: AppDimensions.confirmationTotalFontSize,
@@ -429,7 +419,7 @@ class _ReferenceSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             AppStrings.reservationNumberLabel,
             style: TextStyle(
               fontWeight: FontWeight.w400,

@@ -1,49 +1,55 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// The only place the access/refresh token session is persisted. Nothing
-/// else — not [SessionController]'s callers, not any screen — should touch
-/// [FlutterSecureStorage] directly. Passwords are never written here or
-/// anywhere else.
+/// Keeps the auth tokens in the platform's secure storage (Android
+/// Keystore / iOS Keychain), with an in-memory copy so every request
+/// doesn't hit the disk.
 class TokenStorage {
-  TokenStorage({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+  TokenStorage._();
 
-  final FlutterSecureStorage _storage;
+  static final TokenStorage instance = TokenStorage._();
 
-  static const _accessTokenKey = 'auth_access_token';
-  static const _refreshTokenKey = 'auth_refresh_token';
-  static const _accessTokenExpiresAtKey = 'auth_access_token_expires_at_utc';
+  static const _accessTokenKey = 'auth.accessToken';
+  static const _refreshTokenKey = 'auth.refreshToken';
 
-  Future<void> saveSession({
-    required String accessToken,
-    required String refreshToken,
-    required DateTime accessTokenExpiresAtUtc,
-  }) async {
-    await Future.wait([
-      _storage.write(key: _accessTokenKey, value: accessToken),
-      _storage.write(key: _refreshTokenKey, value: refreshToken),
-      _storage.write(
-        key: _accessTokenExpiresAtKey,
-        value: accessTokenExpiresAtUtc.toIso8601String(),
-      ),
-    ]);
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  String? _accessToken;
+  String? _refreshToken;
+  bool _loaded = false;
+
+  Future<void> _ensureLoaded() async {
+    if (_loaded) return;
+    _accessToken = await _storage.read(key: _accessTokenKey);
+    _refreshToken = await _storage.read(key: _refreshTokenKey);
+    _loaded = true;
   }
 
-  Future<String?> readAccessToken() => _storage.read(key: _accessTokenKey);
+  Future<String?> readAccessToken() async {
+    await _ensureLoaded();
+    return _accessToken;
+  }
 
-  Future<String?> readRefreshToken() => _storage.read(key: _refreshTokenKey);
+  Future<String?> readRefreshToken() async {
+    await _ensureLoaded();
+    return _refreshToken;
+  }
 
-  Future<DateTime?> readAccessTokenExpiresAtUtc() async {
-    final raw = await _storage.read(key: _accessTokenExpiresAtKey);
-    if (raw == null) return null;
-    return DateTime.tryParse(raw);
+  Future<void> save({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    _accessToken = accessToken;
+    _refreshToken = refreshToken;
+    _loaded = true;
+    await _storage.write(key: _accessTokenKey, value: accessToken);
+    await _storage.write(key: _refreshTokenKey, value: refreshToken);
   }
 
   Future<void> clear() async {
-    await Future.wait([
-      _storage.delete(key: _accessTokenKey),
-      _storage.delete(key: _refreshTokenKey),
-      _storage.delete(key: _accessTokenExpiresAtKey),
-    ]);
+    _accessToken = null;
+    _refreshToken = null;
+    _loaded = true;
+    await _storage.delete(key: _accessTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
   }
 }

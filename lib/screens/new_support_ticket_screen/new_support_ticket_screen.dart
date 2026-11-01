@@ -1,11 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/support_tickets/support_tickets_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/support_attachment.dart';
-import 'package:bulka_frontend/services/support_ticket_controller.dart';
 import 'package:bulka_frontend/widgets/dashed_border_box.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -21,7 +22,9 @@ class NewSupportTicketScreen extends StatefulWidget {
 }
 
 class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
-  static const List<String> _categories = [
+  // A getter so the labels follow the current language; the selection is
+  // kept as an index so it survives a language switch.
+  static List<String> get _categories => [
     AppStrings.newTicketCategoryReservations,
     AppStrings.newTicketCategoryListings,
     AppStrings.newTicketCategoryPayments,
@@ -32,7 +35,7 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  String _category = _categories.first;
+  int _categoryIndex = 0;
   SupportAttachment? _attachment;
   bool _isValid = false;
 
@@ -77,7 +80,7 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
                 Icons.photo_library,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.imageSourceGallery),
+              title: Text(AppStrings.imageSourceGallery),
               onTap: () =>
                   Navigator.pop(sheetContext, _AttachmentSource.gallery),
             ),
@@ -86,7 +89,7 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
                 Icons.camera_alt,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.imageSourceCamera),
+              title: Text(AppStrings.imageSourceCamera),
               onTap: () =>
                   Navigator.pop(sheetContext, _AttachmentSource.camera),
             ),
@@ -95,7 +98,7 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
                 Icons.insert_drive_file_outlined,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.attachmentSourceDocument),
+              title: Text(AppStrings.attachmentSourceDocument),
               onTap: () =>
                   Navigator.pop(sheetContext, _AttachmentSource.document),
             ),
@@ -146,15 +149,16 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
 
   void _handleSubmit() {
     if (!_isValid) return;
-    SupportTicketController.instance.createTicket(
-      category: _category,
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      attachment: _attachment,
+    context.read<SupportTicketsBloc>().add(
+      SupportTicketCreated(
+        category: _categories[_categoryIndex],
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        attachment: _attachment,
+      ),
     );
-    // The new ticket is now first in SupportTicketController's shared
-    // list — My Tickets renders from that same list, so popping back to it
-    // shows the new ticket immediately without any extra plumbing.
+    // My Tickets watches SupportTicketsBloc, so it shows the new ticket
+    // (first in the list) as soon as we're back.
     Navigator.of(context).pop();
   }
 
@@ -164,7 +168,7 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.newTicketTitle,
             subtitle: AppStrings.newTicketSubtitle,
             titleFontSize: AppDimensions.dsHeaderSubtitleTitleFontSize,
@@ -187,8 +191,10 @@ class _NewSupportTicketScreenState extends State<NewSupportTicketScreen> {
                   children: [
                     _CategoryField(
                       categories: _categories,
-                      value: _category,
-                      onChanged: (value) => setState(() => _category = value),
+                      value: _categories[_categoryIndex],
+                      onChanged: (value) => setState(
+                        () => _categoryIndex = _categories.indexOf(value),
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.newTicketBodyGap),
                     LabeledTextField(
@@ -240,7 +246,7 @@ class _CategoryField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.newTicketCategoryLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -298,7 +304,7 @@ class _DescriptionField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           AppStrings.newTicketDescriptionLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -329,7 +335,7 @@ class _DescriptionField extends StatelessWidget {
               fontSize: AppDimensions.dsInputFontSize,
               color: AppColors.agroForest950,
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: AppStrings.newTicketDescriptionPlaceholder,
               hintStyle: TextStyle(
                 fontWeight: FontWeight.w400,
@@ -379,7 +385,7 @@ class _AttachmentField extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   AppStrings.newTicketAttachmentLabel,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -388,7 +394,7 @@ class _AttachmentField extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppDimensions.newTicketAttachmentBoxGap),
-                const Text(
+                Text(
                   AppStrings.newTicketAttachmentOptional,
                   style: TextStyle(
                     fontWeight: FontWeight.w400,

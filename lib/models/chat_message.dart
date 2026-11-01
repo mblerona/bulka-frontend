@@ -1,6 +1,6 @@
 /// A single message within a [ChatConversation]. Shaped to map directly
 /// onto a future chat API/WebSocket payload (id/conversationId/text/
-/// timestamp/isMine/isRead) so the mock data in `ChatController` can be
+/// timestamp/isMine/isRead) so the mock data in `ChatBloc` can be
 /// swapped for real fetched/streamed messages without changing this model.
 class ChatMessage {
   const ChatMessage({

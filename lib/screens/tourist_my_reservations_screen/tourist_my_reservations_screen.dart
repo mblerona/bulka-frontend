@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -7,11 +13,6 @@ import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
-import 'package:bulka_frontend/screens/leave_review_screen/leave_review_screen.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
@@ -20,11 +21,10 @@ enum ReservationsTab { upcoming, past }
 
 /// The Figma "26 – Buyer · My Bookings" frame (both the "Претстојни" and
 /// "Минати" (26b) states) — one screen, one local [ReservationsTab], not
-/// two routes. Reads exclusively from the shared `ReservationController`/
-/// `ProviderListingController` singletons — the same `Reservation` objects
-/// the booking flow creates and the Provider Dashboard/Calendar already
-/// consume, so an accept/reject or a status change is reflected here
-/// automatically via [notifyListeners], with nothing manually copied
+/// two routes. Reads exclusively from `ReservationsBloc`/`ListingsBloc` —
+/// the same `Reservation` objects the booking flow creates and the Provider
+/// Dashboard/Calendar already consume, so an accept/reject or a status
+/// change is reflected here automatically, with nothing manually copied
 /// between separate lists.
 class TouristMyReservationsScreen extends StatefulWidget {
   const TouristMyReservationsScreen({
@@ -41,12 +41,9 @@ class TouristMyReservationsScreen extends StatefulWidget {
 
 class _TouristMyReservationsScreenState
     extends State<TouristMyReservationsScreen> {
-  final ReservationController _reservationController =
-      ReservationController.instance;
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
-  final ListingReviewController _reviewController =
-      ListingReviewController.instance;
+  // Read here; `build` watches the same blocs so the screen rebuilds.
+  ReservationsState get _reservations => context.read<ReservationsBloc>().state;
+  ListingsState get _listings => context.read<ListingsBloc>().state;
 
   late ReservationsTab _tab;
 
@@ -54,24 +51,11 @@ class _TouristMyReservationsScreenState
   void initState() {
     super.initState();
     _tab = widget.initialTab;
-    _reservationController.addListener(_handleChanged);
-    _listingController.addListener(_handleChanged);
-    _reviewController.addListener(_handleChanged);
   }
-
-  @override
-  void dispose() {
-    _reservationController.removeListener(_handleChanged);
-    _listingController.removeListener(_handleChanged);
-    _reviewController.removeListener(_handleChanged);
-    super.dispose();
-  }
-
-  void _handleChanged() => setState(() {});
 
   /// "Mine" per [mockTouristGuestName] — see that constant's own TODO for
   /// the real auth-based identity this stands in for.
-  List<Reservation> get _myReservations => _reservationController.reservations
+  List<Reservation> get _myReservations => _reservations.reservations
       .where((r) => r.guestName == mockTouristGuestName)
       .toList();
 
@@ -88,20 +72,20 @@ class _TouristMyReservationsScreenState
       .toList();
 
   // TODO: `rejected`/`cancelled` reservations are intentionally not shown
-  // in either tab yet. They remain safely in `ReservationController`'s
+  // in either tab yet. They remain safely in `ReservationsBloc`'s
   // shared state (nothing here hides or deletes them) — only this
   // screen's presentation of them is undecided, pending product
   // confirmation of where a no-longer-active reservation belongs on this
   // screen. Do not silently fold them into either tab above.
 
   ProviderListing? _resolveListing(Reservation reservation) {
-    for (final listing in _listingController.listings) {
+    for (final listing in _listings.listings) {
       if (reservation.listingId != null &&
           listing.id == reservation.listingId) {
         return listing;
       }
     }
-    for (final listing in _listingController.listings) {
+    for (final listing in _listings.listings) {
       if (listing.title == reservation.listingName) return listing;
     }
     return null;
@@ -120,16 +104,17 @@ class _TouristMyReservationsScreenState
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ReservationsBloc>();
+    context.watch<ListingsBloc>();
     final entries = _resolvedEntries(
       _tab == ReservationsTab.upcoming ? _upcoming : _past,
     );
 
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.myReservationsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -310,7 +295,7 @@ class _UpcomingCard extends StatelessWidget {
   final ProviderListing listing;
 
   String get _metaLine =>
-      '${formatMkDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
+      '${formatDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
       ' · ${_guestsLabel(reservation.guestCount)}';
 
   String get _actionLabel {
@@ -318,7 +303,7 @@ class _UpcomingCard extends StatelessWidget {
       return AppStrings.myReservationsDetailsButton;
     }
     return '${AppStrings.myReservationsDetailsButton} · '
-        '${formatMkPrice(reservation.totalAmount!)} ${AppStrings.wizardPriceSuffix}';
+        '${formatPrice(reservation.totalAmount!)} ${AppStrings.wizardPriceSuffix}';
   }
 
   @override
@@ -343,12 +328,14 @@ class _PastCard extends StatelessWidget {
   final ProviderListing listing;
 
   String get _metaLine =>
-      '${formatMkDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
+      '${formatDateRangeShortWithYear(reservation.startDate, reservation.endDate)}'
       ' · ${_guestsLabel(reservation.guestCount)}';
 
   @override
   Widget build(BuildContext context) {
-    final alreadyReviewed = ListingReviewController.instance
+    final alreadyReviewed = context
+        .watch<ListingReviewsBloc>()
+        .state
         .hasReviewForReservation(reservation.id);
     return _ReservationCard(
       listing: listing,
@@ -361,14 +348,9 @@ class _PastCard extends StatelessWidget {
       // non-bookable categories), rather than inventing new UI. TODO:
       // replace with a real "already reviewed" visual treatment once one
       // is designed. Real duplicate-review prevention lives in
-      // `ListingReviewController.submitReview` regardless of this check.
+      // `ListingReviewsBloc` regardless of this check.
       enabled: !alreadyReviewed,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) =>
-              LeaveReviewScreen(reservation: reservation, listing: listing),
-        ),
-      ),
+      onTap: () => context.push(AppRoutes.leaveReview(reservation.id)),
     );
   }
 }

@@ -2,14 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
+import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/services/listing_review_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
 import 'package:bulka_frontend/widgets/collapsible_checklist.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
@@ -20,51 +22,45 @@ import 'package:bulka_frontend/widgets/subject_type_toggle.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
-  const ProviderProfileScreen({
-    super.key,
-    this.profile = const RegistrationProfile(
-      fullName: AppStrings.providerExampleName,
-      email: AppStrings.providerExampleEmail,
-      phone: AppStrings.providerExamplePhone,
-    ),
-  });
+  const ProviderProfileScreen({super.key, this.profile});
 
-  final RegistrationProfile profile;
+  /// Null shows the sample provider (e.g. from the dev launcher or the
+  /// bottom nav, before real profile data exists).
+  final RegistrationProfile? profile;
 
   @override
   State<ProviderProfileScreen> createState() => _ProviderProfileScreenState();
 }
 
 class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
-  static const List<String> _categories = [
-    AppStrings.providerCategoryAccommodation,
-    AppStrings.providerCategoryGastronomy,
-    AppStrings.providerCategoryFarmParticipation,
-    AppStrings.providerCategoryDirectSales,
-    AppStrings.providerCategoryFarmEducation,
-    AppStrings.providerCategoryFarmRecreation,
-    AppStrings.providerCategoryOffFarmTours,
-  ];
+  static const List<ListingCategory> _categories = ListingCategory.values;
+
+  RegistrationProfile get _profile =>
+      widget.profile ??
+      RegistrationProfile(
+        fullName: AppStrings.providerExampleName,
+        email: AppStrings.providerExampleEmail,
+        phone: AppStrings.providerExamplePhone,
+      );
 
   // No verification system exists yet, so a freshly-registered provider
   // hasn't actually been verified by anyone — default to "not verified"
   // rather than the Figma mock's literal "ВЕРИФИКУВАН" state.
   static const bool _isVerified = false;
 
-  final ProviderListingController _listingController =
-      ProviderListingController.instance;
-  final ListingReviewController _reviewController =
-      ListingReviewController.instance;
+  // Read here; `build` watches the same blocs so the screen rebuilds.
+  ListingsState get _listings => context.read<ListingsBloc>().state;
+  ListingReviewsState get _reviews => context.read<ListingReviewsBloc>().state;
 
-  int get _activeOffersCount => _listingController.activeListingsCount;
+  int get _activeOffersCount => _listings.activeCount;
 
   // Average of active listings' own *effective* ratings (the real review
   // average where reviews exist, same as everywhere else in the app) — 0
   // if none are rated yet.
   double get _averageRating {
-    final ratings = _listingController.listings
+    final ratings = _listings.listings
         .where((l) => l.status == ListingStatus.active)
-        .map((l) => _reviewController.effectiveRating(l))
+        .map((l) => _reviews.effectiveRating(l))
         .whereType<double>()
         .toList();
     if (ratings.isEmpty) return 0;
@@ -82,8 +78,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   late String _savedOfferName;
   late String _savedLocation;
 
-  late Set<String> _selectedCategories;
-  late Set<String> _savedCategories;
+  late Set<ListingCategory> _selectedCategories;
+  late Set<ListingCategory> _savedCategories;
 
   // ── Правно лице (legal entity) fields ──
   late final TextEditingController _companyNameController;
@@ -100,8 +96,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   late String _savedTaxId;
   late String _savedBusinessAddress;
 
-  late Set<String> _selectedLegalCategories;
-  late Set<String> _savedLegalCategories;
+  late Set<ListingCategory> _selectedLegalCategories;
+  late Set<ListingCategory> _savedLegalCategories;
 
   final List<TextEditingController> _contactControllers = [];
   List<String> _savedContacts = [];
@@ -117,13 +113,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _listingController.addListener(_handleListingsChanged);
-    _reviewController.addListener(_handleListingsChanged);
-    _savedName = widget.profile.fullName;
-    _savedPhone = widget.profile.phone;
+    _savedName = _profile.fullName;
+    _savedPhone = _profile.phone;
     _savedOfferName = '';
     _savedLocation = '';
-    _savedCategories = {AppStrings.providerCategoryAccommodation};
+    _savedCategories = {ListingCategory.accommodation};
     _selectedCategories = Set.of(_savedCategories);
 
     _nameController = TextEditingController(text: _savedName)
@@ -138,12 +132,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     _savedCompanyName = '';
     // Responsible person / phone / email can be taken straight from what
     // was entered at registration, same as the Физичко лице fields above.
-    _savedResponsiblePerson = widget.profile.fullName;
-    _savedLegalPhone = widget.profile.phone;
-    _savedLegalEmail = widget.profile.email;
+    _savedResponsiblePerson = _profile.fullName;
+    _savedLegalPhone = _profile.phone;
+    _savedLegalEmail = _profile.email;
     _savedTaxId = '';
     _savedBusinessAddress = '';
-    _savedLegalCategories = {AppStrings.providerCategoryAccommodation};
+    _savedLegalCategories = {ListingCategory.accommodation};
     _selectedLegalCategories = Set.of(_savedLegalCategories);
 
     _companyNameController = TextEditingController(text: _savedCompanyName)
@@ -167,12 +161,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     _savedContacts = _contactValues;
   }
 
-  void _handleListingsChanged() => setState(() {});
-
   @override
   void dispose() {
-    _listingController.removeListener(_handleListingsChanged);
-    _reviewController.removeListener(_handleListingsChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _offerNameController.dispose();
@@ -224,12 +214,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       !listEquals(_contactValues, _savedContacts) ||
       _logoFile?.path != _savedLogoPath;
 
-  void _handleCategoriesChanged(Set<String> updated) {
+  void _handleCategoriesChanged(Set<ListingCategory> updated) {
     setState(() => _selectedCategories = updated);
     _recomputeHasChanges();
   }
 
-  void _handleLegalCategoriesChanged(Set<String> updated) {
+  void _handleLegalCategoriesChanged(Set<ListingCategory> updated) {
     setState(() => _selectedLegalCategories = updated);
     _recomputeHasChanges();
   }
@@ -268,7 +258,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 Icons.photo_library,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.imageSourceGallery),
+              title: Text(AppStrings.imageSourceGallery),
               onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
@@ -276,7 +266,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 Icons.camera_alt,
                 color: AppColors.agroForest950,
               ),
-              title: const Text(AppStrings.imageSourceCamera),
+              title: Text(AppStrings.imageSourceCamera),
               onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
           ],
@@ -337,13 +327,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ListingsBloc>();
+    context.watch<ListingReviewsBloc>();
     final isLegalEntity = _subjectTypeIndex == 1;
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [
           isLegalEntity
-              ? const ScreenHeader(
+              ? ScreenHeader(
                   title: AppStrings.providerSetupTitle,
                   subtitle: AppStrings.providerSetupSubtitle,
                   titleFontSize: AppDimensions.dsHeaderSubtitleTitleFontSize,
@@ -351,7 +343,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   contentGap: AppDimensions.dsHeaderSubtitleGap,
                   subtitleFontSize: AppDimensions.dsSubheadingFontSize,
                 )
-              : const ScreenHeader(
+              : ScreenHeader(
                   title: AppStrings.profileTitle,
                   titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
                   bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -385,14 +377,14 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         _AvatarRow(
           initials: _initials,
           nameController: _nameController,
-          email: widget.profile.email,
+          email: _profile.email,
           isVerified: _isVerified,
         ),
         const SizedBox(height: AppDimensions.profileBodyGap),
         _sectionHeading(AppStrings.providerSubjectTypeLabel),
         const SizedBox(height: AppDimensions.providerSubjectTypeGap),
         SubjectTypeToggle(
-          options: const [
+          options: [
             AppStrings.providerSubjectTypeIndividual,
             AppStrings.providerSubjectTypeLegal,
           ],
@@ -429,6 +421,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         CollapsibleChecklist(
           headerLabel: AppStrings.providerCategoryHeading,
           items: _categories,
+          itemLabel: (category) => category.label,
           selectedItems: _selectedCategories,
           onChanged: _handleCategoriesChanged,
         ),
@@ -474,7 +467,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         _sectionHeading(AppStrings.providerSubjectTypeLabel),
         const SizedBox(height: AppDimensions.providerSubjectTypeGap),
         SubjectTypeToggle(
-          options: const [
+          options: [
             AppStrings.providerSubjectTypeIndividual,
             AppStrings.providerSubjectTypeLegal,
           ],
@@ -523,6 +516,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         CollapsibleChecklist(
           headerLabel: AppStrings.providerLegalCategoryHeading,
           items: _categories,
+          itemLabel: (category) => category.label,
           selectedItems: _selectedLegalCategories,
           onChanged: _handleLegalCategoriesChanged,
         ),
@@ -761,7 +755,7 @@ class _LogoUploadAvatar extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppDimensions.providerLogoCaptionGap),
-        const Text(
+        Text(
           AppStrings.providerAddLogoLabel,
           style: TextStyle(
             fontWeight: FontWeight.w600,

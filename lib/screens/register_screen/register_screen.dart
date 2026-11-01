@@ -1,16 +1,20 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/role_toggle.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
-import 'package:bulka_frontend/screens/terms_privacy_screen/terms_privacy_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,62 +24,99 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  String _selectedLanguageCode = AppStrings.languageCodeMk;
   int _selectedRoleIndex = 0;
   bool _agreedToTerms = false;
 
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _displayNameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _businessNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _businessNameController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
   late final TapGestureRecognizer _termsOfServiceRecognizer =
       TapGestureRecognizer()..onTap = () {};
   late final TapGestureRecognizer _privacyPolicyRecognizer =
       TapGestureRecognizer()..onTap = () {};
 
+  // Extend this with any future field-validation requirements; today
+  // accepting the terms is the only gate on submission.
+  bool get _canSubmit => _agreedToTerms;
+
   bool get _isProvider => _selectedRoleIndex == 1;
 
-  bool get _canSubmit =>
-      _agreedToTerms &&
-      _emailController.text.trim().isNotEmpty &&
-      _passwordController.text.isNotEmpty &&
-      _firstNameController.text.trim().isNotEmpty &&
-      _lastNameController.text.trim().isNotEmpty &&
-      _displayNameController.text.trim().isNotEmpty &&
-      (!_isProvider || _businessNameController.text.trim().isNotEmpty);
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-  @override
-  void initState() {
-    super.initState();
-    for (final c in [
-      _firstNameController,
-      _lastNameController,
-      _displayNameController,
-      _emailController,
-      _passwordController,
-      _businessNameController,
-    ]) {
-      c.addListener(_onFieldChanged);
-    }
+  /// International format, like the backend requires: "+" and digits.
+  /// Spaces and dashes are allowed (the backend accepts them too).
+  static bool _isInternationalPhone(String phone) {
+    final digitsOnly = phone.replaceAll(RegExp(r'[\s-]'), '');
+    return RegExp(r'^\+\d{8,15}$').hasMatch(digitsOnly);
   }
 
-  void _onFieldChanged() {
-    if (mounted) setState(() {});
+  /// Same password rules the backend enforces.
+  static bool _isStrongPassword(String password) {
+    return password.length >= 8 &&
+        RegExp(r'\p{Lu}', unicode: true).hasMatch(password) &&
+        RegExp(r'\d').hasMatch(password) &&
+        RegExp(r'[^\p{L}\p{N}]', unicode: true).hasMatch(password);
+  }
+
+  /// Returns the first problem with the form (as a function, so its text
+  /// follows a language switch), or null when it's valid.
+  String Function()? _validate(RegistrationProfile profile) {
+    if (profile.firstName.isEmpty || profile.lastName.isEmpty) {
+      return () => AppStrings.registerErrorFullName;
+    }
+    if (profile.role == UserRole.owner &&
+        (profile.businessName ?? '').isEmpty) {
+      return () => AppStrings.registerErrorBusinessName;
+    }
+    if (!_emailPattern.hasMatch(profile.email)) {
+      return () => AppStrings.registerErrorEmail;
+    }
+    if (!_isInternationalPhone(profile.phone)) {
+      return () => AppStrings.registerErrorPhone;
+    }
+    if (!_isStrongPassword(_passwordController.text)) {
+      return () => AppStrings.registerErrorPasswordRules;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      return () => AppStrings.registerErrorPasswordMismatch;
+    }
+    return null;
+  }
+
+  void _handleSubmit() {
+    final profile = RegistrationProfile(
+      fullName: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      role: _isProvider ? UserRole.owner : UserRole.buyer,
+      businessName: _isProvider ? _businessNameController.text.trim() : null,
+    );
+    final error = _validate(profile);
+    setState(() => _errorMessage = error);
+    if (error != null) return;
+
+    context.push(
+      AppRoutes.registerTerms,
+      extra: SignUpData(profile: profile, password: _passwordController.text),
+    );
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _displayNameController.dispose();
+    _nameController.dispose();
+    _businessNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _businessNameController.dispose();
+    _confirmPasswordController.dispose();
     _termsOfServiceRecognizer.dispose();
     _privacyPolicyRecognizer.dispose();
     super.dispose();
@@ -92,9 +133,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
-            selectedLanguageCode: _selectedLanguageCode,
+            selectedLanguageCode: context.watch<LocaleBloc>().state.switchCode,
             onLanguageChanged: (code) {
-              setState(() => _selectedLanguageCode = code);
+              // Saved app-wide; BulkaApp rebuilds every screen.
+              context.read<LocaleBloc>().add(LanguageChanged(code));
             },
           ),
           Expanded(
@@ -115,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     RoleToggle(
-                      options: const [
+                      options: [
                         AppStrings.registerRoleGuest,
                         AppStrings.registerRoleProvider,
                       ],
@@ -126,21 +168,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     LabeledTextField(
-                      label: AppStrings.registerFirstNameLabel,
-                      hintText: AppStrings.registerFirstNamePlaceholder,
-                      controller: _firstNameController,
-                    ),
-                    const SizedBox(height: AppDimensions.dsBodyGap),
-                    LabeledTextField(
-                      label: AppStrings.registerLastNameLabel,
-                      hintText: AppStrings.registerLastNamePlaceholder,
-                      controller: _lastNameController,
-                    ),
-                    const SizedBox(height: AppDimensions.dsBodyGap),
-                    LabeledTextField(
-                      label: AppStrings.registerDisplayNameLabel,
-                      hintText: AppStrings.registerDisplayNamePlaceholder,
-                      controller: _displayNameController,
+                      label: AppStrings.registerNameLabel,
+                      hintText: AppStrings.registerNamePlaceholder,
+                      controller: _nameController,
                     ),
                     if (_isProvider) ...[
                       const SizedBox(height: AppDimensions.dsBodyGap),
@@ -176,6 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: AppStrings.registerConfirmPasswordLabel,
                       hintText: AppStrings.passwordPlaceholder,
                       obscureText: true,
+                      controller: _confirmPasswordController,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     Row(
@@ -197,9 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: AppColors.agroInk500,
                               ),
                               children: [
-                                const TextSpan(
-                                  text: AppStrings.registerTermsPrefix,
-                                ),
+                                TextSpan(text: AppStrings.registerTermsPrefix),
                                 TextSpan(
                                   text: AppStrings.registerTermsOfService,
                                   recognizer: _termsOfServiceRecognizer,
@@ -219,9 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     color: AppColors.agroGreen700,
                                   ),
                                 ),
-                                const TextSpan(
-                                  text: AppStrings.registerTermsSuffix,
-                                ),
+                                TextSpan(text: AppStrings.registerTermsSuffix),
                               ],
                             ),
                           ),
@@ -229,38 +256,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
+                    if (_errorMessage != null) ...[
+                      FormErrorText(_errorMessage!()),
+                      const SizedBox(height: AppDimensions.dsBodyGap),
+                    ],
                     PrimaryButton(
                       label: AppStrings.registerSubmitButton,
-                      onPressed: _canSubmit
-                          ? () {
-                              final firstName = _firstNameController.text
-                                  .trim();
-                              final lastName = _lastNameController.text
-                                  .trim();
-                              final profile = RegistrationProfile(
-                                fullName: '$firstName $lastName'.trim(),
-                                email: _emailController.text.trim(),
-                                phone: _phoneController.text,
-                                role: _isProvider
-                                    ? UserRole.owner
-                                    : UserRole.buyer,
-                                firstName: firstName,
-                                lastName: lastName,
-                                displayName: _displayNameController.text
-                                    .trim(),
-                                password: _passwordController.text,
-                                businessName: _isProvider
-                                    ? _businessNameController.text.trim()
-                                    : null,
-                              );
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      TermsPrivacyScreen(profile: profile),
-                                ),
-                              );
-                            }
-                          : null,
+                      onPressed: _canSubmit ? _handleSubmit : null,
                     ),
                     const SizedBox(height: AppDimensions.dsBodyGap),
                     Row(

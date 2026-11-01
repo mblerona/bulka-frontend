@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/notifications/notifications_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/relative_time.dart';
 import 'package:bulka_frontend/models/notification_item.dart';
-import 'package:bulka_frontend/services/notifications_controller.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -15,26 +16,11 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  final NotificationsController _controller = NotificationsController.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_handleControllerChanged);
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_handleControllerChanged);
-    super.dispose();
-  }
-
-  void _handleControllerChanged() => setState(() {});
-
   @override
   Widget build(BuildContext context) {
-    final notifications = _controller.notifications;
-    final unreadCount = _controller.unreadCount;
+    final notificationsState = context.watch<NotificationsBloc>().state;
+    final notifications = notificationsState.notifications;
+    final unreadCount = notificationsState.unreadCount;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -66,7 +52,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   final notification = notifications[index];
                   return _NotificationCard(
                     notification: notification,
-                    onTap: () => _controller.markAsRead(notification.id),
+                    onTap: () => context.read<NotificationsBloc>().add(
+                      NotificationRead(notification.id),
+                    ),
                   );
                 },
               ),

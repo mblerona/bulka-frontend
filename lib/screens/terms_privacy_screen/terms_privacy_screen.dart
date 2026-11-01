@@ -1,111 +1,100 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
-import 'package:bulka_frontend/models/user_role.dart';
-import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
-import 'package:bulka_frontend/services/auth_repository.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
+/// Last step before the account is created: once all consents are given,
+/// submitting registers the account and moves on to Email Verification.
 class TermsPrivacyScreen extends StatefulWidget {
-  const TermsPrivacyScreen({super.key, required this.profile});
+  const TermsPrivacyScreen({
+    super.key,
+    required this.profile,
+    required this.password,
+  });
 
   final RegistrationProfile profile;
+
+  /// Passed separately (not part of [RegistrationProfile]) so it isn't
+  /// carried through the rest of the sign-up flow.
+  final String password;
 
   @override
   State<TermsPrivacyScreen> createState() => _TermsPrivacyScreenState();
 }
 
 class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
-  final AuthRepository _authRepository = AuthRepository();
-
   bool _agreedToTerms = false;
   bool _agreedToPrivacy = false;
   bool _agreedToResponsibilities = false;
 
-  bool _isSubmitting = false;
-  String? _errorMessage;
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
-  bool get _canSubmit =>
-      !_isSubmitting &&
-      _agreedToTerms &&
-      _agreedToPrivacy &&
-      _agreedToResponsibilities;
+  bool get _allAgreed =>
+      _agreedToTerms && _agreedToPrivacy && _agreedToResponsibilities;
 
-  /// This is the first point in the flow where terms/privacy consent
-  /// actually exists, so it's where the real `/api/auth/register/*` call
-  /// belongs — not on `RegisterScreen`, which only collects identity data.
-  Future<void> _handleSubmit() async {
-    if (!_canSubmit) return;
+  void _handleSubmit() {
+    final profile = widget.profile;
+    setState(() => _errorMessage = null);
+    context.read<AuthBloc>().add(
+      AuthRegistrationRequested(
+        role: profile.role,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phone: profile.phone,
+        password: widget.password,
+        businessName: profile.businessName,
+      ),
+    );
+  }
 
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final profile = widget.profile;
-
-      // Both endpoints' responses are now confirmed live:
-      // - Buyer: `{ userId, status: "PendingVerification",
-      //   emailVerificationRequired: true }`
-      // - Provider: `{ userId, providerProfileId,
-      //   userStatus: "PendingVerification", providerProfileStatus: "Draft",
-      //   emailVerificationRequired: true }`
-      // Both mean exactly "go verify your email next", matching the
-      // navigation below — see RegisterResult/ProviderRegisterResult if a
-      // different status is ever observed.
-      if (profile.role == UserRole.owner) {
-        await _authRepository.registerProvider(
-          email: profile.email,
-          password: profile.password,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          displayName: profile.displayName,
-          businessName: profile.businessName ?? '',
-          acceptedTerms: _agreedToTerms,
-          acceptedPrivacy: _agreedToPrivacy,
-        );
+  void _handleAuthResult(BuildContext context, AuthState state) {
+    if (state.status == AuthOperationStatus.succeeded) {
+      if (state.emailVerificationRequired) {
+        context.push(AppRoutes.registerVerify, extra: widget.profile);
       } else {
-        await _authRepository.registerBuyer(
-          email: profile.email,
-          password: profile.password,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          displayName: profile.displayName,
-          acceptedTerms: _agreedToTerms,
-          acceptedPrivacy: _agreedToPrivacy,
-        );
+        // Account is already active: registration doesn't sign in, so the
+        // user logs in with their new credentials.
+        context.go(AppRoutes.login);
       }
-
-      if (!mounted) return;
-      setState(() => _isSubmitting = false);
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => EmailVerificationScreen(profile: widget.profile),
-        ),
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isSubmitting = false;
-        _errorMessage = e.message;
-      });
+    } else if (state.status == AuthOperationStatus.failed) {
+      final error = state.error!;
+      setState(() => _errorMessage = () => error.message);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Disabled while the request runs, so it can't be sent twice.
+    final isSubmitting = context.select(
+      (AuthBloc bloc) => bloc.state.isInProgress(AuthOperation.register),
+    );
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          current.operation == AuthOperation.register &&
+          current.status != previous.status,
+      listener: _handleAuthResult,
+      child: _buildScreen(context, canSubmit: !isSubmitting && _allAgreed),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, {required bool canSubmit}) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.termsPrivacyTitle,
             titleFontSize: AppDimensions.termsPrivacyTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -145,29 +134,16 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
                         setState(() => _agreedToResponsibilities = value);
                       },
                     ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(
-                        height: AppDimensions.termsPrivacyBodyGap,
-                      ),
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: AppDimensions.dsFooterFontSize,
-                          color: AppColors.settingsDangerColor,
-                        ),
-                      ),
-                    ],
                     const SizedBox(
                       height: AppDimensions.termsPrivacyBottomSpacerHeight,
                     ),
-                    if (_isSubmitting) ...[
-                      const Center(child: CircularProgressIndicator()),
+                    if (_errorMessage != null) ...[
+                      FormErrorText(_errorMessage!()),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(
                       label: AppStrings.termsPrivacySubmitButton,
-                      onPressed: _canSubmit ? _handleSubmit : null,
+                      onPressed: canSubmit ? _handleSubmit : null,
                     ),
                   ],
                 ),
@@ -198,7 +174,7 @@ class _LegalTextCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               AppStrings.termsPrivacyTermsHeading,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -207,7 +183,7 @@ class _LegalTextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.termsPrivacyCardGap),
-            const Text(
+            Text(
               AppStrings.termsPrivacyTermsBody,
               style: TextStyle(
                 fontWeight: FontWeight.w400,
@@ -216,7 +192,7 @@ class _LegalTextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.termsPrivacyCardGap),
-            const Text(
+            Text(
               AppStrings.termsPrivacyPolicyHeading,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -225,7 +201,7 @@ class _LegalTextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppDimensions.termsPrivacyCardGap),
-            const Text(
+            Text(
               AppStrings.termsPrivacyPolicyBody,
               style: TextStyle(
                 fontWeight: FontWeight.w400,

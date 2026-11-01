@@ -36,30 +36,41 @@ class BottomNavBar extends StatelessWidget {
   /// Tab index -> unread count. A tab is only badged when its count is > 0.
   /// Not part of [BottomNavItem] because it's runtime state, not static tab
   /// data — e.g. the "Пораки" tab's badge comes from
-  /// `ChatController.instance.totalUnreadMessages`.
+  /// `ChatState.totalUnreadMessages`.
   final Map<int, int> badgeCounts;
 
   @override
   Widget build(BuildContext context) {
+    // Space taken by the system gesture/button bar (0 on devices without
+    // one). The white background extends behind it, while the tabs sit
+    // above it, so the bar never gets covered.
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Container(
-      height: AppDimensions.bottomNavHeight,
+      // Design height is the minimum; the bar grows instead of overflowing
+      // if the label needs more room (large system font size).
+      constraints: BoxConstraints(
+        minHeight: AppDimensions.bottomNavHeight + bottomInset,
+      ),
+      padding: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(top: BorderSide(color: AppColors.agroBorder300)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < items.length; i++)
-            Expanded(
-              child: _BottomNavTab(
-                item: items[i],
-                isSelected: i == selectedIndex,
-                badgeCount: badgeCounts[i] ?? 0,
-                onTap: () => onTap(i),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < items.length; i++)
+              Expanded(
+                child: _BottomNavTab(
+                  item: items[i],
+                  isSelected: i == selectedIndex,
+                  badgeCount: badgeCounts[i] ?? 0,
+                  onTap: () => onTap(i),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -129,6 +140,13 @@ class _BottomNavTab extends StatelessWidget {
             const SizedBox(height: AppDimensions.bottomNavIndicatorGap),
             Text(
               item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              // Tab labels still follow the system font size, but capped so
+              // the bar keeps its shape on phones set to very large text.
+              textScaler: MediaQuery.textScalerOf(
+                context,
+              ).clamp(maxScaleFactor: AppDimensions.bottomNavLabelMaxTextScale),
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 fontSize: AppDimensions.bottomNavLabelFontSize,
@@ -176,11 +194,12 @@ class _NavBadge extends StatelessWidget {
 
 /// Index of the "Пораки" tab — identical in both [touristBottomNavItems]
 /// and [providerBottomNavItems], which is what lets both roles' nav bars
-/// badge from the one shared `ChatController.instance`.
+/// badge from the one shared `ChatBloc`.
 const int navMessagesTabIndex = 3;
 
-/// DS/Nav/Tourist — Дома, Пребарај, Резервации, Пораки, Профил.
-const List<BottomNavItem> touristBottomNavItems = [
+/// DS/Nav/Tourist — Дома, Пребарај, Резервации, Пораки, Профил. A getter, so
+/// the labels follow the current language.
+List<BottomNavItem> get touristBottomNavItems => [
   BottomNavItem(icon: Icons.home_outlined, label: AppStrings.navTouristHome),
   BottomNavItem(icon: Icons.search, label: AppStrings.navTouristSearch),
   BottomNavItem(
@@ -192,7 +211,7 @@ const List<BottomNavItem> touristBottomNavItems = [
 ];
 
 /// DS/Nav/Provider — Табла, Понуди, Календар, Пораки, Профил.
-const List<BottomNavItem> providerBottomNavItems = [
+List<BottomNavItem> get providerBottomNavItems => [
   BottomNavItem(
     icon: Icons.insert_chart_outlined_rounded,
     label: AppStrings.navProviderDashboard,

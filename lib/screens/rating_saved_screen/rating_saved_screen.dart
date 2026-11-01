@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
@@ -17,17 +17,13 @@ class RatingSavedScreen extends StatelessWidget {
   const RatingSavedScreen({super.key});
 
   void _goToDashboard(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
-      (route) => false,
-    );
+    context.go(AppRoutes.dashboard);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const ProviderBottomNav(selectedIndex: 0),
       body: Column(
         children: [
           ScreenHeader(
@@ -71,7 +67,7 @@ class RatingSavedScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.successBlockGap),
-                          const Text(
+                          Text(
                             AppStrings.ratingSavedHeading,
                             textAlign: TextAlign.center,
                             style: TextStyle(

@@ -26,7 +26,7 @@ class ListingReview {
 
   /// The completed `Reservation` this review was written for — the
   /// one-review-per-reservation uniqueness boundary
-  /// (`ListingReviewController.hasReviewForReservation`). Nullable: the
+  /// (`ListingReviewsState.hasReviewForReservation`). Nullable: the
   /// 2 pre-existing mock reviews predate this relationship (neither mock
   /// author actually has a *completed* reservation for that listing in
   /// the mock data) and simply don't participate in the dedup check;

@@ -55,7 +55,7 @@ enum ReservationStatus {
 
 /// A guest's reservation against one of a provider's listings. Shaped to
 /// map directly onto a future reservations API response so the mock data
-/// in `ReservationController` can be swapped for real fetched records
+/// in `ReservationsBloc` can be swapped for real fetched records
 /// without changing this model or anything that reads it.
 ///
 /// `listingId` — added alongside the Tourist booking flow, which is the
@@ -63,7 +63,7 @@ enum ReservationStatus {
 /// `ProviderListing` in hand. Nullable/optional: older mock reservations
 /// (and anything a future backend response might omit) still work with
 /// only `listingName`, which remains the field every existing screen
-/// (Provider Dashboard, `AvailabilityController`) actually reads — this
+/// (Provider Dashboard, `AvailabilityState.statusFor`) actually reads — this
 /// doesn't replace that, just finally gives new reservations a proper
 /// foreign key for when something needs one.
 ///

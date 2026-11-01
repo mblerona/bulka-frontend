@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/models/user_role.dart';
-import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
-import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
-import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
-import 'package:bulka_frontend/services/session_controller.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -17,62 +18,59 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String _selectedLanguageCode = AppStrings.languageCodeMk;
-
-  /// Assigned in [initState] rather than inline here — a `late final`
-  /// field's initializer only runs on first *read*, so assigning it inline
-  /// would mean the restore attempt doesn't actually start until
-  /// [_handleContinue] first awaits it, defeating the point of starting it
-  /// early.
-  late final Future<bool> _restoreSessionFuture;
-
-  bool _isContinuing = false;
+  /// Continue was tapped before the saved session was checked; move on as
+  /// soon as the check finishes.
+  bool _waitingForSession = false;
 
   @override
   void initState() {
     super.initState();
-    // Kicked off immediately so the restore attempt runs in the background
-    // while the user reads the splash and picks a language — by the time
-    // "Продолжи" is actually tapped, this has very plausibly already
-    // resolved, so the button rarely has to show its own loading state.
-    _restoreSessionFuture = SessionController.instance.restoreSession();
+    // Checked in the background while the user picks a language, so
+    // Continue usually doesn't have to wait.
+    context.read<AuthBloc>().add(const AuthSessionRestoreRequested());
   }
 
-  Future<void> _handleContinue() async {
-    if (_isContinuing) return;
-    setState(() => _isContinuing = true);
-
-    final restored = await _restoreSessionFuture;
-    if (!mounted) return;
-
-    if (!restored) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+  void _handleContinue() {
+    final auth = context.read<AuthBloc>().state;
+    if (auth.isInProgress(AuthOperation.restoreSession)) {
+      setState(() => _waitingForSession = true);
       return;
     }
+    _goNext(auth);
+  }
 
-    final Widget destination;
-    switch (SessionController.instance.appRole) {
-      case UserRole.buyer:
-        destination = const TouristHomeScreen();
-      case UserRole.owner:
-        destination = const ProviderDashboardScreen();
-      case null:
-        // Restored a session, but this backend role has no app
-        // destination yet (see backend_role_mapper.dart) — same gap
-        // LoginScreen leaves alone rather than guessing a destination.
-        destination = const LoginScreen();
+  /// Signed in again: straight to the account's side of the app.
+  /// Otherwise: Login.
+  void _goNext(AuthState auth) {
+    // No role means not a Tourist or Provider account (AuthBloc doesn't
+    // restore those anyway).
+    final role = auth.user?.role;
+    if (role == null) {
+      context.push(AppRoutes.login);
+      return;
     }
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => destination),
-      (route) => false,
-    );
+    context.go(switch (role) {
+      UserRole.buyer => AppRoutes.home,
+      UserRole.owner => AppRoutes.dashboard,
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          _waitingForSession &&
+          current.operation == AuthOperation.restoreSession &&
+          current.status != AuthOperationStatus.inProgress,
+      listener: (context, state) {
+        setState(() => _waitingForSession = false);
+        _goNext(state);
+      },
+      child: _buildScreen(context),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.agroGreen700,
       body: SafeArea(
@@ -101,12 +99,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
               final Widget content = _SplashContent(
                 logoSize: logoSize,
-                selectedLanguageCode: _selectedLanguageCode,
+                selectedLanguageCode: context
+                    .watch<LocaleBloc>()
+                    .state
+                    .switchCode,
                 onLanguageChanged: (code) {
-                  setState(() => _selectedLanguageCode = code);
+                  // Saved app-wide; BulkaApp rebuilds every screen.
+                  context.read<LocaleBloc>().add(LanguageChanged(code));
                 },
-                isContinuing: _isContinuing,
-                onContinuePressed: _handleContinue,
+                onContinuePressed: _waitingForSession ? null : _handleContinue,
               );
 
               // Absolute floor: fixed text/controls + smallest logo, with the
@@ -140,15 +141,15 @@ class _SplashContent extends StatelessWidget {
     required this.logoSize,
     required this.selectedLanguageCode,
     required this.onLanguageChanged,
-    required this.isContinuing,
     required this.onContinuePressed,
   });
 
   final double logoSize;
   final String selectedLanguageCode;
   final ValueChanged<String> onLanguageChanged;
-  final bool isContinuing;
-  final VoidCallback onContinuePressed;
+
+  /// Null while the saved session is still being checked.
+  final VoidCallback? onContinuePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +217,7 @@ class _SplashContent extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: isContinuing ? null : onContinuePressed,
+            onPressed: onContinuePressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.agroGreen100,
               foregroundColor: AppColors.agroForest950,
@@ -230,22 +231,13 @@ class _SplashContent extends StatelessWidget {
                 ),
               ),
             ),
-            child: isContinuing
-                ? const SizedBox(
-                    width: AppDimensions.ctaFontSize,
-                    height: AppDimensions.ctaFontSize,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.agroForest950,
-                    ),
-                  )
-                : Text(
-                    AppStrings.continueButton,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: AppDimensions.ctaFontSize,
-                    ),
-                  ),
+            child: Text(
+              AppStrings.continueButton,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: AppDimensions.ctaFontSize,
+              ),
+            ),
           ),
         ),
         Flexible(

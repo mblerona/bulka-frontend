@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
@@ -18,20 +18,13 @@ class ReviewSubmittedScreen extends StatelessWidget {
   const ReviewSubmittedScreen({super.key});
 
   void _backToReservations(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) =>
-            const TouristMyReservationsScreen(initialTab: ReservationsTab.past),
-      ),
-      (route) => false,
-    );
+    context.go(AppRoutes.pastReservations);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const TouristBottomNav(selectedIndex: 2),
       body: Column(
         children: [
           ScreenHeader(
@@ -75,7 +68,7 @@ class ReviewSubmittedScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppDimensions.successBlockGap),
-                          const Text(
+                          Text(
                             AppStrings.reviewSubmittedHeading,
                             textAlign: TextAlign.center,
                             style: TextStyle(

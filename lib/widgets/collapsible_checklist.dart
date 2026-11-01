@@ -4,32 +4,36 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 
 /// DS/CollapsibleSection — a tappable header (label + chevron) that expands
-/// to reveal a bordered box of checkbox rows.
-class CollapsibleChecklist extends StatefulWidget {
+/// to reveal a bordered box of checkbox rows. [itemLabel] gives each item's
+/// text, so items can be values (e.g. enums) rather than display strings.
+class CollapsibleChecklist<T> extends StatefulWidget {
   const CollapsibleChecklist({
     super.key,
     required this.headerLabel,
     required this.items,
+    required this.itemLabel,
     required this.selectedItems,
     required this.onChanged,
     this.initiallyExpanded = true,
   });
 
   final String headerLabel;
-  final List<String> items;
-  final Set<String> selectedItems;
-  final ValueChanged<Set<String>> onChanged;
+  final List<T> items;
+  final String Function(T item) itemLabel;
+  final Set<T> selectedItems;
+  final ValueChanged<Set<T>> onChanged;
   final bool initiallyExpanded;
 
   @override
-  State<CollapsibleChecklist> createState() => _CollapsibleChecklistState();
+  State<CollapsibleChecklist<T>> createState() =>
+      _CollapsibleChecklistState<T>();
 }
 
-class _CollapsibleChecklistState extends State<CollapsibleChecklist> {
+class _CollapsibleChecklistState<T> extends State<CollapsibleChecklist<T>> {
   late bool _expanded = widget.initiallyExpanded;
 
-  void _toggleItem(String item) {
-    final updated = Set<String>.from(widget.selectedItems);
+  void _toggleItem(T item) {
+    final updated = Set<T>.from(widget.selectedItems);
     if (!updated.remove(item)) {
       updated.add(item);
     }
@@ -80,7 +84,7 @@ class _CollapsibleChecklistState extends State<CollapsibleChecklist> {
               children: [
                 for (var i = 0; i < widget.items.length; i++) ...[
                   _ChecklistRow(
-                    label: widget.items[i],
+                    label: widget.itemLabel(widget.items[i]),
                     value: widget.selectedItems.contains(widget.items[i]),
                     onChanged: (_) => _toggleItem(widget.items[i]),
                   ),

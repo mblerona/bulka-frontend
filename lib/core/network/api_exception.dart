@@ -1,83 +1,109 @@
-/// One item from the backend's response envelope's `errors` array:
-/// `{ "code": "...", "message": "...", "field": null }` — confirmed against
-/// a real 401 from `POST /api/auth/login`.
-class ApiErrorItem {
-  const ApiErrorItem({required this.code, required this.message, this.field});
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/core/network/api_error_translator.dart';
+import 'package:bulka_frontend/core/network/api_response.dart';
 
-  factory ApiErrorItem.fromJson(Map<String, dynamic> json) {
-    return ApiErrorItem(
-      code: json['code'] as String? ?? '',
-      message: json['message'] as String? ?? '',
-      field: json['field'] as String?,
-    );
-  }
-
-  final String code;
-  final String message;
-  final String? field;
-}
-
-/// Coarse category of an [ApiException], derived from the HTTP status code —
-/// lets a screen react generically (e.g. `unauthorized` -> force logout)
-/// without switching on raw status codes itself.
-enum ApiExceptionKind {
-  validation,
-  unauthorized,
-  forbidden,
-  notFound,
-  conflict,
-  server,
+enum ApiErrorKind {
   network,
+  timeout,
+  unauthorized,
+  badRequest,
+  server,
   unknown,
 }
 
-/// The one exception type the rest of the app ever deals with for a failed
-/// API call. [ApiErrorMapper] is the only place a `DioException` gets turned
-/// into this — repositories/controllers should let `DioException` propagate
-/// out of their own try/catch only long enough to hand it to the mapper,
-/// never surface it (or its raw message text) directly to a screen.
+/// The one error type services throw, so screens never deal with Dio
+/// directly. [message] is always safe to show to the user.
 class ApiException implements Exception {
+  /// [customMessage] replaces the usual text (e.g. "2FA isn't supported");
+  /// it's a function so it's read in the current language.
   const ApiException({
     required this.kind,
-    required this.message,
     this.statusCode,
     this.errors = const [],
-    this.traceId,
-  });
+    String Function()? customMessage,
+  }) : _customMessage = customMessage;
 
-  final ApiExceptionKind kind;
-
-  /// Backend-provided message when available, otherwise a generic
-  /// [AppStrings]-sourced fallback for [kind]. Safe to show to the user.
-  final String message;
-
-  final int? statusCode;
-
-  /// The backend's full `errors` array, when the response body matched the
-  /// confirmed envelope shape — empty for network failures or responses
-  /// that didn't match it.
-  final List<ApiErrorItem> errors;
-
-  /// Present only for debugging/logging — deliberately not surfaced in any
-  /// user-facing string.
-  final String? traceId;
-
-  /// The backend-provided error attached to [field], if any — lets a form
-  /// show a message under the specific input it belongs to.
-  ApiErrorItem? errorForField(String field) {
-    for (final error in errors) {
-      if (error.field == field) return error;
+  factory ApiException.fromDio(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return const ApiException(kind: ApiErrorKind.timeout);
+      case DioExceptionType.connectionError:
+        return const ApiException(kind: ApiErrorKind.network);
+      default:
+        break;
     }
-    return null;
+
+    final status = e.response?.statusCode;
+    final body = e.response?.data;
+    final errors = body is Map<String, dynamic>
+        ? parseApiErrors(body['errors'])
+        : const <ApiError>[];
+
+    final ApiErrorKind kind;
+    if (status == 401) {
+      kind = ApiErrorKind.unauthorized;
+    } else if (status != null && status >= 400 && status < 500) {
+      kind = ApiErrorKind.badRequest;
+    } else if (status != null && status >= 500) {
+      kind = ApiErrorKind.server;
+    } else {
+      kind = ApiErrorKind.unknown;
+    }
+    _logUntranslated(errors);
+    return ApiException(kind: kind, statusCode: status, errors: errors);
   }
 
-  /// True if the backend attached an error with this exact [code] anywhere
-  /// in [errors] — lets a caller react to a specific confirmed backend
-  /// error condition (e.g. `AUTH_EMAIL_NOT_VERIFIED`) without matching on
-  /// [message] text, which is free-form and not meant to be parsed.
+  /// For a 2xx response whose envelope still says `success: false`.
+  factory ApiException.fromEnvelope(ApiResponse<Object?> response) {
+    _logUntranslated(response.errors);
+    return ApiException(kind: ApiErrorKind.badRequest, errors: response.errors);
+  }
+
+  final ApiErrorKind kind;
+  final int? statusCode;
+  final List<ApiError> errors;
+  final String Function()? _customMessage;
+
+  /// Whether the backend sent an error with this `code`, e.g.
+  /// `AUTH_EMAIL_NOT_VERIFIED`.
   bool hasErrorCode(String code) => errors.any((e) => e.code == code);
 
+  /// In the app's current language, never the backend's English text.
+  /// Worked out on every read, so it follows a language switch.
+  String get message {
+    final custom = _customMessage;
+    if (custom != null) return custom();
+    for (final error in errors) {
+      final translated = translateApiError(error);
+      if (translated != null) return translated;
+    }
+    return switch (kind) {
+      ApiErrorKind.network => AppStrings.apiErrorNetwork,
+      ApiErrorKind.timeout => AppStrings.apiErrorTimeout,
+      ApiErrorKind.unauthorized => AppStrings.apiErrorUnauthorized,
+      ApiErrorKind.badRequest => AppStrings.apiErrorInvalidInput,
+      ApiErrorKind.server => AppStrings.apiErrorServer,
+      ApiErrorKind.unknown => AppStrings.apiErrorUnknown,
+    };
+  }
+
+  /// Debug builds: print errors the app has no text for yet, so they can be
+  /// added to api_error_translator.dart.
+  static void _logUntranslated(List<ApiError> errors) {
+    for (final error in errors) {
+      if (translateApiError(error) == null) {
+        debugPrint(
+          '[API] No translation for error ${error.code} '
+          '(field: ${error.field}): ${error.message}',
+        );
+      }
+    }
+  }
+
   @override
-  String toString() =>
-      'ApiException(kind: $kind, statusCode: $statusCode, message: $message, traceId: $traceId)';
+  String toString() => 'ApiException($kind, $statusCode): $message';
 }

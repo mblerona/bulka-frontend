@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/availability_status.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
-import 'package:bulka_frontend/services/availability_controller.dart';
-import 'package:bulka_frontend/services/provider_listing_controller.dart';
-import 'package:bulka_frontend/services/reservation_controller.dart';
-import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
 
-const List<String> _weekdayLabels = [
+List<String> get _weekdayLabels => [
   AppStrings.weekdayMon,
   AppStrings.weekdayTue,
   AppStrings.weekdayWed,
@@ -33,14 +33,14 @@ class ProviderAvailabilityCalendarScreen extends StatefulWidget {
 
 class _ProviderAvailabilityCalendarScreenState
     extends State<ProviderAvailabilityCalendarScreen> {
-  final AvailabilityController _availability = AvailabilityController.instance;
-  final ReservationController _reservations = ReservationController.instance;
-
   // No listing picker exists in Figma yet — use the provider's first
   // (currently only) listing. Once multiple listings/a picker exist, this
   // becomes the one place a `selectedListingId` would be swapped in.
-  late final ProviderListing _listing =
-      ProviderListingController.instance.listings.first;
+  late final ProviderListing _listing = context
+      .read<ListingsBloc>()
+      .state
+      .listings
+      .first;
 
   // Figma's example opens on August 2026; real prev/next navigation from
   // here regenerates the grid via DateTime, not a hardcoded layout.
@@ -51,26 +51,28 @@ class _ProviderAvailabilityCalendarScreenState
   @override
   void initState() {
     super.initState();
-    _availability.addListener(_handleChanged);
-    _reservations.addListener(_handleChanged);
-    _availability.loadAvailability(_listing.id, _visibleMonth);
+    _requestMonth();
   }
 
-  @override
-  void dispose() {
-    _availability.removeListener(_handleChanged);
-    _reservations.removeListener(_handleChanged);
-    super.dispose();
-  }
+  void _requestMonth() => context.read<AvailabilityBloc>().add(
+    AvailabilityMonthRequested(listingId: _listing.id, month: _visibleMonth),
+  );
 
-  void _handleChanged() => setState(() {});
+  /// Reads the blocs; `build` watches them so the calendar rebuilds.
+  AvailabilityStatus _statusOf(DateTime date) =>
+      context.read<AvailabilityBloc>().state.statusFor(
+        _listing.id,
+        date,
+        listings: context.read<ListingsBloc>().state,
+        reservations: context.read<ReservationsBloc>().state,
+      );
 
   void _changeMonth(int delta) {
     setState(() {
       _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + delta);
       _selectedDates.clear();
     });
-    _availability.loadAvailability(_listing.id, _visibleMonth);
+    _requestMonth();
   }
 
   void _toggleSelection(DateTime date, AvailabilityStatus status) {
@@ -82,36 +84,41 @@ class _ProviderAvailabilityCalendarScreenState
     });
   }
 
-  bool get _canBlock => _selectedDates.any(
-    (d) =>
-        _availability.statusForDate(_listing.id, d) ==
-        AvailabilityStatus.available,
-  );
+  bool get _canBlock =>
+      _selectedDates.any((d) => _statusOf(d) == AvailabilityStatus.available);
 
-  bool get _canUnblock => _selectedDates.any(
-    (d) =>
-        _availability.statusForDate(_listing.id, d) ==
-        AvailabilityStatus.blocked,
-  );
+  bool get _canUnblock =>
+      _selectedDates.any((d) => _statusOf(d) == AvailabilityStatus.blocked);
 
   void _handleBlock() {
-    _availability.blockDates(_listing.id, _selectedDates);
+    // Booked dates can't be blocked.
+    final available = {
+      for (final d in _selectedDates)
+        if (_statusOf(d) == AvailabilityStatus.available) d,
+    };
+    context.read<AvailabilityBloc>().add(
+      DatesBlocked(listingId: _listing.id, dates: available),
+    );
     setState(() => _selectedDates.clear());
   }
 
   void _handleUnblock() {
-    _availability.unblockDates(_listing.id, _selectedDates);
+    context.read<AvailabilityBloc>().add(
+      DatesUnblocked(listingId: _listing.id, dates: Set.of(_selectedDates)),
+    );
     setState(() => _selectedDates.clear());
   }
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AvailabilityBloc>();
+    context.watch<ListingsBloc>();
+    context.watch<ReservationsBloc>();
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
-      bottomNavigationBar: const ProviderBottomNav(selectedIndex: 2),
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.calendarTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -135,7 +142,7 @@ class _ProviderAvailabilityCalendarScreenState
                     _CalendarGrid(
                       month: _visibleMonth,
                       listingId: _listing.id,
-                      availability: _availability,
+                      statusOf: _statusOf,
                       selectedDates: _selectedDates,
                       onToggle: _toggleSelection,
                     ),
@@ -303,9 +310,9 @@ class _MonthNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final monthName = mkMonthNames[month.month - 1];
+    final name = monthName(month.month);
     final title =
-        '${monthName[0].toUpperCase()}${monthName.substring(1)} '
+        '${name[0].toUpperCase()}${name.substring(1)} '
         '${month.year}';
     return Container(
       width: double.infinity,
@@ -367,14 +374,14 @@ class _CalendarGrid extends StatelessWidget {
   const _CalendarGrid({
     required this.month,
     required this.listingId,
-    required this.availability,
+    required this.statusOf,
     required this.selectedDates,
     required this.onToggle,
   });
 
   final DateTime month;
   final String listingId;
-  final AvailabilityController availability;
+  final AvailabilityStatus Function(DateTime date) statusOf;
   final Set<DateTime> selectedDates;
   final void Function(DateTime date, AvailabilityStatus status) onToggle;
 
@@ -439,7 +446,7 @@ class _CalendarGrid extends StatelessWidget {
                             date: DateTime(month.year, month.month, week[i]!),
                             day: week[i]!,
                             listingId: listingId,
-                            availability: availability,
+                            statusOf: statusOf,
                             selectedDates: selectedDates,
                             onToggle: onToggle,
                           ),
@@ -461,7 +468,7 @@ class _DayCell extends StatelessWidget {
     required this.date,
     required this.day,
     required this.listingId,
-    required this.availability,
+    required this.statusOf,
     required this.selectedDates,
     required this.onToggle,
   });
@@ -469,13 +476,13 @@ class _DayCell extends StatelessWidget {
   final DateTime date;
   final int day;
   final String listingId;
-  final AvailabilityController availability;
+  final AvailabilityStatus Function(DateTime date) statusOf;
   final Set<DateTime> selectedDates;
   final void Function(DateTime date, AvailabilityStatus status) onToggle;
 
   @override
   Widget build(BuildContext context) {
-    final status = availability.statusForDate(listingId, date);
+    final status = statusOf(date);
     final isSelected = selectedDates.contains(date);
     final isSelectable = status != AvailabilityStatus.occupied;
 

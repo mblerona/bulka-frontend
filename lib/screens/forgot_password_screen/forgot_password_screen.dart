@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/network/api_exception.dart';
-import 'package:bulka_frontend/screens/reset_password_screen/reset_password_screen.dart';
-import 'package:bulka_frontend/services/auth_repository.dart';
+import 'package:bulka_frontend/widgets/form_error_text.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
+/// Asks the backend to email a password-reset code, then moves on to
+/// Reset Password where the code and the new password are entered.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -17,70 +21,61 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final AuthRepository _authRepository = AuthRepository();
-  final TextEditingController _emailController = TextEditingController();
+  final _emailController = TextEditingController();
 
-  bool _isSubmitting = false;
-  String? _errorMessage;
+  /// A function, not the text itself, so a message on screen follows a
+  /// language switch.
+  String Function()? _errorMessage;
 
-  @override
-  void initState() {
-    super.initState();
-    _emailController.addListener(_onFieldChanged);
-  }
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   @override
   void dispose() {
-    _emailController.removeListener(_onFieldChanged);
     _emailController.dispose();
     super.dispose();
   }
 
-  void _onFieldChanged() {
-    if (mounted) setState(() {});
+  void _handleSubmit() {
+    final email = _emailController.text.trim();
+    if (!_emailPattern.hasMatch(email)) {
+      setState(() => _errorMessage = () => AppStrings.registerErrorEmail);
+      return;
+    }
+    setState(() => _errorMessage = null);
+    context.read<AuthBloc>().add(AuthPasswordResetCodeRequested(email));
   }
 
-  bool get _canSubmit =>
-      !_isSubmitting && _emailController.text.trim().isNotEmpty;
-
-  /// `POST /api/auth/forgot-password`'s response isn't confirmed live yet
-  /// (see `AuthRepository.forgotPassword`), but the UI doesn't need
-  /// anything from it — a successful call just means a reset code was sent,
-  /// so this always proceeds to [ResetPasswordScreen] on success regardless
-  /// of what `data` actually contains.
-  Future<void> _handleSubmit() async {
-    if (!_canSubmit) return;
-
-    final email = _emailController.text.trim();
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    try {
-      await _authRepository.forgotPassword(email: email);
-      if (!mounted) return;
-      setState(() => _isSubmitting = false);
-
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ResetPasswordScreen(email: email)),
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isSubmitting = false;
-        _errorMessage = e.message;
-      });
+  void _handleAuthResult(BuildContext context, AuthState state) {
+    if (state.status == AuthOperationStatus.succeeded) {
+      context.push(AppRoutes.resetPassword(_emailController.text.trim()));
+    } else if (state.status == AuthOperationStatus.failed) {
+      final error = state.error!;
+      setState(() => _errorMessage = () => error.message);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Disabled while the request runs, so it can't be sent twice.
+    final isSubmitting = context.select(
+      (AuthBloc bloc) =>
+          bloc.state.isInProgress(AuthOperation.requestPasswordReset),
+    );
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          current.operation == AuthOperation.requestPasswordReset &&
+          current.status != previous.status,
+      listener: _handleAuthResult,
+      child: _buildScreen(context, isSubmitting),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, bool isSubmitting) {
     return Scaffold(
       backgroundColor: AppColors.beigeBackground,
       body: Column(
         children: [
-          const ScreenHeader(
+          ScreenHeader(
             title: AppStrings.forgotPasswordTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
@@ -112,9 +107,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         size: AppDimensions.forgotPasswordIconSize,
                       ),
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     Text(
                       AppStrings.forgotPasswordHeading,
                       style: const TextStyle(
@@ -134,38 +127,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         color: AppColors.agroInk500,
                       ),
                     ),
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     LabeledTextField(
                       label: AppStrings.emailLabel,
                       hintText: AppStrings.emailPlaceholder,
                       keyboardType: TextInputType.emailAddress,
                       controller: _emailController,
                     ),
+                    const SizedBox(height: AppDimensions.forgotPasswordBodyGap),
                     if (_errorMessage != null) ...[
-                      const SizedBox(
-                        height: AppDimensions.forgotPasswordBodyGap,
-                      ),
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: AppDimensions.dsFooterFontSize,
-                          color: AppColors.settingsDangerColor,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(
-                      height: AppDimensions.forgotPasswordBodyGap,
-                    ),
-                    if (_isSubmitting) ...[
-                      const Center(child: CircularProgressIndicator()),
+                      FormErrorText(_errorMessage!()),
                       const SizedBox(height: AppDimensions.dsBodyGap),
                     ],
                     PrimaryButton(
                       label: AppStrings.forgotPasswordSubmitButton,
-                      onPressed: _canSubmit ? _handleSubmit : null,
+                      onPressed: isSubmitting ? null : _handleSubmit,
                     ),
                     const SizedBox(
                       height: AppDimensions.forgotPasswordBodyGap * 4,

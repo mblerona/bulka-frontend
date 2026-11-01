@@ -20,22 +20,36 @@ flutter test test/widget_test.dart  # Run single test file
 
 ## Architecture
 
-**Entry point**: `lib/main.dart` — boots `BulkaApp` with `MaterialApp`, Material 3, custom theme, and `SplashScreen` as home.
+**Entry point**: `lib/main.dart` — boots `BulkaApp` with `MaterialApp.router` (GoRouter), Material 3 and the custom theme. Debug builds start on the dev screen launcher (`/dev`), release builds on Splash (`/`).
 
 **Core structure**:
-- `lib/core/constants/` — `AppColors` and `AppStrings` (all user-facing text is in Macedonian, defined here)
+- `lib/core/constants/` — `AppColors` and `AppStrings` (all user-facing text; `AppStrings` is generated and returns the current language)
+- `lib/l10n/` — translations: `app_mk.arb` (template), `app_en.arb`, `app_sq.arb`, plus the generated `app_localizations*.dart`
+- `lib/blocs/<feature>/` — app state, one Bloc per feature (see State management)
+- `lib/core/l10n/app_locale.dart` — the current language for code without a `BuildContext` (`AppStrings`, API headers, `intl`); only `LocaleBloc` changes it
 - `lib/core/theme/` — `AppTheme.lightTheme` with Montserrat font
 - `lib/models/` — `UserRole` enum (`buyer`, `owner`)
 - `lib/screens/` — one folder per screen (e.g. `splash_screen/`, `choose_role_screen/`)
 - `lib/widgets/` — shared reusable widgets
 
-**Routing**: No routing library yet; navigation is done via `MaterialApp.home` and `Navigator.push`.
+**Routing**: `go_router`. All routes are in `lib/core/routing/app_router.dart`; all paths and path helpers in `lib/core/routing/app_routes.dart` (`AppRoutes`) — navigate with `context.go`/`context.push(AppRoutes.x)`, never hard-coded strings or `MaterialPageRoute`.
+- Tourist and Provider tabs are `StatefulShellRoute`s (`TouristShell`/`ProviderShell` in `lib/widgets/app_bottom_nav.dart`) that draw the one shared bottom nav; each tab keeps its own history. Screens must not add their own `bottomNavigationBar`. Messages (and the Provider's Profile) open full screen.
+- Screens that need an object get its id in the URL (e.g. `/home/listings/:listingId`); the route looks it up and shows `RouteNotFoundScreen` if it's missing. Only sign-up data (contains the password) travels as `extra`.
+- To leave a tab cleared before jumping elsewhere (e.g. after booking), use `resetTabThenGo`.
+- New screens also get a `DevScreenEntry` in `lib/dev/dev_launcher_screen.dart`; `test/all_screens_localized_test.dart` then checks it in every language.
 
-**State management**: None yet — plain `StatefulWidget` where needed.
+**State management**: `flutter_bloc`, full Blocs with events (no Cubits).
+- One feature per folder in `lib/blocs/<feature>/`: `<feature>_bloc.dart` with `part` files `<feature>_event.dart` (a `sealed` event class, events named in the past tense: `ListingCreated`, `AuthLoginRequested`) and `<feature>_state.dart` (an immutable state with lookup helpers like `byId`). Mock seed data lives in `<feature>_mock_data.dart` until that feature uses the backend; API calls live in the bloc itself (no repositories).
+- All blocs are created once in `AppBlocProviders` (`lib/blocs/app_bloc_providers.dart`), above the router. Read them with `context.read<XBloc>()`, rebuild with `context.watch`/`BlocBuilder`/`BlocSelector`; never keep a bloc in a global.
+- Blocs don't depend on each other. Logic that needs two features is a pure function taking both states (`searchListings`, `AvailabilityState.statusFor`).
+- Request/response flows (login, register, booking) end in a state the screen reacts to with a `BlocListener` (e.g. `AuthState.operation` + `status`, `ReservationsState.lastCreated`) — events don't return values.
+- Form fields and other purely local UI state stay in `StatefulWidget`/`setState`.
+- Bloc tests use `bloc_test` (`test/blocs_test.dart`).
 
 ## Conventions
 
-- All user-facing strings go in `AppColors` / `AppStrings` in `lib/core/constants/`, never hardcoded inline.
+- All user-facing strings are read through `AppStrings`, never hardcoded inline. To add one: add the key to all three `.arb` files in `lib/l10n/`, then run `flutter gen-l10n` and `dart run tool/gen_app_strings.dart`. Text that's the same in every language (symbols, emoji) goes in the constants at the bottom of `AppStrings`.
+- Translated `AppStrings` values aren't `const`; lists of labels must be getters (not `const`/`final` fields) so they follow a language switch. Store choices as values (enums, indexes), never as translated text.
 - Screen folders live under `lib/screens/<screen_name>/` and contain a single `<screen_name>.dart` file.
 - Assets are under `assets/images/` with subfolders per screen (e.g. `assets/images/SplashScreen/`).
 - Package name / import prefix: `package:bulka_frontend/`.
