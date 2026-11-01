@@ -71,6 +71,12 @@ class ApiException implements Exception {
     return null;
   }
 
+  /// True if the backend attached an error with this exact [code] anywhere
+  /// in [errors] — lets a caller react to a specific confirmed backend
+  /// error condition (e.g. `AUTH_EMAIL_NOT_VERIFIED`) without matching on
+  /// [message] text, which is free-form and not meant to be parsed.
+  bool hasErrorCode(String code) => errors.any((e) => e.code == code);
+
   @override
   String toString() =>
       'ApiException(kind: $kind, statusCode: $statusCode, message: $message, traceId: $traceId)';

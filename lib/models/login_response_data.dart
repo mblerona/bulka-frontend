@@ -17,6 +17,7 @@ class LoginResponseData {
     this.refreshToken,
     this.user,
     this.twoFactorChallenge,
+    this.webSession,
   });
 
   factory LoginResponseData.fromJson(Map<String, dynamic> json) {
@@ -33,6 +34,11 @@ class LoginResponseData {
       // challenge has been observed. Kept untyped on purpose rather than
       // guessed at; 2FA completion is a later integration step.
       twoFactorChallenge: json['twoFactorChallenge'],
+      // Shape unconfirmed — only observed as `null`, on a real mobile
+      // login. Presumably web-only (a cookie-based session alongside the
+      // bearer tokens), but that's inferred, not confirmed; kept untyped
+      // and unused on purpose rather than guessed at.
+      webSession: json['webSession'],
     );
   }
 
@@ -41,6 +47,7 @@ class LoginResponseData {
   final String? refreshToken;
   final AuthUser? user;
   final Object? twoFactorChallenge;
+  final Object? webSession;
 
   /// True once tokens + user actually came back — i.e. the login is
   /// genuinely complete, not pending a 2FA step this app doesn't handle yet.

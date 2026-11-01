@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
+import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
+import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
+import 'package:bulka_frontend/services/session_controller.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,6 +18,58 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   String _selectedLanguageCode = AppStrings.languageCodeMk;
+
+  /// Assigned in [initState] rather than inline here — a `late final`
+  /// field's initializer only runs on first *read*, so assigning it inline
+  /// would mean the restore attempt doesn't actually start until
+  /// [_handleContinue] first awaits it, defeating the point of starting it
+  /// early.
+  late final Future<bool> _restoreSessionFuture;
+
+  bool _isContinuing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Kicked off immediately so the restore attempt runs in the background
+    // while the user reads the splash and picks a language — by the time
+    // "Продолжи" is actually tapped, this has very plausibly already
+    // resolved, so the button rarely has to show its own loading state.
+    _restoreSessionFuture = SessionController.instance.restoreSession();
+  }
+
+  Future<void> _handleContinue() async {
+    if (_isContinuing) return;
+    setState(() => _isContinuing = true);
+
+    final restored = await _restoreSessionFuture;
+    if (!mounted) return;
+
+    if (!restored) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      return;
+    }
+
+    final Widget destination;
+    switch (SessionController.instance.appRole) {
+      case UserRole.buyer:
+        destination = const TouristHomeScreen();
+      case UserRole.owner:
+        destination = const ProviderDashboardScreen();
+      case null:
+        // Restored a session, but this backend role has no app
+        // destination yet (see backend_role_mapper.dart) — same gap
+        // LoginScreen leaves alone rather than guessing a destination.
+        destination = const LoginScreen();
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => destination),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +105,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 onLanguageChanged: (code) {
                   setState(() => _selectedLanguageCode = code);
                 },
+                isContinuing: _isContinuing,
+                onContinuePressed: _handleContinue,
               );
 
               // Absolute floor: fixed text/controls + smallest logo, with the
@@ -82,11 +140,15 @@ class _SplashContent extends StatelessWidget {
     required this.logoSize,
     required this.selectedLanguageCode,
     required this.onLanguageChanged,
+    required this.isContinuing,
+    required this.onContinuePressed,
   });
 
   final double logoSize;
   final String selectedLanguageCode;
   final ValueChanged<String> onLanguageChanged;
+  final bool isContinuing;
+  final VoidCallback onContinuePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -154,11 +216,7 @@ class _SplashContent extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
-            },
+            onPressed: isContinuing ? null : onContinuePressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.agroGreen100,
               foregroundColor: AppColors.agroForest950,
@@ -172,13 +230,22 @@ class _SplashContent extends StatelessWidget {
                 ),
               ),
             ),
-            child: Text(
-              AppStrings.continueButton,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: AppDimensions.ctaFontSize,
-              ),
-            ),
+            child: isContinuing
+                ? const SizedBox(
+                    width: AppDimensions.ctaFontSize,
+                    height: AppDimensions.ctaFontSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.agroForest950,
+                    ),
+                  )
+                : Text(
+                    AppStrings.continueButton,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: AppDimensions.ctaFontSize,
+                    ),
+                  ),
           ),
         ),
         Flexible(

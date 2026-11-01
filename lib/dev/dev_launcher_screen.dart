@@ -28,6 +28,7 @@ import 'package:bulka_frontend/screens/rate_guest_screen/rate_guest_screen.dart'
 import 'package:bulka_frontend/screens/rating_saved_screen/rating_saved_screen.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservation_confirmation_screen.dart';
+import 'package:bulka_frontend/screens/reset_password_screen/reset_password_screen.dart';
 import 'package:bulka_frontend/screens/review_submitted_screen/review_submitted_screen.dart';
 import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
 import 'package:bulka_frontend/screens/settings_screen/settings_screen.dart';
@@ -66,6 +67,10 @@ class DevLauncherScreen extends StatelessWidget {
       _DevScreenEntry('Splash & Language', (_) => const SplashScreen()),
       _DevScreenEntry('Login', (_) => const LoginScreen()),
       _DevScreenEntry('Forgot Password', (_) => const ForgotPasswordScreen()),
+      _DevScreenEntry(
+        'Reset Password',
+        (_) => const ResetPasswordScreen(email: 'dev@example.com'),
+      ),
       _DevScreenEntry('Register', (_) => const RegisterScreen()),
       _DevScreenEntry(
         'Terms & Privacy',

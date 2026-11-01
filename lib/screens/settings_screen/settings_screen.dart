@@ -3,6 +3,7 @@ import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/screens/login_screen/login_screen.dart';
+import 'package:bulka_frontend/services/session_controller.dart';
 import 'package:bulka_frontend/widgets/language_switch.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
@@ -18,8 +19,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedLanguageCode = AppStrings.languageCodeMk;
   bool _notificationsEnabled = true;
 
-  void _handleLogout() {
-    // TODO: clear the authenticated session/token once auth exists.
+  final SessionController _session = SessionController.instance;
+
+  /// [SessionController.logout] deliberately never touches `isLoading` (it
+  /// always "succeeds" locally, see its doc comment), so this is a
+  /// screen-local flag purely to disable the button and avoid a double-tap
+  /// firing two concurrent logout calls while the best-effort backend call
+  /// is in flight.
+  bool _isLoggingOut = false;
+
+  Future<void> _handleLogout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+
+    await _session.logout();
+    if (!mounted) return;
+
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
@@ -139,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: AppDimensions.profileBodyGap),
                     SecondaryButton(
                       label: AppStrings.settingsLogoutButton,
-                      onPressed: _handleLogout,
+                      onPressed: _isLoggingOut ? null : _handleLogout,
                     ),
                   ],
                 ),

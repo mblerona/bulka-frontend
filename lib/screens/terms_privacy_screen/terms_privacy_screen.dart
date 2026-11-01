@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
-import 'package:bulka_frontend/core/network/api_response.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
@@ -52,9 +49,18 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
 
     try {
       final profile = widget.profile;
-      final ApiResponse<Object?> response;
+
+      // Both endpoints' responses are now confirmed live:
+      // - Buyer: `{ userId, status: "PendingVerification",
+      //   emailVerificationRequired: true }`
+      // - Provider: `{ userId, providerProfileId,
+      //   userStatus: "PendingVerification", providerProfileStatus: "Draft",
+      //   emailVerificationRequired: true }`
+      // Both mean exactly "go verify your email next", matching the
+      // navigation below — see RegisterResult/ProviderRegisterResult if a
+      // different status is ever observed.
       if (profile.role == UserRole.owner) {
-        response = await _authRepository.registerProvider(
+        await _authRepository.registerProvider(
           email: profile.email,
           password: profile.password,
           firstName: profile.firstName,
@@ -65,7 +71,7 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
           acceptedPrivacy: _agreedToPrivacy,
         );
       } else {
-        response = await _authRepository.registerBuyer(
+        await _authRepository.registerBuyer(
           email: profile.email,
           password: profile.password,
           firstName: profile.firstName,
@@ -79,15 +85,6 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
 
-      // TEMPORARY, integration-inspection only: backend/swagger.json has no
-      // response schema for either register endpoint, so show exactly what
-      // came back instead of silently assuming a shape (e.g. tokens, a
-      // user object, a verification flag) that hasn't been confirmed.
-      // Remove once the real response is confirmed and handled properly —
-      // see AuthRepository.registerBuyer/registerProvider.
-      await _showRawResponseDialog(response);
-      if (!mounted) return;
-
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => EmailVerificationScreen(profile: widget.profile),
@@ -100,39 +97,6 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
         _errorMessage = e.message;
       });
     }
-  }
-
-  Future<void> _showRawResponseDialog(ApiResponse<Object?> response) {
-    const encoder = JsonEncoder.withIndent('  ');
-    final pretty = encoder.convert({
-      'success': response.success,
-      'data': response.data,
-      'errors': [
-        for (final e in response.errors)
-          {'code': e.code, 'message': e.message, 'field': e.field},
-      ],
-      'traceId': response.traceId,
-    });
-
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.registerDebugResponseTitle),
-        content: SingleChildScrollView(
-          child: SelectableText(
-            pretty,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text(AppStrings.registerDebugResponseContinueButton),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

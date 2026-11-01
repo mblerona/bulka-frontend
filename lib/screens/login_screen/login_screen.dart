@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
+import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/user_role.dart';
+import 'package:bulka_frontend/screens/email_verification_screen/email_verification_screen.dart';
 import 'package:bulka_frontend/screens/forgot_password_screen/forgot_password_screen.dart';
 import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
@@ -69,11 +71,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _unsupportedRoleMessage = null);
 
-    final success = await _session.login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-    if (!mounted || !success) return;
+    final email = _emailController.text.trim();
+    final success = await _session.login(email, _passwordController.text);
+    if (!mounted) return;
+
+    if (!success) {
+      if (_session.emailNotVerified) {
+        // Confirmed live: a 403 with `AUTH_EMAIL_NOT_VERIFIED` means the
+        // account exists and the password is correct, just not usable yet
+        // — send the user straight to verification instead of leaving them
+        // stuck on a login form with only an inline error. Login doesn't
+        // collect a name/phone (registration does), but
+        // `EmailVerificationScreen` only reads `profile.email`/`profile.role`
+        // from this, so leaving those blank here isn't a guess at real data.
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => EmailVerificationScreen(
+              profile: RegistrationProfile(
+                fullName: '',
+                email: email,
+                phone: '',
+              ),
+            ),
+          ),
+        );
+      }
+      return;
+    }
 
     switch (_session.appRole) {
       case UserRole.buyer:

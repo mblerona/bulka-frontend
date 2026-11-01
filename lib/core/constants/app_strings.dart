@@ -38,6 +38,22 @@ class AppStrings {
   static const String forgotPasswordSubmitButton = 'ИСПРАТИ КОД';
   static const String forgotPasswordFooterPrompt = 'Се сетивте на лозинката? ';
 
+  //RESET PASSWORD SCREEN
+  static const String resetPasswordTitle = 'Нова лозинка';
+  static const String resetPasswordHeading = 'Внесете нова лозинка';
+  static const String resetPasswordSubheading =
+      'Внесете го кодот што ви го испративме по е-пошта и изберете нова '
+      'лозинка.';
+  static const String resetPasswordCodeLabel = 'Код за ресетирање';
+  static const String resetPasswordCodePlaceholder =
+      'Внесете го кодот од е-поштата';
+  static const String resetPasswordNewPasswordLabel = 'Нова лозинка';
+  static const String resetPasswordSubmitButton = 'РЕСЕТИРАЈ ЛОЗИНКА';
+  static const String resetPasswordMismatchError =
+      'Лозинките не се совпаѓаат.';
+  static const String resetPasswordSuccessMessage =
+      'Лозинката е успешно променета. Најавете се.';
+
   //REGISTER SCREEN
   static const String registerTitle = 'Регистрација';
   static const String registerRoleLabel = 'Изберете тип на профил';
@@ -91,14 +107,6 @@ class AppStrings {
       'Ги прифаќам одговорностите на корисникот при резервација и плаќање.';
   static const String termsPrivacySubmitButton = 'ПРИФАТИ И ПРОДОЛЖИ';
 
-  // TEMPORARY, integration-inspection only: the backend's registration
-  // response schema isn't documented anywhere, so this dialog surfaces the
-  // raw envelope after a successful call instead of silently assuming a
-  // shape. Remove once the real response is confirmed and handled properly.
-  static const String registerDebugResponseTitle =
-      'Одговор од регистрацијата (за инспекција)';
-  static const String registerDebugResponseContinueButton = 'Продолжи';
-
   //EMAIL VERIFICATION SCREEN
   static const String emailVerificationTitle = 'Потврдете ја вашата е-пошта';
   static const String emailVerificationSentTo = 'Испративме линк за потврда до';
@@ -109,7 +117,13 @@ class AppStrings {
       'да продолжите со користење на апликацијата.';
   static const String emailVerificationBadge = 'НЕ Е ПОТВРДЕНО';
   static const String emailVerificationResendButton = 'ИСПРАТИ ПОВТОРНО';
+  static const String emailVerificationResendSuccess =
+      'Нов код е испратен на вашата е-пошта.';
   static const String emailVerificationChangeEmail = 'Промени е-пошта';
+  static const String emailVerificationCodeLabel = 'Код за потврда';
+  static const String emailVerificationCodePlaceholder =
+      'Внесете го кодот од е-поштата';
+  static const String emailVerificationSubmitButton = 'ПОТВРДИ';
 
   //PROFILE SCREEN
   static const String profileTitle = 'Мојот профил';

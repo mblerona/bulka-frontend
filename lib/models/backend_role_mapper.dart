@@ -4,27 +4,25 @@ import 'package:bulka_frontend/models/user_role.dart';
 /// [UserRole]. THE one centralized place that comparison happens — nothing
 /// else should switch on a raw role string.
 ///
-/// Confirmed backend role strings so far: only `"Admin"`, observed on a real
-/// `/api/auth/login` response for an admin test account.
-/// `backend/swagger.json` declares no role enum and no role field anywhere
-/// in the whole document. The `buyer`/`provider` segments in
-/// `/api/auth/register/buyer` and `/api/auth/register/provider` (and the
-/// `RegisterBuyerRequest`/`RegisterProviderRequest` schema names) are
-/// URL/schema naming conventions, not confirmed role string values — do NOT
-/// assume the real Buyer/Provider role strings are `"Buyer"`/`"Provider"`.
+/// Confirmed backend role strings: `"Admin"` (an admin test account),
+/// `"Buyer"`, and `"Provider"` — all confirmed live on real
+/// `/api/auth/login` responses.
+///
+/// **Critical, confirmed live:** a real Provider account's `roles` was
+/// `["Buyer", "Provider"]`, not just `["Provider"]` — every Provider
+/// account is apparently also a Buyer. So this deliberately checks for
+/// `"Provider"` first via [List.contains] rather than iterating the list
+/// and returning on whichever role is matched first — doing that would
+/// return [UserRole.buyer] for a real Provider account whenever `"Buyer"`
+/// happens to be listed before `"Provider"`, exactly as observed. Do not
+/// "simplify" this back down to a single iterate-and-switch loop.
 ///
 /// Returns `null` for:
 /// - `"Admin"` (confirmed real role; this app has no Admin destination), and
-/// - any other/unrecognized role string (nothing else has been confirmed).
-///
-/// Add a case here — and only here — once a real Buyer or Provider account's
-/// login response confirms the actual role string.
+/// - any other/unrecognized role string — never defaults an unrecognized
+///   role to [UserRole.buyer].
 UserRole? mapBackendRoleToUserRole(List<String> roles) {
-  for (final role in roles) {
-    switch (role) {
-      case 'Admin':
-        return null;
-    }
-  }
+  if (roles.contains('Provider')) return UserRole.owner;
+  if (roles.contains('Buyer')) return UserRole.buyer;
   return null;
 }
