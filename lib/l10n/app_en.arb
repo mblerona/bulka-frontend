@@ -19,6 +19,7 @@
   "loginErrorEmptyFields": "Enter your email and password.",
   "loginErrorInvalidCredentials": "Incorrect email or password.",
   "loginErrorTwoFactorUnsupported": "This account has two-factor authentication turned on, which the app doesn't support yet.",
+  "loginErrorUnsupportedAccount": "The app is only for tourists and providers. This account can't be used here.",
   "registerErrorFullName": "Enter your first and last name.",
   "registerErrorEmail": "Enter a valid email address.",
   "registerErrorPhone": "Enter a phone number in international format, e.g. +389 70 123 456.",

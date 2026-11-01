@@ -68,6 +68,10 @@ class AppLocalizationsMk extends AppLocalizations {
       'Оваа сметка има вклучена двофакторска автентикација, која сè уште не е поддржана во апликацијата.';
 
   @override
+  String get loginErrorUnsupportedAccount =>
+      'Апликацијата е само за туристи и понудувачи. Оваа сметка не може да се користи тука.';
+
+  @override
   String get registerErrorFullName => 'Внесете име и презиме.';
 
   @override

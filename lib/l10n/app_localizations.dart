@@ -214,6 +214,12 @@ abstract class AppLocalizations {
   /// **'Оваа сметка има вклучена двофакторска автентикација, која сè уште не е поддржана во апликацијата.'**
   String get loginErrorTwoFactorUnsupported;
 
+  /// No description provided for @loginErrorUnsupportedAccount.
+  ///
+  /// In mk, this message translates to:
+  /// **'Апликацијата е само за туристи и понудувачи. Оваа сметка не може да се користи тука.'**
+  String get loginErrorUnsupportedAccount;
+
   /// No description provided for @registerErrorFullName.
   ///
   /// In mk, this message translates to:

@@ -62,7 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Signed in: go to the account's side of the app. Failed: show why.
   void _handleAuthResult(BuildContext context, AuthState state) {
     if (state.status == AuthOperationStatus.succeeded) {
-      context.go(switch (state.user!.role) {
+      // AuthBloc only signs in Tourist and Provider accounts.
+      final role = state.user?.role;
+      if (role == null) return;
+      context.go(switch (role) {
         UserRole.buyer => AppRoutes.home,
         UserRole.owner => AppRoutes.dashboard,
       });

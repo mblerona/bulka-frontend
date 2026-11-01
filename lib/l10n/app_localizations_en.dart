@@ -68,6 +68,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This account has two-factor authentication turned on, which the app doesn\'t support yet.';
 
   @override
+  String get loginErrorUnsupportedAccount =>
+      'The app is only for tourists and providers. This account can\'t be used here.';
+
+  @override
   String get registerErrorFullName => 'Enter your first and last name.';
 
   @override

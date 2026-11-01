@@ -62,12 +62,15 @@ class AuthUser {
   final String? providerProfileStatus;
   final bool providerQuestionnaireRequired;
 
-  /// Which side of the app this account uses. Any role containing
-  /// "provider" counts as a Property Owner; every other account (including
-  /// admins) gets the Tourist side.
-  UserRole get role {
-    final isProvider = roles.any((r) => r.toLowerCase().contains('provider'));
-    return isProvider ? UserRole.owner : UserRole.buyer;
+  /// Which side of the app this account uses, or null for accounts the
+  /// mobile app doesn't support (e.g. "Admin"). Provider accounts also have
+  /// the "Buyer" role (`["Buyer", "Provider"]`), so Provider is checked
+  /// first.
+  UserRole? get role {
+    final lower = roles.map((r) => r.toLowerCase());
+    if (lower.contains('provider')) return UserRole.owner;
+    if (lower.contains('buyer')) return UserRole.buyer;
+    return null;
   }
 
   String get fullName {

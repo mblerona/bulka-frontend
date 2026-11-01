@@ -68,6 +68,10 @@ class AppLocalizationsSq extends AppLocalizations {
       'Kjo llogari ka të aktivizuar vërtetimin me dy faktorë, i cili ende nuk mbështetet nga aplikacioni.';
 
   @override
+  String get loginErrorUnsupportedAccount =>
+      'Aplikacioni është vetëm për turistë dhe ofrues. Kjo llogari nuk mund të përdoret këtu.';
+
+  @override
   String get registerErrorFullName => 'Shkruani emrin dhe mbiemrin.';
 
   @override

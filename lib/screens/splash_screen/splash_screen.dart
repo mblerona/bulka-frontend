@@ -42,12 +42,14 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Signed in again: straight to the account's side of the app.
   /// Otherwise: Login.
   void _goNext(AuthState auth) {
-    final user = auth.user;
-    if (user == null) {
+    // No role means not a Tourist or Provider account (AuthBloc doesn't
+    // restore those anyway).
+    final role = auth.user?.role;
+    if (role == null) {
       context.push(AppRoutes.login);
       return;
     }
-    context.go(switch (user.role) {
+    context.go(switch (role) {
       UserRole.buyer => AppRoutes.home,
       UserRole.owner => AppRoutes.dashboard,
     });

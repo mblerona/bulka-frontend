@@ -19,6 +19,7 @@
   "loginErrorEmptyFields": "Внесете е-пошта и лозинка.",
   "loginErrorInvalidCredentials": "Погрешна е-пошта или лозинка.",
   "loginErrorTwoFactorUnsupported": "Оваа сметка има вклучена двофакторска автентикација, која сè уште не е поддржана во апликацијата.",
+  "loginErrorUnsupportedAccount": "Апликацијата е само за туристи и понудувачи. Оваа сметка не може да се користи тука.",
   "registerErrorFullName": "Внесете име и презиме.",
   "registerErrorEmail": "Внесете валидна е-пошта.",
   "registerErrorPhone": "Внесете телефонски број во меѓународен формат, на пр. +389 70 123 456.",

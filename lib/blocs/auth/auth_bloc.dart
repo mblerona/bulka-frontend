@@ -163,7 +163,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (!envelope.success || data is! Map<String, dynamic>) {
         throw ApiException.fromEnvelope(envelope);
       }
-      emit(state.succeeded(user: AuthUser.fromJson(data)));
+      final user = AuthUser.fromJson(data);
+      if (user.role == null) {
+        final refreshToken = await _tokenStorage.readRefreshToken();
+        if (refreshToken != null) await _revokeSession(refreshToken);
+        await _tokenStorage.clear();
+        throw _unsupportedAccount();
+      }
+      emit(state.succeeded(user: user));
     } on ApiException catch (e) {
       // Tokens that were rejected are useless; keep them after e.g. a
       // network error so the next app start can try again.
@@ -225,16 +232,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(state.started(AuthOperation.logout));
     final refreshToken = await _tokenStorage.readRefreshToken();
-    if (refreshToken != null) {
-      try {
-        await _dio.post<void>(
-          '/api/auth/logout',
-          data: {'refreshToken': refreshToken},
-        );
-      } on DioException {
-        // Ignored: the local session is cleared below either way.
-      }
-    }
+    if (refreshToken != null) await _revokeSession(refreshToken);
     await _tokenStorage.clear();
     emit(state.succeeded(signedOut: true));
   }
@@ -298,10 +296,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       throw const ApiException(kind: ApiErrorKind.unknown);
     }
 
+    final user = AuthUser.fromJson(userJson);
+    if (user.role == null) {
+      // Not a Tourist or Provider account: end the session the backend
+      // just opened, and never store its tokens.
+      await _revokeSession(refreshToken);
+      throw _unsupportedAccount();
+    }
+
     await _tokenStorage.save(
       accessToken: accessToken,
       refreshToken: refreshToken,
     );
-    return AuthUser.fromJson(userJson);
+    return user;
+  }
+
+  /// The app is only for Tourist and Provider accounts (not e.g. Admin).
+  static ApiException _unsupportedAccount() => ApiException(
+    kind: ApiErrorKind.badRequest,
+    customMessage: () => AppStrings.loginErrorUnsupportedAccount,
+  );
+
+  /// Best effort: asks the backend to end the session. Failures are ignored.
+  Future<void> _revokeSession(String refreshToken) async {
+    try {
+      await _dio.post<void>(
+        '/api/auth/logout',
+        data: {'refreshToken': refreshToken},
+      );
+    } on DioException {
+      // Ignored: the session isn't stored locally either way.
+    }
   }
 }

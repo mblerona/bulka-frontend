@@ -36,6 +36,8 @@ class AppStrings {
       _s.loginErrorInvalidCredentials;
   static String get loginErrorTwoFactorUnsupported =>
       _s.loginErrorTwoFactorUnsupported;
+  static String get loginErrorUnsupportedAccount =>
+      _s.loginErrorUnsupportedAccount;
   static String get registerErrorFullName => _s.registerErrorFullName;
   static String get registerErrorEmail => _s.registerErrorEmail;
   static String get registerErrorPhone => _s.registerErrorPhone;

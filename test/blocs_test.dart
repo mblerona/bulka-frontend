@@ -316,6 +316,69 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
+      'admin accounts are refused and their tokens are not stored',
+      // The handlers await the (fake) HTTP request.
+      wait: const Duration(milliseconds: 50),
+      build: () => authWith({
+        '/api/auth/login': (
+          200,
+          {
+            'success': true,
+            'data': {
+              'accessToken': 'access',
+              'refreshToken': 'refresh',
+              'user': {
+                'id': 'a1',
+                'email': 'admin@example.com',
+                'roles': ['Admin'],
+              },
+            },
+          },
+        ),
+        '/api/auth/logout': (200, {'success': true}),
+      }),
+      act: (bloc) => bloc.add(
+        const AuthLoginRequested(email: 'admin@example.com', password: 'pw'),
+      ),
+      verify: (bloc) {
+        expect(bloc.state.status, AuthOperationStatus.failed);
+        expect(bloc.state.isLoggedIn, isFalse);
+        expect(tokens.access, isNull);
+        expect(tokens.refresh, isNull);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'a saved admin session is not restored',
+      // The handlers await the (fake) HTTP request.
+      wait: const Duration(milliseconds: 50),
+      build: () => authWith({
+        '/api/users/me': (
+          200,
+          {
+            'success': true,
+            'data': {
+              'id': 'a1',
+              'email': 'admin@example.com',
+              'roles': ['Admin'],
+            },
+          },
+        ),
+        '/api/auth/logout': (200, {'success': true}),
+      }),
+      setUp: () {
+        tokens.access = 'access';
+        tokens.refresh = 'refresh';
+      },
+      act: (bloc) => bloc.add(const AuthSessionRestoreRequested()),
+      verify: (bloc) {
+        expect(bloc.state.status, AuthOperationStatus.failed);
+        expect(bloc.state.isLoggedIn, isFalse);
+        expect(tokens.refresh, isNull);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
       'wrong credentials fail with an unauthorized error',
       // The handlers await the (fake) HTTP request.
       wait: const Duration(milliseconds: 50),

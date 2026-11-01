@@ -19,6 +19,7 @@
   "loginErrorEmptyFields": "Shkruani email-in dhe fjalëkalimin.",
   "loginErrorInvalidCredentials": "Email-i ose fjalëkalimi është i pasaktë.",
   "loginErrorTwoFactorUnsupported": "Kjo llogari ka të aktivizuar vërtetimin me dy faktorë, i cili ende nuk mbështetet nga aplikacioni.",
+  "loginErrorUnsupportedAccount": "Aplikacioni është vetëm për turistë dhe ofrues. Kjo llogari nuk mund të përdoret këtu.",
   "registerErrorFullName": "Shkruani emrin dhe mbiemrin.",
   "registerErrorEmail": "Shkruani një email të vlefshëm.",
   "registerErrorPhone": "Shkruani numrin e telefonit në formatin ndërkombëtar, p.sh. +389 70 123 456.",
