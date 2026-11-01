@@ -2,8 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/network/api_client.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
-import 'package:bulka_frontend/core/network/api_response.dart';
-import 'package:bulka_frontend/core/network/auth_interceptor.dart';
+import 'package:bulka_frontend/core/network/public_api.dart';
 import 'package:bulka_frontend/models/amenity.dart';
 
 part 'amenities_event.dart';
@@ -42,28 +41,7 @@ class AmenitiesBloc extends Bloc<AmenitiesEvent, AmenitiesState> {
   }
 
   Future<List<Amenity>> _fetch() async {
-    final Response<Object?> response;
-    try {
-      // Public endpoint: no token needed, and a 401 shouldn't trigger a
-      // refresh.
-      response = await _dio.get<Object?>(
-        '/api/amenities',
-        options: Options(extra: {skipAuth: true}),
-      );
-    } on DioException catch (e) {
-      throw ApiException.fromDio(e);
-    }
-    final json = response.data;
-    if (json is! Map<String, dynamic>) {
-      throw const ApiException(kind: ApiErrorKind.unknown);
-    }
-    final envelope = ApiResponse<Object?>.fromJson(json, (data) => data);
-    if (!envelope.success) throw ApiException.fromEnvelope(envelope);
-    final data = envelope.data;
-    if (data is! List) throw const ApiException(kind: ApiErrorKind.unknown);
-    return [
-      for (final item in data)
-        if (item is Map<String, dynamic>) Amenity.fromJson(item),
-    ];
+    final json = await getPublicList(_dio, '/api/amenities');
+    return [for (final item in json) Amenity.fromJson(item)];
   }
 }

@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/blocs/amenities/amenities_bloc.dart';
+import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
-import 'package:bulka_frontend/blocs/search/search_bloc.dart';
-import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
-import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
+import 'package:bulka_frontend/blocs/regions/regions_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
-import 'package:bulka_frontend/models/listing_category.dart';
-import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/amenity.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/widgets/app_checkbox.dart';
 import 'package:bulka_frontend/widgets/labeled_text_field.dart';
+import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 
 /// The Figma "21 – Buyer · Search & Filters (Overlay)" frame's Filter
@@ -24,6 +22,10 @@ import 'package:bulka_frontend/widgets/primary_button.dart';
 /// [ListingSearchFilter] for the caller to commit). Edits a local *copy* of
 /// [initialFilter] so a dismissed sheet never mutates the caller's already
 /// -applied filter.
+///
+/// Locations, categories and amenities are the backend's (`RegionsBloc`,
+/// `CategoriesBloc`, `AmenitiesBloc`); the search itself runs on the
+/// backend once the filter is applied.
 class SearchFiltersSheet extends StatefulWidget {
   const SearchFiltersSheet({super.key, required this.initialFilter});
 
@@ -48,11 +50,12 @@ const List<double?> _ratingOptions = [null, 3.0, 4.0, 4.5];
 /// clears it back to null instead.
 const List<int> _guestCountOptions = [1, 2, 3, 4, 5];
 
-class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
-  /// The sheet works on a draft filter, so it doesn't need to rebuild when
-  /// listings change; it reads them as needed.
-  ListingsState get _listings => context.read<ListingsBloc>().state;
+const ({double min, double max}) _priceBounds = (
+  min: ListingSearchFilter.priceSliderMin,
+  max: ListingSearchFilter.priceSliderMax,
+);
 
+class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
   late final ListingSearchFilter _filter;
   late final TextEditingController _keywordController;
   late RangeValues _priceRange;
@@ -65,12 +68,11 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
       ..addListener(
         () => setState(() => _filter.keyword = _keywordController.text),
       );
-    final bounds = _listings.activePriceBounds;
     _priceRange = RangeValues(
-      _filter.minPrice ?? bounds.min,
-      _filter.maxPrice ?? bounds.max,
+      _filter.minPrice ?? _priceBounds.min,
+      _filter.maxPrice ?? _priceBounds.max,
     );
-    _loadAmenities(context);
+    _loadFilterOptions(context);
   }
 
   @override
@@ -79,25 +81,18 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
     super.dispose();
   }
 
-  int get _resultCount => searchListings(
-    filter: _filter,
-    listings: _listings,
-    reviews: context.read<ListingReviewsBloc>().state,
-  ).length;
-
   void _handleClose() => Navigator.of(context).pop();
 
   void _handleClear() {
-    final bounds = _listings.activePriceBounds;
     setState(() {
       _filter.reset();
       _keywordController.text = '';
-      _priceRange = RangeValues(bounds.min, bounds.max);
+      _priceRange = RangeValues(_priceBounds.min, _priceBounds.max);
     });
   }
 
   void _handleApply() {
-    final bounds = _listings.activePriceBounds;
+    const bounds = _priceBounds;
     final applied = _filter.copy()
       ..minPrice = _filter.minPrice != null && _filter.minPrice! <= bounds.min
           ? null
@@ -117,7 +112,8 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
   }
 
   Future<void> _pickLocation() async {
-    final locations = _listings.activeLocations;
+    _loadFilterOptions(context);
+    final regions = context.read<RegionsBloc>().state.regions;
     final selected = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.white,
@@ -134,10 +130,10 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
               title: Text(AppStrings.filtersAllLocationsOption),
               onTap: () => Navigator.pop(sheetContext, _allLocationsSentinel),
             ),
-            for (final location in locations)
+            for (final region in regions)
               ListTile(
-                title: Text(location),
-                onTap: () => Navigator.pop(sheetContext, location),
+                title: Text(region.name),
+                onTap: () => Navigator.pop(sheetContext, region.id),
               ),
           ],
         ),
@@ -145,7 +141,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
     );
     if (selected == null) return;
     setState(() {
-      _filter.location = selected == _allLocationsSentinel ? null : selected;
+      _filter.regionId = selected == _allLocationsSentinel ? null : selected;
     });
   }
 
@@ -177,25 +173,26 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
     });
   }
 
-  void _toggleCategory(ListingCategory category) {
+  /// One category at a time; tapping the selected one clears it.
+  void _toggleCategory(String categoryId) {
     setState(() {
-      if (!_filter.categories.remove(category)) {
-        _filter.categories.add(category);
-      }
+      _filter.categoryId = _filter.categoryId == categoryId ? null : categoryId;
     });
   }
 
-  void _toggleAmenity(String code) {
+  void _toggleAmenity(String amenityId) {
     setState(() {
-      if (!_filter.amenities.remove(code)) {
-        _filter.amenities.add(code);
+      if (!_filter.amenityIds.remove(amenityId)) {
+        _filter.amenityIds.add(amenityId);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final bounds = _listings.activePriceBounds;
+    final regionName = context.select(
+      (RegionsBloc bloc) => bloc.state.byId(_filter.regionId)?.name,
+    );
     return SafeArea(
       top: false,
       child: Padding(
@@ -229,16 +226,14 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
                     ),
                     _SelectBox(
                       label: AppStrings.filtersLocationLabel,
-                      value:
-                          _filter.location ??
-                          AppStrings.filtersAllLocationsOption,
+                      value: regionName ?? AppStrings.filtersAllLocationsOption,
                       onTap: _pickLocation,
                     ),
                     const SizedBox(
                       height: AppDimensions.filtersSheetContentGap,
                     ),
                     _PriceField(
-                      bounds: bounds,
+                      bounds: _priceBounds,
                       range: _priceRange,
                       onChanged: _handlePriceChanged,
                     ),
@@ -276,14 +271,14 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
                       height: AppDimensions.filtersSheetContentGap,
                     ),
                     _CategoryField(
-                      selected: _filter.categories,
+                      selectedId: _filter.categoryId,
                       onToggle: _toggleCategory,
                     ),
                     const SizedBox(
                       height: AppDimensions.filtersSheetContentGap,
                     ),
                     _AmenityField(
-                      selected: _filter.amenities,
+                      selected: _filter.amenityIds,
                       onToggle: _toggleAmenity,
                     ),
                   ],
@@ -291,11 +286,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
               ),
             ),
             const SizedBox(height: AppDimensions.filtersSheetContentGap),
-            _ActionsRow(
-              resultCount: _resultCount,
-              onClear: _handleClear,
-              onApply: _handleApply,
-            ),
+            _ActionsRow(onClear: _handleClear, onApply: _handleApply),
           ],
         ),
       ),
@@ -567,32 +558,45 @@ class _GuestCountField extends StatelessWidget {
   }
 }
 
+/// The backend's top-level categories (same as Tourist Home's row).
 class _CategoryField extends StatelessWidget {
-  const _CategoryField({required this.selected, required this.onToggle});
+  const _CategoryField({required this.selectedId, required this.onToggle});
 
-  final Set<ListingCategory> selected;
-  final ValueChanged<ListingCategory> onToggle;
+  final String? selectedId;
+  final ValueChanged<String> onToggle;
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<CategoriesBloc>().state;
+    final categories = state.topLevel;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         _fieldLabel(AppStrings.wizardCategoryLabel),
         const SizedBox(height: AppDimensions.filtersFieldHeadingGap),
-        Wrap(
-          spacing: AppDimensions.wizardChipGap,
-          runSpacing: AppDimensions.wizardChipGap,
-          children: [
-            for (final category in createOfferCategories)
-              _Pill(
-                label: category.shortLabel,
-                isSelected: selected.contains(category),
-                onTap: () => onToggle(category),
-              ),
-          ],
-        ),
+        if (categories.isEmpty)
+          state.status == CategoriesStatus.failed
+              ? LoadFailedMessage(
+                  message: AppStrings.homeCategoriesLoadFailed,
+                  onRetry: () => _loadFilterOptions(context),
+                )
+              : const SectionLoadingIndicator(
+                  size: AppDimensions.wizardAmenityEmojiFontSize,
+                )
+        else
+          Wrap(
+            spacing: AppDimensions.wizardChipGap,
+            runSpacing: AppDimensions.wizardChipGap,
+            children: [
+              for (final category in categories)
+                _Pill(
+                  label: category.name,
+                  isSelected: selectedId == category.id,
+                  onTap: () => onToggle(category.id),
+                ),
+            ],
+          ),
       ],
     );
   }
@@ -643,10 +647,18 @@ class _Pill extends StatelessWidget {
   }
 }
 
-/// Loads the amenities in the current language unless they're already
-/// loaded (or loading) in it.
-void _loadAmenities(BuildContext context) {
+/// Loads the sheet's regions, categories and amenities in the current
+/// language unless they're already loaded (or loading) in it.
+void _loadFilterOptions(BuildContext context) {
   final language = context.read<LocaleBloc>().state.locale.languageCode;
+  final regions = context.read<RegionsBloc>();
+  if (regions.state.needsLoadFor(language)) {
+    regions.add(RegionsRequested(language));
+  }
+  final categories = context.read<CategoriesBloc>();
+  if (categories.state.needsLoadFor(language)) {
+    categories.add(CategoriesRequested(language));
+  }
   final amenities = context.read<AmenitiesBloc>();
   if (amenities.state.needsLoadFor(language)) {
     amenities.add(AmenitiesRequested(language));
@@ -654,7 +666,7 @@ void _loadAmenities(BuildContext context) {
 }
 
 /// The amenities from `GET /api/amenities` (see [AmenitiesBloc]); the
-/// filter stores the chosen ones by `Amenity.code`.
+/// filter stores the chosen ones by `Amenity.id`.
 class _AmenityField extends StatelessWidget {
   const _AmenityField({required this.selected, required this.onToggle});
 
@@ -674,59 +686,22 @@ class _AmenityField extends StatelessWidget {
         const SizedBox(height: AppDimensions.filtersAmenitySectionGap),
         if (amenities.isEmpty)
           state.status == AmenitiesStatus.failed
-              ? _AmenitiesLoadFailed(onRetry: () => _loadAmenities(context))
-              : const Center(
-                  child: SizedBox.square(
-                    dimension: AppDimensions.wizardAmenityEmojiFontSize,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.agroGreen600,
-                    ),
-                  ),
+              ? LoadFailedMessage(
+                  message: AppStrings.filtersAmenitiesLoadFailed,
+                  onRetry: () => _loadFilterOptions(context),
+                )
+              : const SectionLoadingIndicator(
+                  size: AppDimensions.wizardAmenityEmojiFontSize,
                 ),
         for (var i = 0; i < amenities.length; i++) ...[
           _AmenityRow(
             amenity: amenities[i],
-            isSelected: selected.contains(amenities[i].code),
-            onChanged: (_) => onToggle(amenities[i].code),
+            isSelected: selected.contains(amenities[i].id),
+            onChanged: (_) => onToggle(amenities[i].id),
           ),
           if (i != amenities.length - 1)
             const SizedBox(height: AppDimensions.filtersAmenitySectionGap),
         ],
-      ],
-    );
-  }
-}
-
-class _AmenitiesLoadFailed extends StatelessWidget {
-  const _AmenitiesLoadFailed({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            AppStrings.filtersAmenitiesLoadFailed,
-            style: const TextStyle(
-              fontSize: AppDimensions.dsInputFontSize,
-              color: AppColors.profileSecondaryText,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: onRetry,
-          child: Text(
-            AppStrings.retryButton,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: AppDimensions.dsInputFontSize,
-              color: AppColors.agroGreen600,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -778,13 +753,8 @@ class _AmenityRow extends StatelessWidget {
 }
 
 class _ActionsRow extends StatelessWidget {
-  const _ActionsRow({
-    required this.resultCount,
-    required this.onClear,
-    required this.onApply,
-  });
+  const _ActionsRow({required this.onClear, required this.onApply});
 
-  final int resultCount;
   final VoidCallback onClear;
   final VoidCallback onApply;
 
@@ -806,7 +776,7 @@ class _ActionsRow extends StatelessWidget {
         const SizedBox(width: AppDimensions.filtersActionsGap),
         Expanded(
           child: PrimaryButton(
-            label: '${AppStrings.filtersShowResultsButton} ($resultCount)',
+            label: AppStrings.filtersShowResultsButton,
             backgroundColor: AppColors.agroGreen600,
             onPressed: onApply,
           ),

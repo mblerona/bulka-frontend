@@ -21,37 +21,11 @@ final class ListingsState {
       ? listings
       : listings.where((l) => l.status == status).toList();
 
-  /// What Tourists can browse and book.
+  /// The Provider's published (live) offers.
   List<ProviderListing> get active => filtered(status: ListingStatus.active);
 
   int get activeCount => active.length;
 
   int get pendingReviewCount =>
       listings.where((l) => l.status == ListingStatus.pendingReview).length;
-
-  /// Sorted, distinct locations of active listings (search filter choices).
-  List<String> get activeLocations {
-    final set = <String>{
-      for (final l in active)
-        if (l.location.trim().isNotEmpty) l.location,
-    };
-    return set.toList()..sort();
-  }
-
-  /// The lowest and highest active price, for the search price slider.
-  ({double min, double max}) get activePriceBounds {
-    final prices = [
-      for (final l in active)
-        if (l.price > 0) l.price,
-    ];
-    if (prices.isEmpty) return (min: 0, max: 10000);
-    var min = prices.first;
-    var max = prices.first;
-    for (final p in prices) {
-      if (p < min) min = p;
-      if (p > max) max = p;
-    }
-    if (min == max) max = min + 1;
-    return (min: min, max: max);
-  }
 }

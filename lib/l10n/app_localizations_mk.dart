@@ -1166,6 +1166,33 @@ class AppLocalizationsMk extends AppLocalizations {
   String get detailsReserveButton => 'Резервирај';
 
   @override
+  String get listingsLoadFailed => 'Понудите не можат да се вчитаат.';
+
+  @override
+  String get listingDetailsLoadFailed => 'Понудата не може да се вчита.';
+
+  @override
+  String get listingPricesPerItem => 'Цени по избрана ставка';
+
+  @override
+  String get listingNoRatingsYet => 'Сè уште нема оцени';
+
+  @override
+  String get listingReviewsSuffix => 'рецензии';
+
+  @override
+  String get listingPerPersonSuffix => 'по лице';
+
+  @override
+  String get detailsItemsHeading => 'Ставки и цени';
+
+  @override
+  String get resultsEmpty => 'Нема понуди што одговараат на филтрите.';
+
+  @override
+  String get resultsLoadMore => 'Прикажи повеќе';
+
+  @override
   String get reservationFlowTitle => 'Резервација';
 
   @override

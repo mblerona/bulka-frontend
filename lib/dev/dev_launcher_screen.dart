@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
+import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
+import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
@@ -16,6 +19,7 @@ import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/reservation.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
+import 'package:bulka_frontend/widgets/load_failed_message.dart';
 
 /// Debug-only screen picker. Lists every real screen and opens it through
 /// its real route (so tab screens appear inside their tab shell, as in the
@@ -105,16 +109,13 @@ class DevLauncherScreen extends StatelessWidget {
         (_) => const _SearchFiltersPreviewScreen(),
       ),
       DevScreenEntry.route('Search Results · Tourist', (_) => AppRoutes.search),
-      DevScreenEntry.route(
-        'Listing Details (first active listing) · Tourist',
-        (context) =>
-            '${AppRoutes.home}/listings/'
-            '${context.read<ListingsBloc>().state.active.first.id}',
+      DevScreenEntry.widget(
+        'Listing Details (newest listing) · Tourist',
+        (_) => const _OpenPublicListingScreen(bookable: false),
       ),
-      DevScreenEntry.route(
-        'Booking Request (first accommodation listing) · Tourist',
-        (context) =>
-            '${AppRoutes.home}/listings/${_firstAccommodation(context).id}/book',
+      DevScreenEntry.widget(
+        'Booking Request (newest bookable listing) · Tourist',
+        (_) => const _OpenPublicListingScreen(bookable: true),
       ),
       DevScreenEntry.route(
         'Reservation Confirmation (mock booking) · Tourist',
@@ -313,5 +314,116 @@ class _SearchFiltersPreviewScreenState
   @override
   Widget build(BuildContext context) {
     return const Scaffold(backgroundColor: AppColors.beigeBackground);
+  }
+}
+
+/// Loads the newest backend listings, then opens the first one's details
+/// (or, with [bookable], the booking form of the first one that has a
+/// nightly item). Listings are opened by slug, which isn't known until
+/// they're loaded.
+class _OpenPublicListingScreen extends StatefulWidget {
+  const _OpenPublicListingScreen({required this.bookable});
+
+  final bool bookable;
+
+  @override
+  State<_OpenPublicListingScreen> createState() =>
+      _OpenPublicListingScreenState();
+}
+
+class _OpenPublicListingScreenState extends State<_OpenPublicListingScreen> {
+  bool _opened = false;
+
+  /// Index into the recommended listings of the one being checked for a
+  /// bookable item.
+  int _candidate = 0;
+
+  String get _language => context.read<LocaleBloc>().state.locale.languageCode;
+
+  @override
+  void initState() {
+    super.initState();
+    // After the first frame: opening a listing pops this screen.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _step(context.read<PublicListingsBloc>().state),
+    );
+  }
+
+  void _loadRecommended() {
+    context.read<PublicListingsBloc>().add(
+      RecommendedListingsRequested(_language),
+    );
+  }
+
+  /// Moves on as far as [state] allows.
+  void _step(PublicListingsState state) {
+    if (_opened) return;
+    if (state.needsRecommendedFor(_language) &&
+        state.recommendedStatus != ListingsLoadStatus.failed) {
+      _loadRecommended();
+      return;
+    }
+    if (state.recommendedStatus != ListingsLoadStatus.loaded) return;
+    final listings = state.recommended;
+    if (listings.isEmpty) return;
+    if (!widget.bookable) {
+      _open('${AppRoutes.home}/listings/${listings.first.slug}');
+      return;
+    }
+    while (_candidate < listings.length) {
+      final slug = listings[_candidate].slug;
+      final status = state.detailsStatusFor(slug);
+      if (status == ListingsLoadStatus.loading) return;
+      final details = state.detailsFor(slug);
+      if (details == null && status == ListingsLoadStatus.initial) {
+        context.read<PublicListingsBloc>().add(
+          ListingDetailsRequested(slug, _language),
+        );
+        return;
+      }
+      if (details?.bookableItem != null) {
+        _open('${AppRoutes.home}/listings/$slug/book');
+        return;
+      }
+      _candidate++;
+    }
+  }
+
+  void _open(String location) {
+    _opened = true;
+    final router = GoRouter.of(context);
+    Navigator.of(context).pop();
+    router.push(location);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<PublicListingsBloc>().state;
+    final failed = state.recommendedStatus == ListingsLoadStatus.failed;
+    final none =
+        state.recommendedStatus == ListingsLoadStatus.loaded &&
+        (state.recommended.isEmpty ||
+            (widget.bookable && _candidate >= state.recommended.length));
+    return BlocListener<PublicListingsBloc, PublicListingsState>(
+      listener: (context, state) => _step(state),
+      child: Scaffold(
+        backgroundColor: AppColors.beigeBackground,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(
+              AppDimensions.dsBodyHorizontalPadding,
+            ),
+            child: failed
+                ? LoadFailedMessage(
+                    message: AppStrings.listingsLoadFailed,
+                    onRetry: _loadRecommended,
+                  )
+                : none
+                ? Text(AppStrings.resultsEmpty)
+                : const SectionLoadingIndicator(),
+          ),
+        ),
+      ),
+    );
   }
 }

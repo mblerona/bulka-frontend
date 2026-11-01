@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:bulka_frontend/core/utils/booked_listing.dart';
 import 'package:bulka_frontend/dev/dev_launcher_screen.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
@@ -303,37 +303,31 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
 }
 
 /// Listing details + booking, used under both the Home and Search tabs.
+/// Listings come from the backend, by slug.
 List<RouteBase> _listingRoutes() => [
   GoRoute(
-    path: 'listings/:listingId',
-    builder: (context, state) => _withListing(
-      context,
-      state,
-      (listing) => ListingDetailsScreen(listing: listing),
+    path: 'listings/:listingSlug',
+    builder: (context, state) => PublicListingLoader(
+      slug: state.pathParameters['listingSlug']!,
+      builder: (context, listing) => ListingDetailsScreen(listing: listing),
     ),
     routes: [
       GoRoute(
         path: 'book',
-        builder: (context, state) => _withListing(
-          context,
-          state,
-          (listing) => BookingRequestScreen(listing: listing),
+        builder: (context, state) => PublicListingLoader(
+          slug: state.pathParameters['listingSlug']!,
+          builder: (context, listing) {
+            // Booking (still local) only books nights for now.
+            final bookable = listing.toBookingListing();
+            return bookable == null
+                ? const RouteNotFoundScreen()
+                : BookingRequestScreen(listing: bookable);
+          },
         ),
       ),
     ],
   ),
 ];
-
-Widget _withListing(
-  BuildContext context,
-  GoRouterState state,
-  Widget Function(ProviderListing listing) build,
-) {
-  final listing = context.read<ListingsBloc>().state.byId(
-    state.pathParameters['listingId']!,
-  );
-  return listing == null ? const RouteNotFoundScreen() : build(listing);
-}
 
 Widget _withReservationAndListing(
   BuildContext context,
@@ -346,7 +340,7 @@ Widget _withReservationAndListing(
   final listingId = reservation?.listingId;
   final listing = listingId == null
       ? null
-      : context.read<ListingsBloc>().state.byId(listingId);
+      : findBookedListing(context, listingId);
   if (reservation == null || listing == null) {
     return const RouteNotFoundScreen();
   }

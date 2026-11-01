@@ -13,8 +13,8 @@ import 'package:bulka_frontend/blocs/favorites/favorites_bloc.dart';
 import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
-import 'package:bulka_frontend/blocs/search/search_bloc.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/core/network/token_storage.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
@@ -258,43 +258,278 @@ void main() {
     );
   });
 
-  test('searchListings filters active listings by category and price', () {
-    final listings = ListingsState([
-      _listing(id: 'cheap', price: 500),
-      _listing(id: 'pricey', price: 5000),
-      _listing(id: 'food', category: ListingCategory.gastronomy),
-      _listing(id: 'archived', status: ListingStatus.archived),
-    ]);
-    final filter = ListingSearchFilter()
-      ..categories = {ListingCategory.accommodation}
-      ..maxPrice = 1000;
-    final matches = searchListings(
-      filter: filter,
-      listings: listings,
-      reviews: ListingReviewsState(const []),
-    );
-    expect(matches.map((l) => l.id), ['cheap']);
+  group('listingSearchQuery', () {
+    test('an empty filter sends only paging (and the currency)', () {
+      expect(listingSearchQuery(ListingSearchFilter(), page: 2, pageSize: 20), {
+        'currencyCode': 'MKD',
+        'sort': 'newest',
+        'page': 2,
+        'pageSize': 20,
+      });
+    });
+
+    test('sends each set filter under the backend\'s name', () {
+      final filter = ListingSearchFilter()
+        ..keyword = '  rancho '
+        ..regionId = 'r1'
+        ..categoryId = 'c1'
+        ..amenityIds = {'a7', 'a1'}
+        ..maxPrice = 5000
+        ..minRating = 4.5
+        ..minimumGuests = 3
+        ..startDate = DateTime(2026, 11, 10)
+        ..endDate = DateTime(2026, 11, 12);
+      final query = listingSearchQuery(filter, page: 1, pageSize: 20);
+      expect(query['q'], 'rancho');
+      expect(query['regionId'], 'r1');
+      expect(query['categoryId'], 'c1');
+      expect(query['amenityIds'], 'a1,a7');
+      // Both ends are sent once either is set.
+      expect(query['minPrice'], 0);
+      expect(query['maxPrice'], 5000);
+      // The backend takes whole stars.
+      expect(query['minRating'], 4);
+      expect(query['guests'], 3);
+      expect(
+        query['availabilityFromUtc'],
+        DateTime(2026, 11, 10).toUtc().toIso8601String(),
+      );
+      expect(
+        query['availabilityToUtc'],
+        DateTime(2026, 11, 12, 23, 59, 59, 999).toUtc().toIso8601String(),
+      );
+    });
   });
 
-  test('searchListings matches amenities by backend code', () {
-    final listings = ListingsState([
-      _listing(
-        id: 'wifi-parking',
-        amenities: {ListingAmenity.wifi, ListingAmenity.parking},
-      ),
-      _listing(id: 'wifi', amenities: {ListingAmenity.wifi}),
-      _listing(id: 'none'),
-    ]);
-    List<String> idsFor(Set<String> codes) => searchListings(
-      filter: ListingSearchFilter()..amenities = codes,
-      listings: listings,
-      reviews: ListingReviewsState(const []),
-    ).map((l) => l.id).toList();
+  group('PublicListingsBloc', () {
+    Map<String, Object?> searchItem(
+      String id, {
+      double? rating,
+      String? cover,
+    }) => {
+      'id': id,
+      'slug': 'slug-$id',
+      'title': 'Listing $id',
+      'municipalityName': 'Струмица',
+      'settlementName': 'Габрово',
+      'coverImageUrl': cover,
+      'priceAmount': null,
+      'ratingSummary': {'averageRating': rating, 'reviewCount': 1},
+      'categories': [],
+      'amenities': [],
+    };
 
-    expect(idsFor({'wi-fi'}), ['wifi-parking', 'wifi']);
-    expect(idsFor({'wi-fi', 'parking'}), ['wifi-parking']);
-    // An amenity no app-side listing has yet matches nothing.
-    expect(idsFor({'guide'}), isEmpty);
+    Map<String, Object> page(
+      List<Map<String, Object?>> items, {
+      int page = 1,
+      int totalPages = 1,
+      int? total,
+    }) => {
+      'success': true,
+      'data': {
+        'items': items,
+        'page': page,
+        'pageSize': 20,
+        'totalCount': total ?? items.length,
+        'totalPages': totalPages,
+      },
+    };
+
+    late _FakeAdapter adapter;
+    PublicListingsBloc listingsWith(Map<String, (int, Object)> responses) {
+      adapter = _FakeAdapter(responses);
+      return PublicListingsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = adapter,
+      );
+    }
+
+    blocTest<PublicListingsBloc, PublicListingsState>(
+      'loads the recommended (newest) listings',
+      build: () => listingsWith({
+        '/api/listings': (
+          200,
+          page([searchItem('1', cover: '/media/a.jpg'), searchItem('2')]),
+        ),
+      }),
+      act: (bloc) => bloc.add(const RecommendedListingsRequested('mk')),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        final state = bloc.state;
+        expect(state.recommendedStatus, ListingsLoadStatus.loaded);
+        expect(state.recommended.map((l) => l.slug), ['slug-1', 'slug-2']);
+        final first = state.recommended.first;
+        expect(first.location, 'Габрово, Струмица');
+        // Uploaded images come as paths on the API server.
+        expect(first.coverImageUrl, endsWith('/media/a.jpg'));
+        expect(first.coverImageUrl, startsWith('http'));
+        expect(adapter.requests.single.queryParameters['pageSize'], 6);
+        expect(state.needsRecommendedFor('mk'), isFalse);
+        expect(state.needsRecommendedFor('en'), isTrue);
+      },
+    );
+
+    blocTest<PublicListingsBloc, PublicListingsState>(
+      'searches with the filter, then loads more pages',
+      build: () => listingsWith({
+        '/api/listings': (
+          200,
+          page([searchItem('1')], totalPages: 2, total: 2),
+        ),
+      }),
+      act: (bloc) async {
+        bloc.add(
+          ListingSearchRequested(
+            ListingSearchFilter()..categoryId = 'c1',
+            'mk',
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        // Page 2 has a new listing.
+        adapter.responses['/api/listings'] = (
+          200,
+          page([searchItem('2')], page: 2, totalPages: 2, total: 2),
+        );
+        bloc.add(const MoreSearchResultsRequested());
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        final state = bloc.state;
+        expect(state.resultsStatus, ListingsLoadStatus.loaded);
+        expect(state.results.map((l) => l.id), ['1', '2']);
+        expect(state.resultsTotal, 2);
+        expect(state.resultsHasMore, isFalse);
+        expect(adapter.requests.first.queryParameters['categoryId'], 'c1');
+        expect(adapter.requests.last.queryParameters['page'], 2);
+        expect(
+          state.needsResultsFor(
+            searchKey(ListingSearchFilter()..categoryId = 'c1', 'mk'),
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    blocTest<PublicListingsBloc, PublicListingsState>(
+      '"4.5+" also drops listings rated 4.0–4.4 (the backend takes 4)',
+      build: () => listingsWith({
+        '/api/listings': (
+          200,
+          page([searchItem('1', rating: 4.8), searchItem('2', rating: 4.2)]),
+        ),
+      }),
+      act: (bloc) => bloc.add(
+        ListingSearchRequested(ListingSearchFilter()..minRating = 4.5, 'mk'),
+      ),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.results.map((l) => l.id), ['1']);
+        expect(bloc.state.resultsTotal, 1);
+      },
+    );
+
+    blocTest<PublicListingsBloc, PublicListingsState>(
+      'a failed search ends in failed',
+      build: () => listingsWith({}),
+      act: (bloc) =>
+          bloc.add(ListingSearchRequested(ListingSearchFilter(), 'mk')),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) =>
+          expect(bloc.state.resultsStatus, ListingsLoadStatus.failed),
+    );
+
+    blocTest<PublicListingsBloc, PublicListingsState>(
+      'loads details with item prices; only nightly items are bookable',
+      build: () => listingsWith({
+        '/api/listings/stay': (
+          200,
+          {
+            'success': true,
+            'data': {
+              ...searchItem('9'),
+              'slug': 'stay',
+              'description': 'Опис',
+              'mode': 'Itemized',
+              'provider': {'businessName': 'Домаќин'},
+              'images': [
+                {'publicUrl': 'https://img/2.jpg', 'sortOrder': 2},
+                {
+                  'publicUrl': 'https://img/1.jpg',
+                  'sortOrder': 1,
+                  'isCover': true,
+                },
+              ],
+            },
+          },
+        ),
+        '/api/itemized-listings/stay': (
+          200,
+          {
+            'success': true,
+            'data': {
+              'items': [
+                {
+                  'id': 'tour',
+                  'kind': 'Experience',
+                  'title': 'Тура',
+                  'experience': {'priceAmount': 800, 'capacity': 4},
+                },
+                {
+                  'id': 'room',
+                  'kind': 'Accommodation',
+                  'title': 'Соба',
+                  'accommodation': {
+                    'nightlyPriceAmount': 1500,
+                    'priceBasis': 'PerPerson',
+                    'guestCapacity': 3,
+                  },
+                },
+              ],
+            },
+          },
+        ),
+      }),
+      act: (bloc) => bloc.add(const ListingDetailsRequested('stay', 'mk')),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        final listing = bloc.state.detailsFor('stay')!;
+        expect(bloc.state.detailsStatusFor('stay'), ListingsLoadStatus.loaded);
+        expect(listing.providerName, 'Домаќин');
+        expect(listing.imageUrls, ['https://img/1.jpg', 'https://img/2.jpg']);
+        expect(listing.items.map((i) => i.id), ['tour', 'room']);
+        expect(listing.lowestItemPrice, 800);
+        expect(listing.bookableItem?.id, 'room');
+        expect(listing.bookableItem?.perPerson, isTrue);
+
+        final booking = listing.toBookingListing()!;
+        expect(booking.id, '9');
+        expect(booking.price, 1500);
+        expect(booking.guestCapacity, 3);
+        // Reservations can find it by id.
+        expect(bloc.state.byId('9')?.slug, 'stay');
+      },
+    );
+
+    blocTest<PublicListingsBloc, PublicListingsState>(
+      'an unknown slug ends in notFound',
+      build: () => listingsWith({
+        '/api/listings/nope': (
+          404,
+          {
+            'success': false,
+            'errors': [
+              {'code': 'PUBLIC_LISTING_NOT_FOUND'},
+            ],
+          },
+        ),
+      }),
+      act: (bloc) => bloc.add(const ListingDetailsRequested('nope', 'mk')),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) => expect(
+        bloc.state.detailsStatusFor('nope'),
+        ListingsLoadStatus.notFound,
+      ),
+    );
   });
 
   group('AmenitiesBloc', () {
@@ -737,12 +972,16 @@ class _FakeAdapter implements HttpClientAdapter {
 
   final Map<String, (int, Object)> responses;
 
+  /// Every request made, in order.
+  final List<RequestOptions> requests = [];
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    requests.add(options);
     final (status, body) = responses[options.path] ?? (500, const {});
     return ResponseBody.fromString(
       jsonEncode(body),

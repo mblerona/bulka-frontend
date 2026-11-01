@@ -66,6 +66,6 @@ void main() {
     final applyButton = find.textContaining('Прикажи');
     await tester.tap(applyButton.last);
     await tester.pumpAndSettle();
-    expect(applied?.amenities, {'wi-fi'});
+    expect(applied?.amenityIds, {'a7'});
   });
 }

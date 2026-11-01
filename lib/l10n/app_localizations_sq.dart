@@ -1166,6 +1166,33 @@ class AppLocalizationsSq extends AppLocalizations {
   String get detailsReserveButton => 'Rezervo';
 
   @override
+  String get listingsLoadFailed => 'Ofertat nuk mund të ngarkohen.';
+
+  @override
+  String get listingDetailsLoadFailed => 'Oferta nuk mund të ngarkohet.';
+
+  @override
+  String get listingPricesPerItem => 'Çmime sipas artikullit të zgjedhur';
+
+  @override
+  String get listingNoRatingsYet => 'Ende pa vlerësime';
+
+  @override
+  String get listingReviewsSuffix => 'vlerësime';
+
+  @override
+  String get listingPerPersonSuffix => 'për person';
+
+  @override
+  String get detailsItemsHeading => 'Opsionet dhe çmimet';
+
+  @override
+  String get resultsEmpty => 'Nuk ka oferta që përputhen me filtrat.';
+
+  @override
+  String get resultsLoadMore => 'Shfaq më shumë';
+
+  @override
   String get reservationFlowTitle => 'Rezervimi';
 
   @override

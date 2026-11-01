@@ -445,6 +445,15 @@ class AppStrings {
   static String get detailsAmenitiesHeading => _s.detailsAmenitiesHeading;
   static String get detailsLocationHeading => _s.detailsLocationHeading;
   static String get detailsReserveButton => _s.detailsReserveButton;
+  static String get listingsLoadFailed => _s.listingsLoadFailed;
+  static String get listingDetailsLoadFailed => _s.listingDetailsLoadFailed;
+  static String get listingPricesPerItem => _s.listingPricesPerItem;
+  static String get listingNoRatingsYet => _s.listingNoRatingsYet;
+  static String get listingReviewsSuffix => _s.listingReviewsSuffix;
+  static String get listingPerPersonSuffix => _s.listingPerPersonSuffix;
+  static String get detailsItemsHeading => _s.detailsItemsHeading;
+  static String get resultsEmpty => _s.resultsEmpty;
+  static String get resultsLoadMore => _s.resultsLoadMore;
   static String get reservationFlowTitle => _s.reservationFlowTitle;
   static String get bookingDatesUnavailableError =>
       _s.bookingDatesUnavailableError;

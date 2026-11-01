@@ -53,6 +53,115 @@ class FakeBackendAdapter implements HttpClientAdapter {
         {'id': 'a8', 'code': 'toilet', 'name': 'Тоалет'},
       ],
     },
+    '/api/regions': {
+      'success': true,
+      'data': [
+        {'id': 'r1', 'name': 'Пелагониски Регион'},
+        {'id': 'r2', 'name': 'Југоисточен Регион'},
+      ],
+    },
+    '/api/listings': {
+      'success': true,
+      'data': {
+        'items': [fakeFarmStay, fakeWorkshop],
+        'page': 1,
+        'pageSize': 20,
+        'totalCount': 2,
+        'totalPages': 1,
+      },
+    },
+    '/api/listings/test-farm-stay': {
+      'success': true,
+      'data': {
+        ...fakeFarmStay,
+        'description': 'Рустикално сместување со домашна храна.',
+        'mode': 'Itemized',
+        'provider': {'businessName': 'Ранчо Тест'},
+        'images': [],
+      },
+    },
+    '/api/itemized-listings/test-farm-stay': {
+      'success': true,
+      'data': {
+        'items': [
+          {
+            'id': 'i1',
+            'kind': 'Accommodation',
+            'title': 'Куќа за 6 гости',
+            'accommodation': {
+              'nightlyPriceAmount': 3000,
+              'priceBasis': 'PerUnit',
+              'guestCapacity': 6,
+            },
+          },
+          {
+            'id': 'i2',
+            'kind': 'Experience',
+            'title': 'Пешачење до водопадите',
+            'experience': {
+              'priceAmount': 1200,
+              'pricingModel': 'FixedPrice',
+              'capacity': 6,
+            },
+          },
+        ],
+      },
+    },
+    '/api/listings/test-cheese-workshop': {
+      'success': true,
+      'data': {
+        ...fakeWorkshop,
+        'description': 'Научете како се прави сирење.',
+        'mode': 'Itemized',
+        'images': [],
+      },
+    },
+    '/api/itemized-listings/test-cheese-workshop': {
+      'success': true,
+      'data': {
+        'items': [
+          {
+            'id': 'i3',
+            'kind': 'Experience',
+            'title': 'Работилница',
+            'experience': {'priceAmount': 1300, 'capacity': 10},
+          },
+        ],
+      },
+    },
+  };
+
+  /// A listing with a bookable (nightly) item.
+  static const Map<String, Object?> fakeFarmStay = {
+    'id': 'l1',
+    'slug': 'test-farm-stay',
+    'title': 'Ранчо на Ката',
+    'shortDescription': 'Рустикално сместување',
+    'municipalityName': 'Чашка',
+    'regionName': 'Вардарски Регион',
+    'coverImageUrl': null,
+    'priceAmount': null,
+    'ratingSummary': {'averageRating': 4.6, 'reviewCount': 3},
+    'categories': [
+      {'id': 'c1', 'code': 'rural-stay', 'name': 'Сместување'},
+    ],
+    'amenities': [
+      {'id': 'a7', 'code': 'wi-fi', 'name': 'Wi-Fi'},
+    ],
+  };
+
+  /// A listing with only an experience (not bookable in the app yet).
+  static const Map<String, Object?> fakeWorkshop = {
+    'id': 'l2',
+    'slug': 'test-cheese-workshop',
+    'title': 'Работилница за сирење',
+    'settlementName': 'Битола',
+    'municipalityName': 'Битола',
+    'coverImageUrl': null,
+    'priceAmount': null,
+    'ratingSummary': {'averageRating': null, 'reviewCount': 0},
+    'categories': [],
+    'amenities': [],
   };
 
   @override

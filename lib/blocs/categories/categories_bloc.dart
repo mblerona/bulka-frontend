@@ -2,8 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/network/api_client.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
-import 'package:bulka_frontend/core/network/api_response.dart';
-import 'package:bulka_frontend/core/network/auth_interceptor.dart';
+import 'package:bulka_frontend/core/network/public_api.dart';
 import 'package:bulka_frontend/models/home_category.dart';
 
 part 'categories_event.dart';
@@ -42,28 +41,7 @@ class CategoriesBloc extends Bloc<CategoriesEvent, CategoriesState> {
   }
 
   Future<List<HomeCategory>> _fetch() async {
-    final Response<Object?> response;
-    try {
-      // Public endpoint: no token needed, and a 401 shouldn't trigger a
-      // refresh.
-      response = await _dio.get<Object?>(
-        '/api/categories',
-        options: Options(extra: {skipAuth: true}),
-      );
-    } on DioException catch (e) {
-      throw ApiException.fromDio(e);
-    }
-    final json = response.data;
-    if (json is! Map<String, dynamic>) {
-      throw const ApiException(kind: ApiErrorKind.unknown);
-    }
-    final envelope = ApiResponse<Object?>.fromJson(json, (data) => data);
-    if (!envelope.success) throw ApiException.fromEnvelope(envelope);
-    final data = envelope.data;
-    if (data is! List) throw const ApiException(kind: ApiErrorKind.unknown);
-    return [
-      for (final item in data)
-        if (item is Map<String, dynamic>) HomeCategory.fromJson(item),
-    ];
+    final json = await getPublicList(_dio, '/api/categories');
+    return [for (final item in json) HomeCategory.fromJson(item)];
   }
 }
