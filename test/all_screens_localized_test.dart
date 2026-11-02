@@ -54,6 +54,11 @@ void main() {
           }
           // Not pumpAndSettle: some screens have looping animations.
           await tester.pump(const Duration(milliseconds: 500));
+          // Lets requests the screen started on its first frames (Home's
+          // categories, the filter sheet's amenities — that sheet opens one
+          // frame later) finish and draw their result.
+          await tester.pump(const Duration(milliseconds: 100));
+          await tester.pump(const Duration(milliseconds: 100));
           expect(tester.takeException(), isNull);
         });
       }

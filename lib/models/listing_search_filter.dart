@@ -1,24 +1,25 @@
-import 'package:bulka_frontend/models/listing_amenity.dart';
-import 'package:bulka_frontend/models/listing_category.dart';
-
 /// Tourist Search & Filters' own UI state — the Figma "Filter Sheet"
-/// mapped 1:1 to fields, deliberately kept separate from `ProviderListing`
-/// itself (this is what the *searcher* is looking for, not listing data).
-/// Mutable/edited field-by-field like `CreateListingDraft`, not
-/// `copyWith`-based like the app's persisted domain models — this is
-/// transient sheet state, not something ever stored.
+/// mapped 1:1 to fields. Sent to `GET /api/listings` by
+/// `PublicListingsBloc` (see `listingSearchQuery`), so every field holds
+/// what the backend filters on: ids, not translated names.
 ///
-/// `minPrice`/`maxPrice` are null when unrestricted (both ends of the
-/// active price range) rather than always carrying concrete numbers —
-/// `ListingsState.activePriceBounds` supplies the real numbers
-/// a slider needs to display, so this model never has to guess or freeze
-/// them itself; a backend-provided min/max would replace that getter
-/// without this model changing at all.
+/// Mutable/edited field-by-field like `CreateListingDraft`: this is
+/// transient sheet state, never stored.
+///
+/// `minPrice`/`maxPrice` are null when unrestricted (both ends of
+/// [priceSliderMin]..[priceSliderMax]).
 class ListingSearchFilter {
   ListingSearchFilter();
 
+  /// The price slider's range, in MKD. Fixed: the listing search doesn't
+  /// return prices to derive it from (itemized listings price each item).
+  static const double priceSliderMin = 0;
+  static const double priceSliderMax = 20000;
+
   String keyword = '';
-  String? location;
+
+  /// `Region.id` from `GET /api/regions`; null = all locations.
+  String? regionId;
   double? minPrice;
   double? maxPrice;
   DateTime? startDate;
@@ -27,54 +28,53 @@ class ListingSearchFilter {
   /// From the Figma "Оценка" chips (Сите/3+★/4+★/4.5+★) — null = "Сите".
   double? minRating;
 
-  /// "Број на гости" (1/2/3/4/5+) — null = unset (no restriction; "1" is
-  /// already functionally unrestrictive since every real listing has
-  /// `guestCapacity >= 1`). Checked against `ProviderListing.guestCapacity`;
-  /// a separate concept from a real booking's exact
-  /// `Reservation.guestCount`, so this is a *minimum threshold*, not an
-  /// exact headcount.
+  /// "Број на гости" (1/2/3/4/5+) — null = unset (no restriction). A
+  /// minimum the listing must fit, not a booking's exact headcount.
   int? minimumGuests;
 
-  /// Same values as `ProviderListing.category` / `createOfferCategories`.
-  Set<ListingCategory> categories = {};
-  Set<ListingAmenity> amenities = {};
+  /// A top-level `HomeCategory.id`; null = all. One at a time: the backend
+  /// filters by a single category.
+  String? categoryId;
+
+  /// `Amenity.id`s from `GET /api/amenities`.
+  Set<String> amenityIds = {};
 
   bool get isActive =>
       keyword.trim().isNotEmpty ||
-      location != null ||
+      regionId != null ||
       minPrice != null ||
       maxPrice != null ||
       startDate != null ||
       endDate != null ||
       minRating != null ||
       minimumGuests != null ||
-      categories.isNotEmpty ||
-      amenities.isNotEmpty;
+      categoryId != null ||
+      amenityIds.isNotEmpty;
 
   ListingSearchFilter copy() {
     return ListingSearchFilter()
       ..keyword = keyword
-      ..location = location
+      ..regionId = regionId
       ..minPrice = minPrice
       ..maxPrice = maxPrice
       ..startDate = startDate
       ..endDate = endDate
       ..minRating = minRating
       ..minimumGuests = minimumGuests
-      ..categories = Set.of(categories)
-      ..amenities = Set.of(amenities);
+      ..categoryId = categoryId
+      ..amenityIds = Set.of(amenityIds);
   }
 
   void reset() {
     keyword = '';
-    location = null;
+    regionId = null;
     minPrice = null;
     maxPrice = null;
     startDate = null;
     endDate = null;
     minRating = null;
     minimumGuests = null;
-    categories = {};
-    amenities = {};
+    categoryId = null;
+    amenityIds = {};
   }
 }

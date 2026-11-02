@@ -1034,6 +1034,12 @@ class AppLocalizationsSq extends AppLocalizations {
   String get homeCategoriesHeading => 'Kategoritë';
 
   @override
+  String get homeCategoriesLoadFailed => 'Kategoritë nuk mund të ngarkohen.';
+
+  @override
+  String get retryButton => 'Provo përsëri';
+
+  @override
   String get homeRecommendedHeading => 'Të rekomanduara për ju';
 
   @override
@@ -1097,6 +1103,9 @@ class AppLocalizationsSq extends AppLocalizations {
   String get filtersAmenityHeading => 'Pajisjet';
 
   @override
+  String get filtersAmenitiesLoadFailed => 'Pajisjet nuk mund të ngarkohen.';
+
+  @override
   String get filtersClearButton => 'Pastro filtrat';
 
   @override
@@ -1155,6 +1164,33 @@ class AppLocalizationsSq extends AppLocalizations {
 
   @override
   String get detailsReserveButton => 'Rezervo';
+
+  @override
+  String get listingsLoadFailed => 'Ofertat nuk mund të ngarkohen.';
+
+  @override
+  String get listingDetailsLoadFailed => 'Oferta nuk mund të ngarkohet.';
+
+  @override
+  String get listingPricesPerItem => 'Çmime sipas artikullit të zgjedhur';
+
+  @override
+  String get listingNoRatingsYet => 'Ende pa vlerësime';
+
+  @override
+  String get listingReviewsSuffix => 'vlerësime';
+
+  @override
+  String get listingPerPersonSuffix => 'për person';
+
+  @override
+  String get detailsItemsHeading => 'Opsionet dhe çmimet';
+
+  @override
+  String get resultsEmpty => 'Nuk ka oferta që përputhen me filtrat.';
+
+  @override
+  String get resultsLoadMore => 'Shfaq më shumë';
 
   @override
   String get reservationFlowTitle => 'Rezervimi';

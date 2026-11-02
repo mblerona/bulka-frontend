@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -9,17 +11,18 @@ import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    super.key,
-    this.profile = const RegistrationProfile(
-      fullName: 'Јована Јованова',
-      email: 'jovana@example.com',
-      phone: '070 123 456',
-      city: 'Охрид, Северна Македонија',
-    ),
-  });
+  const ProfileScreen({super.key, this.profile});
 
-  final RegistrationProfile profile;
+  /// Null shows the signed-in user (or the sample guest when nobody is
+  /// signed in, e.g. from the dev launcher).
+  final RegistrationProfile? profile;
+
+  static const RegistrationProfile _sampleProfile = RegistrationProfile(
+    fullName: 'Јована Јованова',
+    email: 'jovana@example.com',
+    phone: '070 123 456',
+    city: 'Охрид, Северна Македонија',
+  );
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -36,6 +39,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late String _savedPhone;
   late String _savedCity;
 
+  late final RegistrationProfile _profile;
+
   bool _hasChanges = false;
 
   // Real users start with none of either; these increment once the
@@ -47,10 +52,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _savedName = widget.profile.fullName;
-    _savedEmail = widget.profile.email;
-    _savedPhone = widget.profile.phone;
-    _savedCity = widget.profile.city;
+    final user = context.read<AuthBloc>().state.user;
+    _profile =
+        widget.profile ??
+        (user != null
+            ? RegistrationProfile.fromAuthUser(user)
+            : ProfileScreen._sampleProfile);
+    _savedName = _profile.fullName;
+    _savedEmail = _profile.email;
+    _savedPhone = _profile.phone;
+    _savedCity = _profile.city;
 
     _nameController = TextEditingController(text: _savedName)
       ..addListener(_handleFieldChanged);
@@ -94,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // once it exists — same save pathway as the rest of the registration data.
   }
 
-  String get _roleLabel => widget.profile.role == UserRole.buyer
+  String get _roleLabel => _profile.role == UserRole.buyer
       ? AppStrings.registerRoleGuest
       : AppStrings.registerRoleProvider;
 

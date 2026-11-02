@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/amenities/amenities_bloc.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
+import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
 import 'package:bulka_frontend/blocs/favorites/favorites_bloc.dart';
 import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
@@ -9,6 +11,8 @@ import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/blocs/notifications/notifications_bloc.dart';
+import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
+import 'package:bulka_frontend/blocs/regions/regions_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/blocs/search/search_bloc.dart';
 import 'package:bulka_frontend/blocs/support_tickets/support_tickets_bloc.dart';
@@ -44,6 +48,10 @@ class AppBlocProviders extends StatelessWidget {
             return bloc;
           },
         ),
+        BlocProvider(create: (_) => CategoriesBloc()),
+        BlocProvider(create: (_) => AmenitiesBloc()),
+        BlocProvider(create: (_) => RegionsBloc()),
+        BlocProvider(create: (_) => PublicListingsBloc()),
         BlocProvider(create: (_) => ListingsBloc()),
         BlocProvider(create: (_) => ReservationsBloc()),
         BlocProvider(create: (_) => ListingReviewsBloc()),

@@ -2050,6 +2050,18 @@ abstract class AppLocalizations {
   /// **'Категории'**
   String get homeCategoriesHeading;
 
+  /// No description provided for @homeCategoriesLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Категориите не можат да се вчитаат.'**
+  String get homeCategoriesLoadFailed;
+
+  /// No description provided for @retryButton.
+  ///
+  /// In mk, this message translates to:
+  /// **'Обиди се повторно'**
+  String get retryButton;
+
   /// No description provided for @homeRecommendedHeading.
   ///
   /// In mk, this message translates to:
@@ -2176,6 +2188,12 @@ abstract class AppLocalizations {
   /// **'Опрема'**
   String get filtersAmenityHeading;
 
+  /// No description provided for @filtersAmenitiesLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Опремата не може да се вчита.'**
+  String get filtersAmenitiesLoadFailed;
+
   /// No description provided for @filtersClearButton.
   ///
   /// In mk, this message translates to:
@@ -2295,6 +2313,60 @@ abstract class AppLocalizations {
   /// In mk, this message translates to:
   /// **'Резервирај'**
   String get detailsReserveButton;
+
+  /// No description provided for @listingsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Понудите не можат да се вчитаат.'**
+  String get listingsLoadFailed;
+
+  /// No description provided for @listingDetailsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Понудата не може да се вчита.'**
+  String get listingDetailsLoadFailed;
+
+  /// No description provided for @listingPricesPerItem.
+  ///
+  /// In mk, this message translates to:
+  /// **'Цени по избрана ставка'**
+  String get listingPricesPerItem;
+
+  /// No description provided for @listingNoRatingsYet.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште нема оцени'**
+  String get listingNoRatingsYet;
+
+  /// No description provided for @listingReviewsSuffix.
+  ///
+  /// In mk, this message translates to:
+  /// **'рецензии'**
+  String get listingReviewsSuffix;
+
+  /// No description provided for @listingPerPersonSuffix.
+  ///
+  /// In mk, this message translates to:
+  /// **'по лице'**
+  String get listingPerPersonSuffix;
+
+  /// No description provided for @detailsItemsHeading.
+  ///
+  /// In mk, this message translates to:
+  /// **'Ставки и цени'**
+  String get detailsItemsHeading;
+
+  /// No description provided for @resultsEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Нема понуди што одговараат на филтрите.'**
+  String get resultsEmpty;
+
+  /// No description provided for @resultsLoadMore.
+  ///
+  /// In mk, this message translates to:
+  /// **'Прикажи повеќе'**
+  String get resultsLoadMore;
 
   /// No description provided for @reservationFlowTitle.
   ///

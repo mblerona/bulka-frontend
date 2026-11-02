@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
@@ -41,8 +42,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     context.watch<GuestRatingsBloc>();
-    final listings = context.watch<ListingsBloc>().state.listings;
-    final greetingName = listings.isNotEmpty ? listings.first.title : '';
+    context.watch<ListingsBloc>();
+    // The sample provider's name when nobody is signed in (dev launcher).
+    final greetingName =
+        context.select((AuthBloc bloc) => bloc.state.user?.fullName) ??
+        AppStrings.providerExampleName;
     final reservations = context.watch<ReservationsBloc>().state;
     final pending = reservations.pending;
     final completed = reservations.completed;

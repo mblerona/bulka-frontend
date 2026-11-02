@@ -3,14 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
+import 'package:bulka_frontend/blocs/search/search_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/l10n/app_locale.dart';
 import 'package:bulka_frontend/core/routing/app_router.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/main.dart';
-import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/screens/booking_request_screen/booking_request_screen.dart';
 import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
 import 'package:bulka_frontend/screens/listing_details_screen/listing_details_screen.dart';
@@ -49,10 +49,11 @@ void main() {
 
   testWidgets('each tab keeps its own history', (tester) async {
     final router = await pumpAt(tester, AppRoutes.home);
-    final listingId = bloc<ListingsBloc>(tester).state.active.first.id;
-    router.push('${AppRoutes.home}/listings/$listingId');
+    // From the fake backend (test_helpers.dart).
+    router.push('${AppRoutes.home}/listings/test-farm-stay');
     await tester.pumpAndSettle();
     expect(find.byType(ListingDetailsScreen), findsOneWidget);
+    expect(find.text('Ранчо на Ката'), findsOneWidget);
 
     await tapTab(tester, AppStrings.navTouristSearch);
     expect(find.byType(SearchResultsScreen), findsOneWidget);
@@ -81,12 +82,13 @@ void main() {
     appRouter.go(AppRoutes.home);
     await tester.pumpWidget(BulkaApp(router: appRouter));
     await tester.pumpAndSettle();
-    final listing = bloc<ListingsBloc>(
-      tester,
-    ).state.active.firstWhere((l) => categoryRequiresPrice(l.category));
-    appRouter.go('${AppRoutes.home}/listings/${listing.id}/book');
+    // A backend listing with a nightly item (fake backend).
+    appRouter.go('${AppRoutes.home}/listings/test-farm-stay/book');
     await tester.pumpAndSettle();
     expect(find.byType(BookingRequestScreen), findsOneWidget);
+    final listing = bloc<PublicListingsBloc>(
+      tester,
+    ).state.detailsFor('test-farm-stay')!.toBookingListing()!;
 
     final reservations = bloc<ReservationsBloc>(tester)
       ..add(
@@ -111,9 +113,32 @@ void main() {
     expect(find.byType(TouristHomeScreen), findsOneWidget);
   });
 
-  testWidgets('an unknown listing id shows Not Found', (tester) async {
+  testWidgets('an unknown listing shows Not Found', (tester) async {
     await pumpAt(tester, '${AppRoutes.home}/listings/does-not-exist');
     expect(find.byType(RouteNotFoundScreen), findsOneWidget);
+  });
+
+  testWidgets('a listing without a nightly item has no booking form', (
+    tester,
+  ) async {
+    await pumpAt(
+      tester,
+      '${AppRoutes.home}/listings/test-cheese-workshop/book',
+    );
+    expect(find.byType(BookingRequestScreen), findsNothing);
+    expect(find.byType(RouteNotFoundScreen), findsOneWidget);
+  });
+
+  testWidgets('a Home category opens Search Results for that category', (
+    tester,
+  ) async {
+    await pumpAt(tester, AppRoutes.home);
+    await tester.tap(find.text('Сместување'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchResultsScreen), findsOneWidget);
+    expect(bloc<SearchBloc>(tester).state.filter.categoryId, 'c1');
+    // The fake backend's listings.
+    expect(find.text('Ранчо на Ката'), findsOneWidget);
   });
 
   testWidgets('an unknown path shows Not Found', (tester) async {

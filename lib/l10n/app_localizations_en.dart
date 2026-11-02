@@ -1031,6 +1031,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCategoriesHeading => 'Categories';
 
   @override
+  String get homeCategoriesLoadFailed => 'Couldn\'t load categories.';
+
+  @override
+  String get retryButton => 'Try again';
+
+  @override
   String get homeRecommendedHeading => 'Recommended for you';
 
   @override
@@ -1094,6 +1100,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filtersAmenityHeading => 'Amenities';
 
   @override
+  String get filtersAmenitiesLoadFailed => 'Couldn\'t load amenities.';
+
+  @override
   String get filtersClearButton => 'Clear filters';
 
   @override
@@ -1152,6 +1161,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detailsReserveButton => 'Book';
+
+  @override
+  String get listingsLoadFailed => 'Couldn\'t load offers.';
+
+  @override
+  String get listingDetailsLoadFailed => 'Couldn\'t load this offer.';
+
+  @override
+  String get listingPricesPerItem => 'Prices per selected item';
+
+  @override
+  String get listingNoRatingsYet => 'No ratings yet';
+
+  @override
+  String get listingReviewsSuffix => 'reviews';
+
+  @override
+  String get listingPerPersonSuffix => 'per person';
+
+  @override
+  String get detailsItemsHeading => 'Options and prices';
+
+  @override
+  String get resultsEmpty => 'No offers match these filters.';
+
+  @override
+  String get resultsLoadMore => 'Show more';
 
   @override
   String get reservationFlowTitle => 'Reservation';

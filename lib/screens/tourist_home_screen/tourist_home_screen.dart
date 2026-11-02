@@ -1,45 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
+import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
+import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
 import 'package:bulka_frontend/blocs/search/search_bloc.dart';
-import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/utils/price_format.dart';
-import 'package:bulka_frontend/models/create_listing_draft.dart';
+import 'package:bulka_frontend/core/utils/listing_format.dart';
 import 'package:bulka_frontend/models/home_category.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
 import 'package:bulka_frontend/models/promo_banner.dart';
-import 'package:bulka_frontend/models/provider_listing.dart';
+import 'package:bulka_frontend/models/public_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
-import 'package:bulka_frontend/widgets/xfile_image.dart';
+import 'package:bulka_frontend/widgets/listing_image.dart';
+import 'package:bulka_frontend/widgets/load_failed_message.dart';
 
 /// Buyer/Tourist "Дома" — the Figma "20 – Buyer · Discover Home" frame.
-/// Listings come straight from `ListingsState.active`
-/// (active listings only) — no separate Tourist-side listing collection.
-/// The search bar opens the filter sheet (→ Search Results) and each
-/// listing card opens Listing Details; category-chip taps remain a clean
-/// TODO callback pending a category search/results destination.
+/// Categories and the recommended (newest) listings come from the backend
+/// (`CategoriesBloc`, `PublicListingsBloc`). The search bar opens the
+/// filter sheet and a category chip searches that category (→ Search
+/// Results); each listing card opens Listing Details.
 class TouristHomeScreen extends StatefulWidget {
-  const TouristHomeScreen({
-    super.key,
-    this.profile = const RegistrationProfile(
-      fullName: 'Јована Јованова',
-      email: 'jovana@example.com',
-      phone: '070 123 456',
-    ),
-  });
+  const TouristHomeScreen({super.key, this.profile});
 
-  final RegistrationProfile profile;
+  /// Null shows the signed-in user (or the sample guest when nobody is
+  /// signed in, e.g. from the dev launcher).
+  final RegistrationProfile? profile;
+
+  static const RegistrationProfile _sampleProfile = RegistrationProfile(
+    fullName: 'Јована Јованова',
+    email: 'jovana@example.com',
+    phone: '070 123 456',
+  );
 
   @override
   State<TouristHomeScreen> createState() => _TouristHomeScreenState();
 }
 
 class _TouristHomeScreenState extends State<TouristHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadHomeData(context);
+  }
+
   Future<void> _openFilters() async {
     final search = context.read<SearchBloc>();
     final result = await showModalBottomSheet<ListingSearchFilter>(
@@ -61,21 +70,36 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     context.go(AppRoutes.search);
   }
 
-  String get _firstName {
-    final trimmed = widget.profile.fullName.trim();
+  String _firstNameOf(RegistrationProfile profile) {
+    final trimmed = profile.fullName.trim();
     if (trimmed.isEmpty) return '';
     return trimmed.split(RegExp(r'\s+')).first;
   }
 
   @override
   Widget build(BuildContext context) {
-    final listings = context.watch<ListingsBloc>().state.active;
+    final user = context.select((AuthBloc bloc) => bloc.state.user);
+    final profile =
+        widget.profile ??
+        (user != null
+            ? RegistrationProfile.fromAuthUser(user)
+            : TouristHomeScreen._sampleProfile);
 
+    // Categories and listings come translated from the backend, so reload
+    // them in the new language.
+    return BlocListener<LocaleBloc, LocaleState>(
+      listenWhen: (previous, current) => previous.locale != current.locale,
+      listener: (context, _) => _loadHomeData(context),
+      child: _buildScreen(profile),
+    );
+  }
+
+  Widget _buildScreen(RegistrationProfile profile) {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          _HomeHeader(greetingName: _firstName),
+          _HomeHeader(greetingName: _firstNameOf(profile)),
           Expanded(
             child: SafeArea(
               top: false,
@@ -117,13 +141,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
                           const SizedBox(
                             height: AppDimensions.dashboardSectionGap,
                           ),
-                          for (var i = 0; i < listings.length; i++) ...[
-                            _ListingCard(listing: listings[i]),
-                            if (i != listings.length - 1)
-                              const SizedBox(
-                                height: AppDimensions.homeListingCardGap,
-                              ),
-                          ],
+                          const _RecommendedListings(),
                         ],
                       ),
                     ),
@@ -134,6 +152,62 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Loads Home's categories and recommended listings in the current
+/// language unless they're already loaded (or loading) in it.
+void _loadHomeData(BuildContext context) {
+  final language = context.read<LocaleBloc>().state.locale.languageCode;
+  final categories = context.read<CategoriesBloc>();
+  if (categories.state.needsLoadFor(language)) {
+    categories.add(CategoriesRequested(language));
+  }
+  final listings = context.read<PublicListingsBloc>();
+  if (listings.state.needsRecommendedFor(language)) {
+    listings.add(RecommendedListingsRequested(language));
+  }
+}
+
+/// Searches [category] and opens Search Results.
+void _searchCategory(BuildContext context, HomeCategory category) {
+  context.read<SearchBloc>().add(
+    SearchFilterApplied(ListingSearchFilter()..categoryId = category.id),
+  );
+  context.go(AppRoutes.search);
+}
+
+class _RecommendedListings extends StatelessWidget {
+  const _RecommendedListings();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<PublicListingsBloc>().state;
+    final listings = state.recommended;
+    if (listings.isEmpty) {
+      return switch (state.recommendedStatus) {
+        ListingsLoadStatus.failed => LoadFailedMessage(
+          message: AppStrings.listingsLoadFailed,
+          onRetry: () => _loadHomeData(context),
+        ),
+        ListingsLoadStatus.loaded => const SizedBox.shrink(),
+        _ => const Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: AppDimensions.homeCategoryCardVerticalPadding,
+          ),
+          child: SectionLoadingIndicator(),
+        ),
+      };
+    }
+    return Column(
+      children: [
+        for (var i = 0; i < listings.length; i++) ...[
+          _ListingCard(listing: listings[i]),
+          if (i != listings.length - 1)
+            const SizedBox(height: AppDimensions.homeListingCardGap),
+        ],
+      ],
     );
   }
 }
@@ -352,25 +426,45 @@ class _BannerCard extends StatelessWidget {
   }
 }
 
-/// Data-driven from `touristHomeCategories` — same domain category values
-/// `ProviderListing.category`/the Create Offer wizard use, not a second
-/// taxonomy. No search-results screen exists yet, so tapping a chip is a
-/// clean TODO for now.
+/// The top-level categories from `GET /api/categories` (see
+/// [CategoriesBloc]); tapping one searches it.
 class _CategoryRow extends StatelessWidget {
   const _CategoryRow();
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<CategoriesBloc>().state;
+    final categories = state.topLevel;
+
+    if (categories.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.dsBodyHorizontalPadding,
+          vertical: AppDimensions.homeCategoryCardVerticalPadding,
+        ),
+        child: state.status == CategoriesStatus.failed
+            ? LoadFailedMessage(
+                message: AppStrings.homeCategoriesLoadFailed,
+                fontSize: AppDimensions.homeCategoryLabelFontSize,
+                onRetry: () => _loadHomeData(context),
+              )
+            : const SectionLoadingIndicator(
+                size: AppDimensions.homeCategoryIconAreaHeight,
+              ),
+      );
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.only(
         left: AppDimensions.dsBodyHorizontalPadding,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < touristHomeCategories.length; i++) ...[
-            _CategoryCard(category: touristHomeCategories[i]),
-            if (i != touristHomeCategories.length - 1)
+          for (var i = 0; i < categories.length; i++) ...[
+            _CategoryCard(category: categories[i]),
+            if (i != categories.length - 1)
               const SizedBox(width: AppDimensions.homeCategoryRowGap),
           ],
         ],
@@ -387,8 +481,7 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // TODO: navigate to category search/results once that screen exists.
-      onTap: () {},
+      onTap: () => _searchCategory(context, category),
       child: Container(
         width: AppDimensions.homeCategoryCardWidth,
         padding: const EdgeInsets.symmetric(
@@ -438,20 +531,12 @@ class _CategoryCard extends StatelessWidget {
 class _ListingCard extends StatelessWidget {
   const _ListingCard({required this.listing});
 
-  final ProviderListing listing;
-
-  String get _priceLabel {
-    final suffix = categoryRequiresPrice(listing.category)
-        ? AppStrings.wizardPricePerNightSuffix
-        : AppStrings.wizardPriceSuffix;
-    return '${AppStrings.homePricePrefix}'
-        '${formatPrice(listing.price)} $suffix';
-  }
+  final PublicListing listing;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.listing(context, listing.id)),
+      onTap: () => context.push(AppRoutes.listing(context, listing.slug)),
       child: Container(
         width: double.infinity,
         clipBehavior: Clip.antiAlias,
@@ -463,18 +548,10 @@ class _ListingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            listing.photoPaths.isEmpty
-                ? Container(
-                    width: double.infinity,
-                    height: AppDimensions.homeListingCardImageHeight,
-                    color: AppColors.profileSoftMint,
-                  )
-                : XFileImage(
-                    path: listing.photoPaths.first,
-                    width: double.infinity,
-                    height: AppDimensions.homeListingCardImageHeight,
-                    fit: BoxFit.cover,
-                  ),
+            ListingImage(
+              url: listing.coverImageUrl,
+              height: AppDimensions.homeListingCardImageHeight,
+            ),
             Padding(
               padding: const EdgeInsets.all(
                 AppDimensions.homeListingCardPadding,
@@ -505,7 +582,7 @@ class _ListingCard extends StatelessWidget {
                     height: AppDimensions.homeListingCardContentGap,
                   ),
                   Text(
-                    _priceLabel,
+                    listingPriceLabel(listing),
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: AppDimensions.homeListingPriceFontSize,

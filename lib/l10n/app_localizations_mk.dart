@@ -1034,6 +1034,12 @@ class AppLocalizationsMk extends AppLocalizations {
   String get homeCategoriesHeading => 'Категории';
 
   @override
+  String get homeCategoriesLoadFailed => 'Категориите не можат да се вчитаат.';
+
+  @override
+  String get retryButton => 'Обиди се повторно';
+
+  @override
   String get homeRecommendedHeading => 'Препорачано за вас';
 
   @override
@@ -1097,6 +1103,9 @@ class AppLocalizationsMk extends AppLocalizations {
   String get filtersAmenityHeading => 'Опрема';
 
   @override
+  String get filtersAmenitiesLoadFailed => 'Опремата не може да се вчита.';
+
+  @override
   String get filtersClearButton => 'Избриши филтри';
 
   @override
@@ -1155,6 +1164,33 @@ class AppLocalizationsMk extends AppLocalizations {
 
   @override
   String get detailsReserveButton => 'Резервирај';
+
+  @override
+  String get listingsLoadFailed => 'Понудите не можат да се вчитаат.';
+
+  @override
+  String get listingDetailsLoadFailed => 'Понудата не може да се вчита.';
+
+  @override
+  String get listingPricesPerItem => 'Цени по избрана ставка';
+
+  @override
+  String get listingNoRatingsYet => 'Сè уште нема оцени';
+
+  @override
+  String get listingReviewsSuffix => 'рецензии';
+
+  @override
+  String get listingPerPersonSuffix => 'по лице';
+
+  @override
+  String get detailsItemsHeading => 'Ставки и цени';
+
+  @override
+  String get resultsEmpty => 'Нема понуди што одговараат на филтрите.';
+
+  @override
+  String get resultsLoadMore => 'Прикажи повеќе';
 
   @override
   String get reservationFlowTitle => 'Резервација';

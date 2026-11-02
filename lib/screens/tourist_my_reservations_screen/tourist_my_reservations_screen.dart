@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
+import 'package:bulka_frontend/core/utils/booked_listing.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
@@ -79,11 +81,10 @@ class _TouristMyReservationsScreenState
   // screen. Do not silently fold them into either tab above.
 
   ProviderListing? _resolveListing(Reservation reservation) {
-    for (final listing in _listings.listings) {
-      if (reservation.listingId != null &&
-          listing.id == reservation.listingId) {
-        return listing;
-      }
+    final listingId = reservation.listingId;
+    if (listingId != null) {
+      final listing = findBookedListing(context, listingId);
+      if (listing != null) return listing;
     }
     for (final listing in _listings.listings) {
       if (listing.title == reservation.listingName) return listing;
@@ -106,6 +107,7 @@ class _TouristMyReservationsScreenState
   Widget build(BuildContext context) {
     context.watch<ReservationsBloc>();
     context.watch<ListingsBloc>();
+    context.watch<PublicListingsBloc>();
     final entries = _resolvedEntries(
       _tab == ReservationsTab.upcoming ? _upcoming : _past,
     );
