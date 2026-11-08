@@ -546,6 +546,15 @@ class AppLocalizationsSq extends AppLocalizations {
   String get notificationsUnreadSuffix => 'njoftime të palexuara';
 
   @override
+  String get notificationsLoadFailed => 'Njoftimet nuk mund të ngarkoheshin.';
+
+  @override
+  String get notificationsEmpty => 'Nuk keni njoftime.';
+
+  @override
+  String get notificationsMarkAllRead => 'Shëno të gjitha si të lexuara';
+
+  @override
   String get timeJustNow => 'tani';
 
   @override
@@ -579,7 +588,28 @@ class AppLocalizationsSq extends AppLocalizations {
   String get ticketStatusResolved => 'E ZGJIDHUR';
 
   @override
+  String get ticketStatusClosed => 'E MBYLLUR';
+
+  @override
+  String get ticketsLoadFailed => 'Tiketat nuk mund të ngarkohen.';
+
+  @override
+  String get ticketsEmpty => 'Ende nuk keni tiketa.';
+
+  @override
   String get ticketLastChangedLabel => 'Ndryshimi i fundit';
+
+  @override
+  String get ticketDetailsTitle => 'Detajet e tiketës';
+
+  @override
+  String get ticketDetailsLoadFailed => 'Tiketa nuk mund të ngarkohej.';
+
+  @override
+  String get ticketCreatedLabel => 'Krijuar';
+
+  @override
+  String get ticketAttachmentLabel => 'Shtojca';
 
   @override
   String get newTicketTitle => 'Tiketë e re për mbështetje';

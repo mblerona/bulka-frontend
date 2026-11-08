@@ -545,6 +545,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsUnreadSuffix => 'unread notifications';
 
   @override
+  String get notificationsLoadFailed => 'Couldn\'t load your notifications.';
+
+  @override
+  String get notificationsEmpty => 'You don\'t have any notifications.';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+
+  @override
   String get timeJustNow => 'now';
 
   @override
@@ -578,7 +587,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketStatusResolved => 'RESOLVED';
 
   @override
+  String get ticketStatusClosed => 'CLOSED';
+
+  @override
+  String get ticketsLoadFailed => 'Couldn\'t load your tickets.';
+
+  @override
+  String get ticketsEmpty => 'You don\'t have any tickets yet.';
+
+  @override
   String get ticketLastChangedLabel => 'Last updated';
+
+  @override
+  String get ticketDetailsTitle => 'Ticket details';
+
+  @override
+  String get ticketDetailsLoadFailed => 'Couldn\'t load the ticket.';
+
+  @override
+  String get ticketCreatedLabel => 'Created';
+
+  @override
+  String get ticketAttachmentLabel => 'Attachment';
 
   @override
   String get newTicketTitle => 'New support ticket';

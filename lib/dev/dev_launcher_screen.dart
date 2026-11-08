@@ -7,6 +7,7 @@ import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/support_tickets/support_tickets_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
@@ -188,6 +189,22 @@ class DevLauncherScreen extends StatelessWidget {
     _DevScreenSection('Support', [
       DevScreenEntry.route('My Tickets', (_) => AppRoutes.tickets),
       DevScreenEntry.route('New Support Ticket', (_) => AppRoutes.newTicket),
+      DevScreenEntry.route('Ticket Details (first ticket, or a local one)', (
+        context,
+      ) async {
+        final tickets = context.read<SupportTicketsBloc>();
+        if (tickets.state.tickets.isEmpty) {
+          tickets.add(
+            const SupportTicketCreated(
+              category: 'Other',
+              title: 'Dev ticket',
+              description: 'A ticket created by the dev launcher.',
+            ),
+          );
+          await tickets.stream.firstWhere((s) => s.tickets.isNotEmpty);
+        }
+        return AppRoutes.ticket(tickets.state.tickets.first.id);
+      }),
     ]),
     _DevScreenSection('Other', [
       DevScreenEntry.route('Notifications', (_) => AppRoutes.notifications),

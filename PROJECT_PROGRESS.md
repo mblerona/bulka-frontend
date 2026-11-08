@@ -4,6 +4,10 @@ _Rural tourism app for Macedonia (Flutter). This page summarizes what has been b
 
 ## Where we left off
 
+**Latest (2026-11-08): Support tickets are on the backend for reading.** My Tickets loads `GET /api/me/tickets`, and a new Ticket Details screen loads `GET /api/me/tickets/{id}`. Creating a ticket (`POST /api/me/tickets`) is still local only. Full detail in "Support Tickets (backend)" below.
+
+_The rest of this section is from the earlier auth round:_
+
 Last worked on: **the start of real backend integration** — the app now makes real HTTP calls against the hosted API instead of every action being local-only state. Login, registration (Buyer + Provider), `GET /api/users/me`, and logout are wired for real; the Tourist/Buyer and Provider flows from the previous round are otherwise untouched. Short-point summary below (see "Backend / Auth Integration" section for full detail); next up, whenever we pick this back up:
 
 - **Real Buyer and Provider logins both now route correctly.** Confirmed role strings: `"Admin"` (no destination), `"Buyer"`, and `"Provider"`. **Critical, confirmed live:** a real Provider account's `roles` was `["Buyer", "Provider"]`, not just `["Provider"]` — a Provider account is apparently also a Buyer. `mapBackendRoleToUserRole` (`lib/models/backend_role_mapper.dart`) checks for `"Provider"` first via `List.contains` specifically because of this — an iterate-and-return-on-first-match approach would have routed every real Provider account to Tourist Home instead of the Provider Dashboard, since `"Buyer"` is listed first.
@@ -46,11 +50,12 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Provider · Rate Guest | ✅ Implemented | Opened only from a completed reservation's "Оцени гостин" on the Dashboard |
 | Provider · Rating Saved (Success) | ✅ Implemented | Reached only after a successful rating submit |
 | Settings | ✅ Implemented | No screen navigates here yet; "Одjава" really logs out to Login |
-| Notifications | ✅ Implemented | No screen navigates here yet |
+| Notifications | ✅ Implemented, **real backend call** | Loads the list and unread count; tapping marks read on the backend. No screen navigates here yet |
 | Messages · Chat List | ✅ Implemented | Reachable via "Пораки" on both the Tourist and Provider bottom nav; no bottom nav of its own (see "Confusing" section) |
 | Messages · Chat Thread | ✅ Implemented | Reachable from Chat List only |
-| Support · My Tickets | ✅ Implemented | No screen navigates here yet — reachable via Dev Launcher only |
-| Support · New Ticket | ✅ Implemented | Reachable from My Tickets only |
+| Support · My Tickets | ✅ Implemented, **real backend call** | Loads `GET /api/me/tickets`; tapping a ticket opens Ticket Details. No screen navigates here yet, so it's reachable via the Dev Launcher only |
+| Support · New Ticket | ✅ Implemented, 🟡 **local only** | Reachable from My Tickets only. Submitting adds the ticket on this device only; `POST /api/me/tickets` isn't connected yet |
+| Support · Ticket Details | ✅ Implemented, **real backend call**, **not a Figma screen** | Loads `GET /api/me/tickets/{id}`. Shows number, status, dates, category, title, description and attachments. Built from the My Tickets card and the New Ticket field styles |
 | Dev Screen Launcher | ✅ Implemented (debug-only) | Boots automatically in debug builds; never present in release |
 | Choose Role | ❌ Not started | No Figma frame implemented yet |
 | Edit Listing screen | ❌ Not started | Blocks 2 Offers-screen actions |
@@ -134,6 +139,7 @@ flowchart TD
     DevLauncher -.-> Notifications
     MyTickets -->|Креирај нов тикет| NewTicket["New Support Ticket"]
     NewTicket -->|Испрати барање, success| MyTickets
+    MyTickets -->|Tap a ticket| TicketDetails["Ticket Details"]
     Settings -->|Одјава| Login
 ```
 
@@ -218,6 +224,50 @@ The API contract is `backend/swagger.json` (gitignored — kept locally, not in 
 - **Logout** (`POST /api/auth/logout`) — takes `{ refreshToken }` (the request body's schema is actually shared with `/api/auth/refresh` in the OpenAPI contract — `RefreshRequest`, not a logout-specific one), no `Authorization` header (the refresh token itself identifies the session). Response is now fully confirmed live too: `{ loggedOut: true }`, decodes into `LogoutResult`. Implemented as **best-effort**: the backend call's success/failure is irrelevant to whether the local session gets cleared — it always does. Wired to Settings' "Одjава", which calls `SessionController.logout()` and disables itself while the call is in flight (to avoid a double-tap firing two concurrent logout calls), then navigates to Login regardless of backend outcome.
 - **Base URL**: `ApiEnvironment.baseUrl` defaults to `https://agro.finki.net.mk`, overridable via `--dart-define=API_BASE_URL=...`.
 - **Not implemented yet, on purpose**: `/api/auth/invitations/accept` (no UI/entry point anywhere in the app for it), `/api/auth/external/complete` (not even documented in the local `backend/swagger.json` — may need a fresh pull from the live Swagger UI; also blocked on the still-UI-only Google sign-in button, which needs real OAuth SDK integration).
+
+## Support Tickets (backend)
+
+All in `SupportTicketsBloc` (`lib/blocs/support_tickets/`); the mock ticket data is deleted.
+
+**Implemented:**
+- **List** (`GET /api/me/tickets`), confirmed live. `SupportTicketsRequested` is sent each time My Tickets opens. The state has a `status` (initial/loading/loaded/failed) and My Tickets shows a spinner, "Couldn't load your tickets" with "Try again", or "You don't have any tickets yet". A reload drops the old list straight away (it may belong to a previous account), and a late response from an older request is ignored. Newest ticket first.
+- **Details** (`GET /api/me/tickets/{id}`), response confirmed live. `SupportTicketDetailsRequested(id)` is sent each time Ticket Details opens; results are kept per id (`detailsFor(id)`, `detailsStatusFor(id)`). The ticket from the list shows straight away while the details load, and a failed reload keeps what's shown. A 404 shows the Not Found screen. Tickets created on this device aren't requested (the backend doesn't know them).
+- **Ticket Details screen** (`lib/screens/ticket_details_screen/`, route `/tickets/:ticketId`, `AppRoutes.ticket(id)`). **Not a Figma screen**: the summary card matches the My Tickets card (number, status pill, title, created date, last updated), and category/title/description are read-only boxes styled like the New Ticket fields. Image attachments show as a preview, other files as a file-name row; the section is hidden when there are none.
+- **`SupportTicket` model**: `fromJson`, the backend's `ticketNumber` as `number`, a new `closed` status (`TicketStatus.fromApi` maps `Open`/`InProgress`/`Resolved`/`Closed`), and `attachments` is now a list. The response has no "last changed" time, so `updatedAt` is the latest of created, closed and message times. `categoryLabel` translates the backend type (`Booking` → Reservations, `Listing`, `Payment`, `Account`/`Profile`, `Other`).
+- **`SupportAttachment`**: gained `url` and `fromJson`; `localPath` is now optional (empty for a backend file).
+- New strings in all 3 languages: `ticketStatusClosed`, `ticketsLoadFailed`, `ticketsEmpty`, `ticketDetailsTitle`, `ticketDetailsLoadFailed`, `ticketCreatedLabel`, `ticketAttachmentLabel`.
+- Dev Launcher entry "Ticket Details" (opens the first ticket, creating a local one if the list is empty), so the all-languages overflow test covers it. Bloc tests in `test/blocs_test.dart` cover list loading, parsing, failures, details, 404, failed reload, and local tickets.
+
+**Still to do:**
+- **Create a ticket on the backend (`POST /api/me/tickets`).** Body: `type`, `priority`, `subject`, `description`, optional `linkedBookingId`/`linkedListingId`/`linkedPaymentTransactionId`/`linkedReviewId`/`linkedConversationId`, `attachmentMediaAssetIds`, `turnstileToken`. A Swagger test returned 404 `MEDIA_NOT_FOUND` only because it sent Swagger's placeholder GUID; it needs to be retried with the linked ids `null` and `attachmentMediaAssetIds: []`. Open questions:
+  - The allowed `type` and `priority` values. Seen so far: types `Booking`, `Payment`, `Technical`, `Other`; priorities `High`, `Normal`. New Ticket's categories (Reservations/Listings/Payment/Profile/Other) need mapping to real types, and the form has no priority field.
+  - Whether `turnstileToken` is checked (auth sends an empty string today).
+  - Attachments need an upload endpoint that returns a media asset id first; none found yet.
+  - Until this is done, a ticket created in the app disappears the next time My Tickets loads.
+- **Attachment JSON shape is a guess.** No ticket with an attachment has been seen yet; `SupportAttachment.fromJson` reads `publicUrl`/`url`, `originalFileName`/`fileName`, `contentType`/`mimeType`, `sizeBytes`/`fileSizeBytes`. Check it against a real response.
+- **Unknown ticket types show as the raw English word** (e.g. `Technical`) until the full list of types is known.
+- **Not shown on Ticket Details:** the `messages` thread (replies from support), priority, assigned moderator and resolution note. A message thread with a reply box is the natural next step (needs the send-message endpoint).
+- **No real entry point to My Tickets** — still Dev Launcher only (same as Settings/Notifications).
+- Not yet tested on a device against the real backend (Android/Windows; web is blocked by CORS).
+
+## Notifications (backend)
+
+In `NotificationsBloc` (`lib/blocs/notifications/`); the mock data is deleted.
+
+**Implemented:**
+- `GET /api/me/notifications`, response confirmed live. `NotificationsRequested` is sent each time Notifications opens; the state has a `status` (initial/loading/loaded/failed), and the screen shows a spinner, "Couldn't load your notifications" with "Try again", or "You don't have any notifications". Newest first; a reload drops the old list (may belong to a previous account) and late responses from older requests are ignored.
+- `NotificationItem.fromJson`: `body` → `message`, `createdAtUtc` → `timestamp`, read = `readAtUtc` is set. Also keeps `type` and `linkUrl`. Notifications with `dismissedAtUtc` set are left out.
+- **Unread count** — `GET /api/me/notifications/unread-count`, response confirmed live (`data: { count }`). `UnreadNotificationsCountRequested` is sent right after the list each time Notifications opens, and the "N unread notifications" subtitle uses it (`serverUnreadCount`). If it fails, the subtitle counts the unread ones in the loaded list instead. Reading a notification lowers it by one, and a list reload clears it (may belong to a previous account).
+- **Mark as read** — `POST /api/me/notifications/{id}/read` (id in the path, no body), response confirmed live: the updated notification with `readAtUtc` set. Tapping an unread notification shows it read straight away, then sends the request; on success the backend's copy replaces it, on failure it shows as unread again (and the count goes back up). Already-read notifications aren't sent again.
+- **Mark all as read** — `POST /api/me/notifications/read-all` (no parameters, no body), response confirmed live: `data: { count }`, how many it marked (not needed by the app). A "Mark all as read" text link sits above the list while any notification is unread — **not in the Figma design**, styled like the app's other text links. It shows everything read straight away; on failure the ones that were unread show as unread again and the count is restored. New string `notificationsMarkAllRead` in all 3 languages.
+- Strings `notificationsLoadFailed` and `notificationsEmpty` in all 3 languages; bloc tests in `test/blocs_test.dart`.
+
+**Still to do** (all listed in `backend/swagger.json`, responses not seen yet):
+- **Dismiss / delete** — `DELETE /api/me/notifications/{id}` (id in the path, no body; the spec has no description or response shape). **Waiting on test data:** the test account has only one notification, and the backend team has been asked to add more so this can be tried without losing it. To find out what it does: note an id from `GET /api/me/notifications`, call the DELETE and save its response, then list again. If the notification is still there with `dismissedAtUtc` set, it's a dismiss (likely — the app already hides dismissed ones); if it's gone, it's a real delete. Also compare `GET .../unread-count` before/after when deleting an unread one. Planned UI: swipe a card to dismiss it, shown gone straight away and put back if the request fails (same pattern as mark as read).
+- **Unread badge** — the count is loaded, but only the Notifications screen uses it. No bell icon with a badge exists anywhere in the app yet (it would also be the missing entry point to Notifications).
+- **Opening `linkUrl`** — it's a web path (e.g. `/bookings/{id}`); tapping should open the matching app screen (needs a Reservation Details screen for bookings).
+- No real entry point to Notifications — still Dev Launcher only.
+- Not yet tested on a device against the real backend.
 
 ## Architecture / design system
 

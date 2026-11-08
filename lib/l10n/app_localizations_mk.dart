@@ -547,6 +547,15 @@ class AppLocalizationsMk extends AppLocalizations {
   String get notificationsUnreadSuffix => 'непрочитани известувања';
 
   @override
+  String get notificationsLoadFailed => 'Известувањата не можеа да се вчитаат.';
+
+  @override
+  String get notificationsEmpty => 'Немате известувања.';
+
+  @override
+  String get notificationsMarkAllRead => 'Означи ги сите како прочитани';
+
+  @override
   String get timeJustNow => 'сега';
 
   @override
@@ -580,7 +589,28 @@ class AppLocalizationsMk extends AppLocalizations {
   String get ticketStatusResolved => 'РЕШЕН';
 
   @override
+  String get ticketStatusClosed => 'ЗАТВОРЕН';
+
+  @override
+  String get ticketsLoadFailed => 'Тикетите не можат да се вчитаат.';
+
+  @override
+  String get ticketsEmpty => 'Сè уште немате тикети.';
+
+  @override
   String get ticketLastChangedLabel => 'Последна промена';
+
+  @override
+  String get ticketDetailsTitle => 'Детали за тикетот';
+
+  @override
+  String get ticketDetailsLoadFailed => 'Тикетот не можеше да се вчита.';
+
+  @override
+  String get ticketCreatedLabel => 'Креиран';
+
+  @override
+  String get ticketAttachmentLabel => 'Прилог';
 
   @override
   String get newTicketTitle => 'Нов тикет за поддршка';

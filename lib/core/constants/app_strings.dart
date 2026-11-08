@@ -224,6 +224,9 @@ class AppStrings {
   static String get settingsLogoutButton => _s.settingsLogoutButton;
   static String get notificationsTitle => _s.notificationsTitle;
   static String get notificationsUnreadSuffix => _s.notificationsUnreadSuffix;
+  static String get notificationsLoadFailed => _s.notificationsLoadFailed;
+  static String get notificationsEmpty => _s.notificationsEmpty;
+  static String get notificationsMarkAllRead => _s.notificationsMarkAllRead;
   static String get timeJustNow => _s.timeJustNow;
   static String get timeMinutesSuffix => _s.timeMinutesSuffix;
   static String get timeHoursSuffix => _s.timeHoursSuffix;
@@ -235,7 +238,14 @@ class AppStrings {
   static String get ticketStatusOpen => _s.ticketStatusOpen;
   static String get ticketStatusInProgress => _s.ticketStatusInProgress;
   static String get ticketStatusResolved => _s.ticketStatusResolved;
+  static String get ticketStatusClosed => _s.ticketStatusClosed;
+  static String get ticketsLoadFailed => _s.ticketsLoadFailed;
+  static String get ticketsEmpty => _s.ticketsEmpty;
   static String get ticketLastChangedLabel => _s.ticketLastChangedLabel;
+  static String get ticketDetailsTitle => _s.ticketDetailsTitle;
+  static String get ticketDetailsLoadFailed => _s.ticketDetailsLoadFailed;
+  static String get ticketCreatedLabel => _s.ticketCreatedLabel;
+  static String get ticketAttachmentLabel => _s.ticketAttachmentLabel;
   static String get newTicketTitle => _s.newTicketTitle;
   static String get newTicketSubtitle => _s.newTicketSubtitle;
   static String get newTicketCategoryLabel => _s.newTicketCategoryLabel;

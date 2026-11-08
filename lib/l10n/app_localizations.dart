@@ -1102,6 +1102,24 @@ abstract class AppLocalizations {
   /// **'непрочитани известувања'**
   String get notificationsUnreadSuffix;
 
+  /// No description provided for @notificationsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Известувањата не можеа да се вчитаат.'**
+  String get notificationsLoadFailed;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Немате известувања.'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In mk, this message translates to:
+  /// **'Означи ги сите како прочитани'**
+  String get notificationsMarkAllRead;
+
   /// No description provided for @timeJustNow.
   ///
   /// In mk, this message translates to:
@@ -1168,11 +1186,53 @@ abstract class AppLocalizations {
   /// **'РЕШЕН'**
   String get ticketStatusResolved;
 
+  /// No description provided for @ticketStatusClosed.
+  ///
+  /// In mk, this message translates to:
+  /// **'ЗАТВОРЕН'**
+  String get ticketStatusClosed;
+
+  /// No description provided for @ticketsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Тикетите не можат да се вчитаат.'**
+  String get ticketsLoadFailed;
+
+  /// No description provided for @ticketsEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште немате тикети.'**
+  String get ticketsEmpty;
+
   /// No description provided for @ticketLastChangedLabel.
   ///
   /// In mk, this message translates to:
   /// **'Последна промена'**
   String get ticketLastChangedLabel;
+
+  /// No description provided for @ticketDetailsTitle.
+  ///
+  /// In mk, this message translates to:
+  /// **'Детали за тикетот'**
+  String get ticketDetailsTitle;
+
+  /// No description provided for @ticketDetailsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Тикетот не можеше да се вчита.'**
+  String get ticketDetailsLoadFailed;
+
+  /// No description provided for @ticketCreatedLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Креиран'**
+  String get ticketCreatedLabel;
+
+  /// No description provided for @ticketAttachmentLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Прилог'**
+  String get ticketAttachmentLabel;
 
   /// No description provided for @newTicketTitle.
   ///

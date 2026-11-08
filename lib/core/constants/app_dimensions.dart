@@ -358,6 +358,9 @@ class AppDimensions {
   static const double newTicketAttachmentRowIconSize = 20;
   static const double newTicketAttachmentRowGap = 10;
 
+  // ── TICKET DETAILS SCREEN ──
+  static const double ticketDetailsAttachmentImageHeight = 200;
+
   // ── PROVIDER DASHBOARD SCREEN ──
   static const double dashboardBodyGap = 24;
   static const double dashboardSectionGap = 12;
