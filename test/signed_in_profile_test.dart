@@ -5,11 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:bulka_frontend/blocs/app_bloc_providers.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
+import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
 import 'package:bulka_frontend/screens/profile_screen/profile_screen.dart';
 import 'package:bulka_frontend/screens/provider_dashboard_screen/provider_dashboard_screen.dart';
 import 'package:bulka_frontend/screens/provider_profile_screen/provider_profile_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
+import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
 
 import 'test_helpers.dart';
 
@@ -80,6 +83,34 @@ void main() {
     expect(find.text('ana@example.com'), findsWidgets);
     expect(find.text('071 222 333'), findsOneWidget);
     expect(find.textContaining('Јована'), findsNothing);
+  });
+
+  testWidgets('My Reservations shows only the signed-in Tourist bookings', (
+    tester,
+  ) async {
+    await _pumpSignedIn(tester, _tourist, const TouristMyReservationsScreen());
+    final context = tester.element(find.byType(TouristMyReservationsScreen));
+    final listings = context.read<ListingsBloc>().state;
+    void book(String listingTitle, String guestId) {
+      context.read<ReservationsBloc>().add(
+        ReservationRequested(
+          listing: listings.listings.firstWhere((l) => l.title == listingTitle),
+          guestId: guestId,
+          // Same name on purpose: ownership is by account, not by name.
+          guestName: _tourist.fullName,
+          startDate: DateTime.now().add(const Duration(days: 10)),
+          endDate: DateTime.now().add(const Duration(days: 12)),
+          guestCount: 2,
+        ),
+      );
+    }
+
+    book('Villa Zdravkovski', _tourist.id);
+    book('Гостинска соба со појадок', 'someone-else');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Villa Zdravkovski'), findsOneWidget);
+    expect(find.text('Гостинска соба со појадок'), findsNothing);
   });
 
   testWidgets('Provider Dashboard greets the signed-in user', (tester) async {

@@ -74,6 +74,7 @@ void main() {
       act: (bloc) => bloc.add(
         ReservationRequested(
           listing: _listing(price: 1000),
+          guestId: 'u1',
           guestName: 'Ана',
           startDate: DateTime(2026, 9, 1),
           endDate: DateTime(2026, 9, 4),
@@ -87,6 +88,43 @@ void main() {
         expect(created.nightlyPriceAtBooking, 1000);
         expect(created.totalAmount, 3000 + created.serviceFee!);
         expect(created.bookingReference, startsWith('RB-'));
+      },
+    );
+
+    blocTest<ReservationsBloc, ReservationsState>(
+      'a booking belongs to the account that made it, not to a name',
+      build: () => ReservationsBloc(initialReservations: [_reservation()]),
+      act: (bloc) => bloc
+        ..add(
+          ReservationRequested(
+            listing: _listing(),
+            guestId: 'u1',
+            guestName: 'Ана',
+            startDate: DateTime(2026, 9, 1),
+            endDate: DateTime(2026, 9, 4),
+            guestCount: 2,
+          ),
+        )
+        ..add(
+          ReservationRequested(
+            listing: _listing(),
+            guestId: 'u2',
+            // Same name, different account.
+            guestName: 'Ана',
+            startDate: DateTime(2026, 10, 1),
+            endDate: DateTime(2026, 10, 4),
+            guestCount: 2,
+          ),
+        ),
+      verify: (bloc) {
+        final mine = bloc.state.forGuest('u1');
+        expect(mine, hasLength(1));
+        expect(mine.single.guestId, 'u1');
+        expect(mine.single.startDate, DateTime(2026, 9, 1));
+        expect(bloc.state.forGuest('u2'), hasLength(1));
+        // Signed out, or the sample reservations without an account.
+        expect(bloc.state.forGuest(null), isEmpty);
+        expect(bloc.state.forGuest('nobody'), isEmpty);
       },
     );
 

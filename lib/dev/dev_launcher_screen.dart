@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
@@ -11,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/models/create_listing_draft.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
@@ -53,18 +53,18 @@ class DevLauncherScreen extends StatelessWidget {
       .active
       .firstWhere((l) => categoryRequiresPrice(l.category));
 
-  /// Books the first accommodation listing and returns the new
+  /// Books the first accommodation listing as the signed-in user (or an
+  /// account-less dev guest when signed out) and returns the new
   /// reservation's id, once [ReservationsBloc] has created it.
-  static Future<String> _seedMockBooking(
-    BuildContext context, {
-    required String guestName,
-  }) async {
+  static Future<String> _seedMockBooking(BuildContext context) async {
+    final user = context.read<AuthBloc>().state.user;
     final bloc = context.read<ReservationsBloc>();
     final created = bloc.stream.firstWhere((s) => s.lastCreated != null);
     bloc.add(
       ReservationRequested(
         listing: _firstAccommodation(context),
-        guestName: guestName,
+        guestId: user?.id,
+        guestName: user?.fullName ?? 'Дев Тестовски',
         startDate: DateTime.now().add(const Duration(days: 10)),
         endDate: DateTime.now().add(const Duration(days: 13)),
         guestCount: 2,
@@ -119,14 +119,14 @@ class DevLauncherScreen extends StatelessWidget {
       ),
       DevScreenEntry.route(
         'Reservation Confirmation (mock booking) · Tourist',
-        (context) async => AppRoutes.reservationConfirmation(
-          await _seedMockBooking(context, guestName: 'Дев Тестовски'),
-        ),
+        (context) async =>
+            AppRoutes.reservationConfirmation(await _seedMockBooking(context)),
       ),
       DevScreenEntry.route(
-        'My Reservations (seeds one mock booking) · Tourist',
+        // Only the signed-in user's bookings show, so sign in first.
+        'My Reservations (seeds one booking for the signed-in user) · Tourist',
         (context) async {
-          await _seedMockBooking(context, guestName: mockTouristGuestName);
+          await _seedMockBooking(context);
           return AppRoutes.reservations;
         },
       ),

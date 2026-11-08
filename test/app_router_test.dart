@@ -94,6 +94,7 @@ void main() {
       ..add(
         ReservationRequested(
           listing: listing,
+          guestId: 'u1',
           guestName: 'Test',
           startDate: DateTime.now().add(const Duration(days: 30)),
           endDate: DateTime.now().add(const Duration(days: 32)),

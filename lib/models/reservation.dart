@@ -88,6 +88,7 @@ class Reservation {
     required this.createdAt,
     required this.updatedAt,
     this.listingId,
+    this.guestId,
     this.bookingReference,
     this.nightlyPriceAtBooking,
     this.serviceFee,
@@ -105,6 +106,12 @@ class Reservation {
   final DateTime updatedAt;
 
   final String? listingId;
+
+  /// The booking Tourist's account id (`AuthUser.id`) — what My
+  /// Reservations matches on. [guestName] is only for display (the
+  /// Provider's side). Null for the Provider-side sample reservations,
+  /// which belong to no signed-in account.
+  final String? guestId;
   final String? bookingReference;
   final double? nightlyPriceAtBooking;
   final double? serviceFee;
@@ -122,6 +129,7 @@ class Reservation {
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       listingId: listingId,
+      guestId: guestId,
       bookingReference: bookingReference,
       nightlyPriceAtBooking: nightlyPriceAtBooking,
       serviceFee: serviceFee,

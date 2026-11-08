@@ -19,6 +19,12 @@ final class ReservationsState {
     return null;
   }
 
+  /// The bookings made by the Tourist with account id [guestId]
+  /// (`AuthUser.id`); empty when nobody is signed in.
+  List<Reservation> forGuest(String? guestId) => guestId == null
+      ? const []
+      : reservations.where((r) => r.guestId == guestId).toList();
+
   List<Reservation> get pending =>
       reservations.where((r) => r.status == ReservationStatus.pending).toList();
 
