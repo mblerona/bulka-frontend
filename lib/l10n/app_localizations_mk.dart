@@ -510,6 +510,21 @@ class AppLocalizationsMk extends AppLocalizations {
   String get navMessages => 'Пораки';
 
   @override
+  String get chatLoadFailed => 'Пораките не можеа да се вчитаат.';
+
+  @override
+  String get chatEmpty => 'Сè уште немате разговори.';
+
+  @override
+  String get chatMessagesLoadFailed => 'Пораките не можеа да се вчитаат.';
+
+  @override
+  String get chatNoMessages => 'Сè уште нема пораки.';
+
+  @override
+  String get chatMessageDeleted => 'Пораката е избришана';
+
+  @override
   String get navProfile => 'Профил';
 
   @override

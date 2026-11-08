@@ -211,6 +211,11 @@ class AppStrings {
   static String get navProviderOffers => _s.navProviderOffers;
   static String get navProviderCalendar => _s.navProviderCalendar;
   static String get navMessages => _s.navMessages;
+  static String get chatLoadFailed => _s.chatLoadFailed;
+  static String get chatEmpty => _s.chatEmpty;
+  static String get chatMessagesLoadFailed => _s.chatMessagesLoadFailed;
+  static String get chatNoMessages => _s.chatNoMessages;
+  static String get chatMessageDeleted => _s.chatMessageDeleted;
   static String get navProfile => _s.navProfile;
   static String get settingsTitle => _s.settingsTitle;
   static String get settingsLanguageHeading => _s.settingsLanguageHeading;

@@ -508,6 +508,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navMessages => 'Messages';
 
   @override
+  String get chatLoadFailed => 'Couldn\'t load your messages.';
+
+  @override
+  String get chatEmpty => 'You don\'t have any conversations yet.';
+
+  @override
+  String get chatMessagesLoadFailed => 'Couldn\'t load the messages.';
+
+  @override
+  String get chatNoMessages => 'No messages yet.';
+
+  @override
+  String get chatMessageDeleted => 'This message was deleted';
+
+  @override
   String get navProfile => 'Profile';
 
   @override

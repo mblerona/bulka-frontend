@@ -55,7 +55,7 @@ class ProviderShell extends StatelessWidget {
   }
 }
 
-class _TabsScaffold extends StatelessWidget {
+class _TabsScaffold extends StatefulWidget {
   const _TabsScaffold({
     required this.navigationShell,
     required this.items,
@@ -70,8 +70,23 @@ class _TabsScaffold extends StatelessWidget {
   /// Nav bar positions that open a route full screen instead of a tab.
   final Map<int, String> fullScreenTabs;
 
+  @override
+  State<_TabsScaffold> createState() => _TabsScaffoldState();
+}
+
+class _TabsScaffoldState extends State<_TabsScaffold> {
+  StatefulNavigationShell get navigationShell => widget.navigationShell;
+  List<int> get tabOfBranch => widget.tabOfBranch;
+
+  @override
+  void initState() {
+    super.initState();
+    // For the Messages badge; the chat list reloads them when opened.
+    context.read<ChatBloc>().add(const ChatConversationsRequested());
+  }
+
   void _handleTap(BuildContext context, int tab) {
-    final fullScreenRoute = fullScreenTabs[tab];
+    final fullScreenRoute = widget.fullScreenTabs[tab];
     if (fullScreenRoute != null) {
       context.push(fullScreenRoute);
       return;
@@ -93,7 +108,7 @@ class _TabsScaffold extends StatelessWidget {
         selector: (state) => state.totalUnreadMessages,
         builder: (context, unreadCount) {
           return BottomNavBar(
-            items: items,
+            items: widget.items,
             selectedIndex: tabOfBranch[navigationShell.currentIndex],
             badgeCounts: unreadCount > 0
                 ? {navMessagesTabIndex: unreadCount}

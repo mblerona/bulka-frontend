@@ -509,6 +509,21 @@ class AppLocalizationsSq extends AppLocalizations {
   String get navMessages => 'Mesazhet';
 
   @override
+  String get chatLoadFailed => 'Mesazhet nuk mund të ngarkoheshin.';
+
+  @override
+  String get chatEmpty => 'Ende nuk keni biseda.';
+
+  @override
+  String get chatMessagesLoadFailed => 'Mesazhet nuk mund të ngarkoheshin.';
+
+  @override
+  String get chatNoMessages => 'Ende nuk ka mesazhe.';
+
+  @override
+  String get chatMessageDeleted => 'Ky mesazh është fshirë';
+
+  @override
   String get navProfile => 'Profili';
 
   @override

@@ -22,7 +22,6 @@ import 'package:bulka_frontend/core/network/token_storage.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
 import 'package:bulka_frontend/models/availability_status.dart';
 import 'package:bulka_frontend/models/chat_conversation.dart';
-import 'package:bulka_frontend/models/chat_message.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
@@ -185,39 +184,281 @@ void main() {
   });
 
   group('ChatBloc', () {
-    ChatConversation conversation() => ChatConversation(
-      id: 'c1',
-      participantName: 'Стефан',
-      avatarInitials: 'С',
-      messages: [
-        ChatMessage(
-          id: 'm1',
-          conversationId: 'c1',
-          text: 'Здраво',
-          timestamp: DateTime(2026),
-          isMine: false,
+    ChatBloc chatWith((int, Object) response) => ChatBloc(
+      dio: Dio(BaseOptions(baseUrl: 'https://test'))
+        ..httpClientAdapter = _FakeAdapter({
+          '/api/chat/conversations': response,
+        }),
+    );
+
+    ChatConversation conversation({String id = 'c1', int unread = 1}) =>
+        ChatConversation(
+          id: id,
+          buyerUserId: 'buyer',
+          buyerName: 'Local Buyer',
+          providerName: 'Local Provider',
+          lastMessageText: 'Здраво',
+          lastMessageAt: DateTime.utc(2026, 9),
+          unreadCount: unread,
+        );
+
+    const older = {
+      'id': '3d227cad-9691-426c-bff5-fa2b07bb9eb6',
+      'buyerUserId': 'ac302986-d44a-4317-9b7b-7fb51d04dbab',
+      'providerProfileId': 'd50f49c4-4236-4243-98aa-2533d6d6fd74',
+      'bookingId': null,
+      'title': 'Убав локален бизнис',
+      'buyerDisplayName': 'Local Buyer',
+      'providerDisplayName': 'Local Provider',
+      'status': 'Blocked',
+      'startedAtUtc': '2026-06-01T08:26:09.228527+00:00',
+      'lastMessageAtUtc': '2026-06-01T08:27:14.770808+00:00',
+      'unreadCount': 0,
+      'lastMessageBody': 'kiako ste',
+      'bookingContexts': <Object>[],
+    };
+    const newer = {
+      'id': '77b8dddd-6f02-4fe2-95d3-0a94dada9514',
+      'buyerUserId': 'ac302986-d44a-4317-9b7b-7fb51d04dbab',
+      'title': 'Убав локален бизнис',
+      'buyerDisplayName': 'Local Buyer',
+      'providerDisplayName': 'Local Provider',
+      'status': 'Closed',
+      'startedAtUtc': '2026-07-22T13:56:19.913761+00:00',
+      'lastMessageAtUtc': '2026-09-16T21:39:25.265009+00:00',
+      'unreadCount': 3,
+      'lastMessageBody': 'yes',
+    };
+
+    blocTest<ChatBloc, ChatState>(
+      'loads the conversations, newest message first',
+      build: () => chatWith((
+        200,
+        {
+          'success': true,
+          'data': [older, newer],
+          'errors': <Object>[],
+          'traceId': null,
+        },
+      )),
+      act: (bloc) => bloc.add(const ChatConversationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<ChatState>().having((s) => s.status, 'status', ChatStatus.loading),
+        isA<ChatState>().having((s) => s.status, 'status', ChatStatus.loaded),
+      ],
+      verify: (bloc) {
+        final [first, second] = bloc.state.conversations;
+        expect(first.id, newer['id']);
+        expect(first.status, ChatConversationStatus.closed);
+        expect(first.previewText, 'yes');
+        expect(
+          first.previewTime,
+          DateTime.utc(2026, 9, 16, 21, 39, 25, 265, 9),
+        );
+        expect(first.title, 'Убав локален бизнис');
+        expect(second.status, ChatConversationStatus.blocked);
+        expect(bloc.state.totalUnreadMessages, 3);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'a failed request ends in failed',
+      build: () => chatWith((401, const {'success': false})),
+      act: (bloc) => bloc.add(const ChatConversationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, ChatStatus.failed);
+        expect(bloc.state.conversations, isEmpty);
+      },
+    );
+
+    test('shows the other person: the Provider to the Buyer, and back', () {
+      final c = ChatConversation.fromJson(older);
+      expect(
+        c.participantNameFor('ac302986-d44a-4317-9b7b-7fb51d04dbab'),
+        'Local Provider',
+      );
+      expect(c.participantNameFor('someone-else'), 'Local Buyer');
+      expect(ChatConversation.initialsOf('Local Provider'), 'LP');
+      expect(ChatConversation.initialsOf('Љубица'), 'Љ');
+    });
+
+    const conversationId = '77b8dddd-6f02-4fe2-95d3-0a94dada9514';
+    const buyerId = 'ac302986-d44a-4317-9b7b-7fb51d04dbab';
+    const providerUserId = '52109fc1-0b16-4e2f-953c-fa838297c633';
+    Map<String, Object?> message(
+      String id,
+      String sender,
+      String body,
+      String at, {
+      String? deletedAt,
+    }) => {
+      'id': id,
+      'conversationId': conversationId,
+      'senderUserId': sender,
+      'senderRole': sender == buyerId ? 'Buyer' : 'Provider',
+      'body': body,
+      'createdAtUtc': at,
+      'mediaAssetIds': <Object>[],
+      'deletedAtUtc': deletedAt,
+      'isFlagged': false,
+      'flaggedReason': null,
+    };
+    final details = {
+      ...newer,
+      'unreadCount': 0,
+      'messages': {
+        'items': [
+          message('m3', providerUserId, 'yes', '2026-09-16T21:39:25.265009Z'),
+          message(
+            'm2',
+            buyerId,
+            'Dali moze so Drugarce?',
+            '2026-09-16T21:37:16.185131Z',
+            deletedAt: '2026-09-16T21:38:00Z',
+          ),
+          message(
+            'm1',
+            providerUserId,
+            'Zdravo, kako si?',
+            '2026-07-22T13:56:25.249442Z',
+          ),
+        ],
+        'page': 1,
+        'pageSize': 20,
+        'totalCount': 3,
+        'totalPages': 1,
+      },
+    };
+
+    ChatBloc detailsWith((int, Object) response) => ChatBloc(
+      dio: Dio(BaseOptions(baseUrl: 'https://test'))
+        ..httpClientAdapter = _FakeAdapter({
+          '/api/chat/conversations/$conversationId': response,
+        }),
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'loads a conversation\'s messages, oldest first',
+      build: () => detailsWith((
+        200,
+        {'success': true, 'data': details, 'errors': <Object>[]},
+      )),
+      act: (bloc) =>
+          bloc.add(const ChatConversationDetailsRequested(conversationId)),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<ChatState>().having(
+          (s) => s.detailsStatusFor(conversationId),
+          'detailsStatus',
+          ChatStatus.loading,
+        ),
+        isA<ChatState>().having(
+          (s) => s.detailsStatusFor(conversationId),
+          'detailsStatus',
+          ChatStatus.loaded,
         ),
       ],
+      verify: (bloc) {
+        final conversation = bloc.state.detailsFor(conversationId)!;
+        final [first, second, third] = conversation.messages;
+        expect(first.text, 'Zdravo, kako si?');
+        expect(third.text, 'yes');
+        expect(conversation.previewText, 'yes');
+        // Whose message it is depends on who's signed in.
+        expect(first.isMineFor(buyerId), isFalse);
+        expect(first.isMineFor(providerUserId), isTrue);
+        expect(second.isMineFor(buyerId), isTrue);
+        expect(second.isDeleted, isTrue);
+        expect(third.isDeleted, isFalse);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'an unknown conversation ends in notFound',
+      build: () => detailsWith((404, const {'success': false})),
+      act: (bloc) =>
+          bloc.add(const ChatConversationDetailsRequested(conversationId)),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(
+          bloc.state.detailsStatusFor(conversationId),
+          ChatStatus.notFound,
+        );
+        expect(bloc.state.detailsFor(conversationId), isNull);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'a failed reload keeps the messages already shown',
+      build: () => detailsWith((500, const {})),
+      seed: () => ChatState(
+        details: {conversationId: ChatConversation.fromJson(details)},
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      ),
+      act: (bloc) =>
+          bloc.add(const ChatConversationDetailsRequested(conversationId)),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.detailsStatusFor(conversationId), ChatStatus.failed);
+        expect(bloc.state.detailsFor(conversationId)!.messages, hasLength(3));
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'a sent message is added to the loaded messages too',
+      build: () => detailsWith((500, const {})),
+      seed: () => ChatState(
+        conversations: [ChatConversation.fromJson(newer)],
+        status: ChatStatus.loaded,
+        details: {conversationId: ChatConversation.fromJson(details)},
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      ),
+      act: (bloc) => bloc.add(
+        const ChatMessageSent(conversationId: conversationId, text: 'Супер'),
+      ),
+      verify: (bloc) {
+        final messages = bloc.state.detailsFor(conversationId)!.messages;
+        expect(messages, hasLength(4));
+        expect(messages.last.text, 'Супер');
+        expect(messages.last.isMineFor(null), isTrue);
+        expect(bloc.state.byId(conversationId)!.previewText, 'Супер');
+      },
     );
 
     blocTest<ChatBloc, ChatState>(
       'opening a conversation clears its unread count',
-      build: () => ChatBloc(initialConversations: [conversation()]),
+      build: () => chatWith((500, const {})),
+      seed: () => ChatState(
+        conversations: [conversation(unread: 2)],
+        status: ChatStatus.loaded,
+      ),
       act: (bloc) => bloc.add(const ConversationRead('c1')),
       verify: (bloc) => expect(bloc.state.totalUnreadMessages, 0),
     );
 
     blocTest<ChatBloc, ChatState>(
-      'sending appends a trimmed message; blank text is ignored',
-      build: () => ChatBloc(initialConversations: [conversation()]),
+      'sending appends a trimmed message and moves it to the top; blank '
+      'text is ignored',
+      build: () => chatWith((500, const {})),
+      seed: () => ChatState(
+        conversations: [
+          conversation(id: 'c0'),
+          conversation(),
+        ],
+        status: ChatStatus.loaded,
+      ),
       act: (bloc) => bloc
         ..add(const ChatMessageSent(conversationId: 'c1', text: '  Да  '))
         ..add(const ChatMessageSent(conversationId: 'c1', text: '   ')),
       verify: (bloc) {
-        final messages = bloc.state.byId('c1')!.messages;
-        expect(messages, hasLength(2));
-        expect(messages.last.text, 'Да');
-        expect(messages.last.isMine, isTrue);
+        final top = bloc.state.conversations.first;
+        expect(top.id, 'c1');
+        expect(top.messages, hasLength(1));
+        expect(top.messages.single.text, 'Да');
+        expect(top.messages.single.isMine, isTrue);
+        expect(top.previewText, 'Да');
       },
     );
   });

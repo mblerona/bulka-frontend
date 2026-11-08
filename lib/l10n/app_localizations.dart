@@ -1030,6 +1030,36 @@ abstract class AppLocalizations {
   /// **'Пораки'**
   String get navMessages;
 
+  /// No description provided for @chatLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пораките не можеа да се вчитаат.'**
+  String get chatLoadFailed;
+
+  /// No description provided for @chatEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште немате разговори.'**
+  String get chatEmpty;
+
+  /// No description provided for @chatMessagesLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пораките не можеа да се вчитаат.'**
+  String get chatMessagesLoadFailed;
+
+  /// No description provided for @chatNoMessages.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште нема пораки.'**
+  String get chatNoMessages;
+
+  /// No description provided for @chatMessageDeleted.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пораката е избришана'**
+  String get chatMessageDeleted;
+
   /// No description provided for @navProfile.
   ///
   /// In mk, this message translates to:

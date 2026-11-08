@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
@@ -8,6 +9,7 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/relative_time.dart';
 import 'package:bulka_frontend/models/chat_conversation.dart';
+import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -18,6 +20,39 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadConversations();
+  }
+
+  void _loadConversations() {
+    context.read<ChatBloc>().add(const ChatConversationsRequested());
+  }
+
+  /// Shown instead of the list when there are no conversations to list.
+  Widget _noConversationsMessage(ChatStatus status) {
+    switch (status) {
+      case ChatStatus.initial:
+      case ChatStatus.loading:
+        return const SectionLoadingIndicator();
+      case ChatStatus.failed:
+      case ChatStatus.notFound: // Only for one conversation's messages.
+        return LoadFailedMessage(
+          message: AppStrings.chatLoadFailed,
+          onRetry: _loadConversations,
+        );
+      case ChatStatus.loaded:
+        return Text(
+          AppStrings.chatEmpty,
+          style: const TextStyle(
+            fontSize: AppDimensions.dsInputFontSize,
+            color: AppColors.profileSecondaryText,
+          ),
+        );
+    }
+  }
+
   void _openConversation(ChatConversation conversation) {
     // Mark read at tap time (not inside the thread screen) so the badge —
     // here, on the navbar, everywhere — updates before the thread even
@@ -28,7 +63,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final conversations = context.watch<ChatBloc>().state.conversations;
+    final chat = context.watch<ChatBloc>().state;
+    final conversations = chat.conversations;
+    final myUserId = context.watch<AuthBloc>().state.user?.id;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -51,9 +88,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   bottom: AppDimensions.profileBodyBottomPadding,
                 ),
                 children: [
+                  if (conversations.isEmpty)
+                    _noConversationsMessage(chat.status),
                   for (var i = 0; i < conversations.length; i++) ...[
                     _ChatRow(
                       conversation: conversations[i],
+                      name: conversations[i].participantNameFor(myUserId),
                       onTap: () => _openConversation(conversations[i]),
                     ),
                     if (i != conversations.length - 1) ...[
@@ -76,14 +116,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
 }
 
 class _ChatRow extends StatelessWidget {
-  const _ChatRow({required this.conversation, required this.onTap});
+  const _ChatRow({
+    required this.conversation,
+    required this.name,
+    required this.onTap,
+  });
 
   final ChatConversation conversation;
+
+  /// The other person's name.
+  final String name;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final latest = conversation.latestMessage;
+    final preview = conversation.previewText;
     final unreadCount = conversation.unreadCount;
 
     return GestureDetector(
@@ -106,7 +153,7 @@ class _ChatRow extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                conversation.avatarInitials,
+                ChatConversation.initialsOf(name),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: AppDimensions.chatListAvatarInitialsFontSize,
@@ -120,17 +167,17 @@ class _ChatRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.participantName,
+                    name,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: AppDimensions.chatListNameFontSize,
                       color: AppColors.agroForest950,
                     ),
                   ),
-                  if (conversation.contextLabel != null) ...[
+                  if (conversation.title != null) ...[
                     const SizedBox(height: AppDimensions.chatListContentGap),
                     Text(
-                      conversation.contextLabel!,
+                      conversation.title!,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: AppDimensions.chatListContextFontSize,
@@ -138,10 +185,10 @@ class _ChatRow extends StatelessWidget {
                       ),
                     ),
                   ],
-                  if (latest != null) ...[
+                  if (preview != null) ...[
                     const SizedBox(height: AppDimensions.chatListContentGap),
                     Text(
-                      latest.text,
+                      preview,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -158,15 +205,14 @@ class _ChatRow extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (latest != null)
-                  Text(
-                    relativeTimeLabel(latest.timestamp),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: AppDimensions.chatListTimestampFontSize,
-                      color: AppColors.profileSecondaryText,
-                    ),
+                Text(
+                  relativeTimeLabel(conversation.previewTime),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w400,
+                    fontSize: AppDimensions.chatListTimestampFontSize,
+                    color: AppColors.profileSecondaryText,
                   ),
+                ),
                 if (unreadCount > 0) ...[
                   const SizedBox(height: AppDimensions.chatListMetaGap),
                   _UnreadBadge(count: unreadCount),

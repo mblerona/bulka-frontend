@@ -4,7 +4,9 @@ _Rural tourism app for Macedonia (Flutter). This page summarizes what has been b
 
 ## Where we left off
 
-**Latest (2026-11-08): Support tickets are on the backend for reading.** My Tickets loads `GET /api/me/tickets`, and a new Ticket Details screen loads `GET /api/me/tickets/{id}`. Creating a ticket (`POST /api/me/tickets`) is still local only. Full detail in "Support Tickets (backend)" below.
+**Latest (2026-11-09): Chat reads from the backend.** The chat list loads `GET /api/chat/conversations` (also feeding the Messages badge) and each thread loads its newest 20 messages from `GET /api/chat/conversations/{id}`. Sending, marking read and older messages are still to do. Full detail in "Chat (backend)" below.
+
+**Before that (2026-11-08):** support tickets (list + new Ticket Details screen) and notifications (list, unread count, mark read, mark all read) moved to the backend. Creating a ticket and deleting a notification are still to do. See "Support Tickets (backend)" and "Notifications (backend)".
 
 _The rest of this section is from the earlier auth round:_
 
@@ -51,8 +53,8 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Provider · Rating Saved (Success) | ✅ Implemented | Reached only after a successful rating submit |
 | Settings | ✅ Implemented | No screen navigates here yet; "Одjава" really logs out to Login |
 | Notifications | ✅ Implemented, **real backend call** | Loads the list and unread count; tapping marks read on the backend. No screen navigates here yet |
-| Messages · Chat List | ✅ Implemented | Reachable via "Пораки" on both the Tourist and Provider bottom nav; no bottom nav of its own (see "Confusing" section) |
-| Messages · Chat Thread | ✅ Implemented | Reachable from Chat List only |
+| Messages · Chat List | ✅ Implemented, **real backend call** (`GET /api/chat/conversations`) | Reachable via "Пораки" on both the Tourist and Provider bottom nav; no bottom nav of its own (see "Confusing" section) |
+| Messages · Chat Thread | ✅ Implemented, **real backend call** (`GET /api/chat/conversations/{id}`) | Reachable from Chat List only. Shows the newest 20 messages; sending and marking read are still local only |
 | Support · My Tickets | ✅ Implemented, **real backend call** | Loads `GET /api/me/tickets`; tapping a ticket opens Ticket Details. No screen navigates here yet, so it's reachable via the Dev Launcher only |
 | Support · New Ticket | ✅ Implemented, 🟡 **local only** | Reachable from My Tickets only. Submitting adds the ticket on this device only; `POST /api/me/tickets` isn't connected yet |
 | Support · Ticket Details | ✅ Implemented, **real backend call**, **not a Figma screen** | Loads `GET /api/me/tickets/{id}`. Shows number, status, dates, category, title, description and attachments. Built from the My Tickets card and the New Ticket field styles |
@@ -267,6 +269,33 @@ In `NotificationsBloc` (`lib/blocs/notifications/`); the mock data is deleted.
 - **Unread badge** — the count is loaded, but only the Notifications screen uses it. No bell icon with a badge exists anywhere in the app yet (it would also be the missing entry point to Notifications).
 - **Opening `linkUrl`** — it's a web path (e.g. `/bookings/{id}`); tapping should open the matching app screen (needs a Reservation Details screen for bookings).
 - No real entry point to Notifications — still Dev Launcher only.
+- Not yet tested on a device against the real backend.
+
+## Chat (backend)
+
+In `ChatBloc` (`lib/blocs/chat/`); the mock conversations are deleted.
+
+**Implemented:**
+- **Conversation list** — `GET /api/chat/conversations` (no parameters; both roles), response confirmed live. `ChatConversationsRequested` is sent when the Tourist/Provider tabs open (so the Messages badge has a count) and each time the chat list opens. The state has a `status` (initial/loading/loaded/failed); the chat list shows a spinner, "Couldn't load your messages" with "Try again", or "You don't have any conversations yet". Newest message first; a reload drops the old list (may belong to a previous account) and late responses from older requests are ignored.
+- **`ChatConversation` model** rebuilt around the response: buyer/provider names, `buyerUserId`, `title` (shown under the name), `status` (`Open`/`Closed`/`Blocked`), `startedAtUtc`, `lastMessageBody`/`lastMessageAtUtc` (the row's preview and time) and the backend's `unreadCount` (the row badge and the nav badge). The name shown is the other person's: `participantNameFor(myUserId)` gives the Provider's name when the signed-in user is the conversation's Buyer, otherwise the Buyer's. Initials come from that name.
+- **Messages** — `GET /api/chat/conversations/{id}`, response confirmed live: the conversation plus `messages: { items, page, pageSize, totalCount, totalPages }`, items newest first (shown oldest first). `ChatConversationDetailsRequested` is sent each time a thread opens; results are kept per conversation (`detailsFor(id)`, `detailsStatusFor(id)`). The header shows straight away from the list while messages load; the thread shows a spinner, "Couldn't load the messages" with "Try again", or "No messages yet", and jumps to the newest message once they arrive. A failed reload keeps the messages shown; a 404 with no list entry shows Not Found.
+- **Whose message:** `ChatMessage.isMineFor(myUserId)` compares `senderUserId` with the signed-in user's id (right/green bubble when it matches). Messages with `deletedAtUtc` set show as "This message was deleted" in italics. `senderRole`, `senderDisplayName`, `mediaAssetIds` and the flag fields are read from the response but not used yet.
+- Chat Thread opened directly (e.g. `/messages/:id`) loads the list and the messages, and shows a spinner until one of them finds the conversation.
+- The live Swagger has an optional `messageId` **query** parameter on this endpoint (the local `backend/swagger.json` is out of date and doesn't show it). It isn't sent; what it does is unknown (probably paging from a given message).
+- Strings `chatLoadFailed`, `chatEmpty`, `chatMessagesLoadFailed`, `chatNoMessages` and `chatMessageDeleted` in all 3 languages; bloc tests for the list and the messages; the fake test backend answers `/api/chat/conversations` and `/api/chat/conversations/conv-1`, and the "Chat Thread" dev entry loads the list and opens the first conversation.
+- **Test setup fix:** `test/flutter_test_config.dart` now uses `FlutterSecureStorage.setMockInitialValues({})`. Without it, any signed-in request in a widget test waited forever for the keychain, and since the auth interceptor is queued, every request behind it waited too (Home's categories/listings never loaded once the tabs started loading conversations).
+
+**Still to do:**
+- **Older messages** — only the first page (20, the newest) is loaded. Conversations with more need paging: find out how (`messageId` query? a `page` parameter?) and load more when scrolling up.
+- **Images in messages** — `mediaAssetIds` is always empty so far; needs a media URL endpoint to show them.
+- **Refresh `backend/swagger.json`** from the live Swagger — it's missing at least the `messageId` parameter above.
+- **Send a message** — `POST /api/chat/conversations/{id}/messages` (has a body; response not seen yet, same for the endpoints below). Sending only adds the message on this device; it's gone after the next load.
+- **Mark as read** — `POST /api/chat/conversations/{id}/read` (has a body). Opening a conversation clears its unread count on this device only, so the badge comes back on the next load.
+- **Start a conversation** — `POST /api/chat/conversations` (has a body), e.g. "Contact the host" from Listing Details.
+- **Delete a message** — `DELETE /api/chat/conversations/{id}/messages/{messageId}`.
+- **Closed / Blocked conversations** still show the message input; they probably shouldn't allow sending (check what the backend does).
+- `bookingContexts` (always empty so far) and `bookingId` aren't used yet — could show the booking a conversation is about.
+- Each time the chat list opens the list reloads from scratch, so the nav badge briefly drops to 0 while it loads.
 - Not yet tested on a device against the real backend.
 
 ## Architecture / design system

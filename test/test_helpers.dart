@@ -53,6 +53,67 @@ class FakeBackendAdapter implements HttpClientAdapter {
         {'id': 'a8', 'code': 'toilet', 'name': 'Тоалет'},
       ],
     },
+    '/api/chat/conversations': {
+      'success': true,
+      'data': [
+        {
+          'id': 'conv-1',
+          'buyerUserId': 'buyer-1',
+          'providerProfileId': 'provider-1',
+          'bookingId': null,
+          'title': 'Убав локален бизнис',
+          'buyerDisplayName': 'Local Buyer',
+          'providerDisplayName': 'Local Provider',
+          'status': 'Open',
+          'startedAtUtc': '2026-07-22T13:56:19.913761+00:00',
+          'lastMessageAtUtc': '2026-09-16T21:39:25.265009+00:00',
+          'unreadCount': 2,
+          'lastMessageBody':
+              'До каде сте, ако треба нешто слободно може да пишете.',
+          'bookingContexts': [],
+        },
+      ],
+    },
+    '/api/chat/conversations/conv-1': {
+      'success': true,
+      'data': {
+        'id': 'conv-1',
+        'buyerUserId': 'buyer-1',
+        'title': 'Убав локален бизнис',
+        'buyerDisplayName': 'Local Buyer',
+        'providerDisplayName': 'Local Provider',
+        'status': 'Open',
+        'startedAtUtc': '2026-07-22T13:56:19.913761+00:00',
+        'lastMessageAtUtc': '2026-09-16T21:39:25.265009+00:00',
+        'unreadCount': 2,
+        'messages': {
+          'items': [
+            {
+              'id': 'm2',
+              'conversationId': 'conv-1',
+              'senderUserId': 'provider-user-1',
+              'body':
+                  'До каде сте, ако треба нешто слободно може да пишете. '
+                  'Имаме и паркинг и појадок вклучен во цената.',
+              'createdAtUtc': '2026-09-16T21:39:25.265009+00:00',
+              'deletedAtUtc': null,
+            },
+            {
+              'id': 'm1',
+              'conversationId': 'conv-1',
+              'senderUserId': 'buyer-1',
+              'body': 'Здраво, дали има слободно за викендов?',
+              'createdAtUtc': '2026-09-16T21:37:16.185131+00:00',
+              'deletedAtUtc': '2026-09-16T21:38:00Z',
+            },
+          ],
+          'page': 1,
+          'pageSize': 20,
+          'totalCount': 2,
+          'totalPages': 1,
+        },
+      },
+    },
     '/api/regions': {
       'success': true,
       'data': [
