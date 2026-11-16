@@ -114,6 +114,10 @@ class FakeBackendAdapter implements HttpClientAdapter {
         },
       },
     },
+    '/api/me/notifications/unread-count': {
+      'success': true,
+      'data': {'count': 3},
+    },
     '/api/regions': {
       'success': true,
       'data': [

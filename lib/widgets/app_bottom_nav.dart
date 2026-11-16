@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
+import 'package:bulka_frontend/blocs/notifications/notifications_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
@@ -83,6 +84,10 @@ class _TabsScaffoldState extends State<_TabsScaffold> {
     super.initState();
     // For the Messages badge; the chat list reloads them when opened.
     context.read<ChatBloc>().add(const ChatConversationsRequested());
+    // For the Notifications badge in the headers.
+    context.read<NotificationsBloc>().add(
+      const UnreadNotificationsCountRequested(),
+    );
   }
 
   void _handleTap(BuildContext context, int tab) {

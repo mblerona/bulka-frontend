@@ -22,6 +22,7 @@ import 'package:bulka_frontend/core/network/token_storage.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
 import 'package:bulka_frontend/models/availability_status.dart';
 import 'package:bulka_frontend/models/chat_conversation.dart';
+import 'package:bulka_frontend/models/chat_message.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
@@ -406,13 +407,317 @@ void main() {
       },
     );
 
+    group('sending', () {
+      const sendPath = '/api/chat/conversations/$conversationId/messages';
+      late _FakeAdapter adapter;
+      ChatBloc sendingWith(Map<String, (int, Object)> responses) {
+        adapter = _FakeAdapter(responses);
+        return ChatBloc(
+          dio: Dio(BaseOptions(baseUrl: 'https://test'))
+            ..httpClientAdapter = adapter,
+        );
+      }
+
+      ChatState loaded({String status = 'Closed'}) => ChatState(
+        conversations: [
+          ChatConversation.fromJson({...newer, 'status': status}),
+        ],
+        status: ChatStatus.loaded,
+        details: {
+          conversationId: ChatConversation.fromJson({
+            ...details,
+            'status': status,
+          }),
+        },
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      );
+
+      Map<String, Object?> sentBody() =>
+          adapter.requests.singleWhere((r) => r.path == sendPath).data
+              as Map<String, Object?>;
+
+      blocTest<ChatBloc, ChatState>(
+        'shows the message as sending, then replaces it with the '
+        'backend\'s copy',
+        build: () => sendingWith({
+          sendPath: (
+            200,
+            {
+              'success': true,
+              'data': message('m4', buyerId, 'Супер', '2026-09-17T10:00:00Z'),
+            },
+          ),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(
+            conversationId: conversationId,
+            text: ' Супер ',
+          ),
+        ),
+        wait: const Duration(milliseconds: 50),
+        expect: () => [
+          isA<ChatState>().having(
+            (s) => s.detailsFor(conversationId)!.messages.last.sendStatus,
+            'sendStatus',
+            ChatMessageSendStatus.sending,
+          ),
+          isA<ChatState>().having(
+            (s) => s.detailsFor(conversationId)!.messages.last.id,
+            'id',
+            'm4',
+          ),
+        ],
+        verify: (bloc) {
+          final body = sentBody();
+          expect(body['body'], 'Супер');
+          expect(body['mediaAssetIds'], isEmpty);
+          expect(
+            body['clientMessageKey'],
+            matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-')),
+          );
+          final messages = bloc.state.detailsFor(conversationId)!.messages;
+          expect(messages, hasLength(4));
+          expect(messages.last.isPending, isFalse);
+          expect(messages.last.isMineFor(buyerId), isTrue);
+          expect(messages.last.clientMessageKey, body['clientMessageKey']);
+          expect(bloc.state.byId(conversationId)!.previewText, 'Супер');
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'a reply without a message just marks it sent',
+        build: () => sendingWith({
+          sendPath: (200, {'success': true, 'data': null}),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+        ),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final last = bloc.state.detailsFor(conversationId)!.messages.last;
+          expect(last.text, 'Да');
+          expect(last.sendStatus, ChatMessageSendStatus.sent);
+          expect(last.isMineFor(null), isTrue);
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'a failed send is marked failed, and a retry sends the same key',
+        build: () => sendingWith({}),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) async {
+          bloc.add(
+            const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          final failed = bloc.state.detailsFor(conversationId)!.messages.last;
+          expect(failed.sendStatus, ChatMessageSendStatus.failed);
+          adapter.responses[sendPath] = (200, {'success': true, 'data': null});
+          bloc.add(
+            ChatMessageRetried(
+              conversationId: conversationId,
+              clientMessageKey: failed.clientMessageKey!,
+            ),
+          );
+        },
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final sends = adapter.requests.where((r) => r.path == sendPath);
+          expect(sends, hasLength(2));
+          final [first, second] = [
+            for (final r in sends)
+              (r.data as Map<String, Object?>)['clientMessageKey'],
+          ];
+          expect(second, first);
+          final messages = bloc.state.detailsFor(conversationId)!.messages;
+          expect(messages, hasLength(4));
+          expect(messages.last.sendStatus, ChatMessageSendStatus.sent);
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'CHAT_CONVERSATION_NOT_ACTIVE marks it failed and the conversation '
+        'closed',
+        build: () => sendingWith({
+          sendPath: (
+            400,
+            {
+              'success': false,
+              'data': null,
+              'errors': [
+                {
+                  'code': 'CHAT_CONVERSATION_NOT_ACTIVE',
+                  'message': 'Conversation is not active.',
+                  'field': null,
+                },
+              ],
+            },
+          ),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+        ),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final conversation = bloc.state.detailsFor(conversationId)!;
+          expect(conversation.isOpen, isFalse);
+          expect(bloc.state.byId(conversationId)!.isOpen, isFalse);
+          expect(
+            conversation.messages.last.sendStatus,
+            ChatMessageSendStatus.failed,
+          );
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'nothing is sent to a Closed or Blocked conversation',
+        build: () => sendingWith({}),
+        seed: () => loaded(status: 'Blocked'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+        ),
+        wait: const Duration(milliseconds: 50),
+        expect: () => <ChatState>[],
+        verify: (_) => expect(adapter.requests, isEmpty),
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'a message still sending survives a reload of the messages',
+        build: () => sendingWith({
+          '/api/chat/conversations/$conversationId': (
+            200,
+            {'success': true, 'data': details},
+          ),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) async {
+          bloc.add(
+            const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          bloc.add(const ChatConversationDetailsRequested(conversationId));
+        },
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final messages = bloc.state.detailsFor(conversationId)!.messages;
+          expect(messages, hasLength(4));
+          expect(messages.last.text, 'Да');
+          expect(messages.last.isPending, isTrue);
+        },
+      );
+    });
+
+    group('reading', () {
+      const readPath = '/api/chat/conversations/$conversationId/read';
+      late _FakeAdapter adapter;
+      ChatBloc readingWith((int, Object) response) {
+        adapter = _FakeAdapter({readPath: response});
+        return ChatBloc(
+          dio: Dio(BaseOptions(baseUrl: 'https://test'))
+            ..httpClientAdapter = adapter,
+        );
+      }
+
+      ChatState unread() => ChatState(
+        conversations: [ChatConversation.fromJson(newer)],
+        status: ChatStatus.loaded,
+        details: {
+          conversationId: ChatConversation.fromJson({
+            ...details,
+            'unreadCount': 3,
+          }),
+        },
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'tells the backend up to the newest message',
+        build: () => readingWith((200, {'success': true, 'data': null})),
+        seed: unread,
+        act: (bloc) => bloc.add(const ConversationRead(conversationId)),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final request = adapter.requests.single;
+          expect(request.path, readPath);
+          expect(request.method, 'POST');
+          expect(request.data, {'lastReadMessageId': 'm3'});
+          expect(bloc.state.totalUnreadMessages, 0);
+          expect(bloc.state.detailsFor(conversationId)!.unreadCount, 0);
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'if the backend refuses, the unread count comes back',
+        build: () => readingWith((500, const {})),
+        seed: unread,
+        act: (bloc) => bloc.add(const ConversationRead(conversationId)),
+        wait: const Duration(milliseconds: 50),
+        expect: () => [
+          isA<ChatState>().having((s) => s.totalUnreadMessages, 'unread', 0),
+          isA<ChatState>().having((s) => s.totalUnreadMessages, 'unread', 3),
+        ],
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'nothing is sent when it\'s already read, or before the messages '
+        'load',
+        build: () => readingWith((200, {'success': true, 'data': null})),
+        seed: () => ChatState(
+          conversations: [
+            ChatConversation.fromJson(newer),
+            ChatConversation.fromJson(older),
+          ],
+          status: ChatStatus.loaded,
+        ),
+        act: (bloc) => bloc
+          ..add(const ConversationRead(conversationId))
+          ..add(ConversationRead(older['id']! as String)),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          expect(adapter.requests, isEmpty);
+          // Still cleared on this device straight away.
+          expect(bloc.state.totalUnreadMessages, 0);
+        },
+      );
+    });
+
+    blocTest<ChatBloc, ChatState>(
+      'a reload by the same user keeps the list (and badge) while loading',
+      build: () => chatWith((200, {'success': true, 'data': <Object>[]})),
+      seed: () => ChatState(
+        conversations: [conversation(unread: 2)],
+        status: ChatStatus.loaded,
+      ),
+      act: (bloc) =>
+          bloc.add(const ChatConversationsRequested(keepShown: true)),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<ChatState>()
+            .having((s) => s.status, 'status', ChatStatus.loading)
+            .having((s) => s.totalUnreadMessages, 'unread', 2),
+        isA<ChatState>()
+            .having((s) => s.status, 'status', ChatStatus.loaded)
+            .having((s) => s.conversations, 'conversations', isEmpty),
+      ],
+    );
+
     blocTest<ChatBloc, ChatState>(
       'a sent message is added to the loaded messages too',
       build: () => detailsWith((500, const {})),
       seed: () => ChatState(
-        conversations: [ChatConversation.fromJson(newer)],
+        conversations: [
+          ChatConversation.fromJson({...newer, 'status': 'Open'}),
+        ],
         status: ChatStatus.loaded,
-        details: {conversationId: ChatConversation.fromJson(details)},
+        details: {
+          conversationId: ChatConversation.fromJson({
+            ...details,
+            'status': 'Open',
+          }),
+        },
         detailsStatus: {conversationId: ChatStatus.loaded},
       ),
       act: (bloc) => bloc.add(

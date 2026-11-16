@@ -523,6 +523,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageDeleted => 'This message was deleted';
 
   @override
+  String get chatMessageFailed => 'Not sent.';
+
+  @override
+  String get chatMessageNotSent => 'Not sent. Tap to try again.';
+
+  @override
+  String get chatConversationClosed => 'This conversation is closed.';
+
+  @override
+  String get chatConversationBlocked => 'This conversation is blocked.';
+
+  @override
+  String get headerTicketsTooltip => 'My tickets';
+
+  @override
+  String get headerNotificationsTooltip => 'Notifications';
+
+  @override
+  String get headerSettingsTooltip => 'Settings';
+
+  @override
   String get navProfile => 'Profile';
 
   @override

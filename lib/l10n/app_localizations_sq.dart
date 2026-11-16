@@ -524,6 +524,28 @@ class AppLocalizationsSq extends AppLocalizations {
   String get chatMessageDeleted => 'Ky mesazh është fshirë';
 
   @override
+  String get chatMessageFailed => 'Nuk u dërgua.';
+
+  @override
+  String get chatMessageNotSent =>
+      'Nuk u dërgua. Prekni për ta provuar sërish.';
+
+  @override
+  String get chatConversationClosed => 'Kjo bisedë është e mbyllur.';
+
+  @override
+  String get chatConversationBlocked => 'Kjo bisedë është e bllokuar.';
+
+  @override
+  String get headerTicketsTooltip => 'Tiketat e mia';
+
+  @override
+  String get headerNotificationsTooltip => 'Njoftimet';
+
+  @override
+  String get headerSettingsTooltip => 'Cilësimet';
+
+  @override
   String get navProfile => 'Profili';
 
   @override

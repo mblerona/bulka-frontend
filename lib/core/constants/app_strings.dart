@@ -216,6 +216,13 @@ class AppStrings {
   static String get chatMessagesLoadFailed => _s.chatMessagesLoadFailed;
   static String get chatNoMessages => _s.chatNoMessages;
   static String get chatMessageDeleted => _s.chatMessageDeleted;
+  static String get chatMessageFailed => _s.chatMessageFailed;
+  static String get chatMessageNotSent => _s.chatMessageNotSent;
+  static String get chatConversationClosed => _s.chatConversationClosed;
+  static String get chatConversationBlocked => _s.chatConversationBlocked;
+  static String get headerTicketsTooltip => _s.headerTicketsTooltip;
+  static String get headerNotificationsTooltip => _s.headerNotificationsTooltip;
+  static String get headerSettingsTooltip => _s.headerSettingsTooltip;
   static String get navProfile => _s.navProfile;
   static String get settingsTitle => _s.settingsTitle;
   static String get settingsLanguageHeading => _s.settingsLanguageHeading;

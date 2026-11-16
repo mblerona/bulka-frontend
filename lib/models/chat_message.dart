@@ -1,3 +1,7 @@
+/// Where a message sent from this device is. Messages from the backend are
+/// always [sent].
+enum ChatMessageSendStatus { sent, sending, failed }
+
 /// A single message within a [ChatConversation], from the `messages` of
 /// `GET /api/chat/conversations/{id}`, or one sent on this device.
 class ChatMessage {
@@ -10,6 +14,8 @@ class ChatMessage {
     this.isRead = false,
     this.senderUserId,
     this.isDeleted = false,
+    this.clientMessageKey,
+    this.sendStatus = ChatMessageSendStatus.sent,
   });
 
   /// Messages the backend sends are already read or counted in the
@@ -24,6 +30,7 @@ class ChatMessage {
       isRead: true,
       senderUserId: json['senderUserId'] as String?,
       isDeleted: _parseDate(json['deletedAtUtc']) != null,
+      clientMessageKey: json['clientMessageKey'] as String?,
     );
   }
 
@@ -47,13 +54,23 @@ class ChatMessage {
   /// Deleted on the backend (`deletedAtUtc` set); shown as "deleted".
   final bool isDeleted;
 
+  /// The id this device made up when sending it (`clientMessageKey`), so a
+  /// retry is the same message to the backend and its reply replaces this
+  /// one. Null for messages from other devices.
+  final String? clientMessageKey;
+
+  final ChatMessageSendStatus sendStatus;
+
+  /// Not on the backend yet (sending or failed).
+  bool get isPending => sendStatus != ChatMessageSendStatus.sent;
+
   /// Whether the user with [myUserId] sent it (outgoing, right-aligned
   /// green bubble) rather than the other person (incoming, left-aligned
   /// cream bubble).
   bool isMineFor(String? myUserId) =>
       isMine || (myUserId != null && senderUserId == myUserId);
 
-  ChatMessage copyWith({bool? isRead}) {
+  ChatMessage copyWith({bool? isRead, ChatMessageSendStatus? sendStatus}) {
     return ChatMessage(
       id: id,
       conversationId: conversationId,
@@ -63,6 +80,8 @@ class ChatMessage {
       isRead: isRead ?? this.isRead,
       senderUserId: senderUserId,
       isDeleted: isDeleted,
+      clientMessageKey: clientMessageKey,
+      sendStatus: sendStatus ?? this.sendStatus,
     );
   }
 }
