@@ -76,6 +76,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.navMessages,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

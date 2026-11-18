@@ -119,6 +119,7 @@ class _ProviderAvailabilityCalendarScreenState
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.calendarTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

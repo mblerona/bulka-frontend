@@ -111,6 +111,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         body: Column(
           children: [
             ScreenHeader(
+              showActions: true,
               title: AppStrings.resultsTitle,
               titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
               bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

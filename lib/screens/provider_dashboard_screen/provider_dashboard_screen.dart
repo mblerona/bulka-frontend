@@ -56,6 +56,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.dashboardTitle,
             subtitle: '${AppStrings.dashboardGreetingPrefix}$greetingName',
             titleFontSize: AppDimensions.dsHeaderSubtitleTitleFontSize,
