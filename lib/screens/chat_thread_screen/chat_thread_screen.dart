@@ -111,7 +111,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       listenWhen: (previous, current) =>
           previous.detailsStatusFor(id) != ChatStatus.loaded &&
           current.detailsStatusFor(id) == ChatStatus.loaded,
-      listener: (context, _) => _scrollToNewest(),
+      listener: (context, _) {
+        _scrollToNewest();
+        // Now the newest message is known, the backend can be told.
+        context.read<ChatBloc>().add(ConversationRead(id));
+      },
       child: Scaffold(
         backgroundColor: AppColors.white,
         body: Column(
@@ -166,6 +170,14 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         _MessageBubble(
                           message: message,
                           isMine: message.isMineFor(myUserId),
+                          onRetry: conversation.isOpen
+                              ? () => context.read<ChatBloc>().add(
+                                  ChatMessageRetried(
+                                    conversationId: id,
+                                    clientMessageKey: message.clientMessageKey!,
+                                  ),
+                                )
+                              : null,
                         ),
                       ],
                     ],
@@ -175,10 +187,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             ),
             SafeArea(
               top: false,
-              child: _ChatInputBar(
-                controller: _inputController,
-                onSend: _handleSend,
-              ),
+              child: conversation.isOpen
+                  ? _ChatInputBar(
+                      controller: _inputController,
+                      onSend: _handleSend,
+                    )
+                  : _ConversationNotActiveNote(status: conversation.status),
             ),
           ],
         ),
@@ -291,7 +305,11 @@ class _ChatThreadHeader extends StatelessWidget {
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message, required this.isMine});
+  const _MessageBubble({
+    required this.message,
+    required this.isMine,
+    this.onRetry,
+  });
 
   final ChatMessage message;
 
@@ -299,12 +317,65 @@ class _MessageBubble extends StatelessWidget {
   /// person (left, cream).
   final bool isMine;
 
+  /// Sends a failed message again; null when it can't be (the
+  /// conversation is closed).
+  final VoidCallback? onRetry;
+
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final failed = message.sendStatus == ChatMessageSendStatus.failed;
+    final bubble = Row(
       mainAxisAlignment: isMine
           ? MainAxisAlignment.end
           : MainAxisAlignment.start,
+      children: [_bubble()],
+    );
+    if (!failed) {
+      // Faded while it's still being sent.
+      return message.sendStatus == ChatMessageSendStatus.sending
+          ? Opacity(
+              opacity: AppDimensions.chatThreadSendingOpacity,
+              child: bubble,
+            )
+          : bubble;
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onRetry,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          bubble,
+          const SizedBox(height: AppDimensions.chatThreadNotSentGap),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: AppDimensions.chatThreadNotSentIconSize,
+                color: AppColors.settingsDangerColor,
+              ),
+              const SizedBox(width: AppDimensions.chatThreadNotSentGap),
+              Text(
+                onRetry == null
+                    ? AppStrings.chatMessageFailed
+                    : AppStrings.chatMessageNotSent,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: AppDimensions.chatThreadNotSentFontSize,
+                  color: AppColors.settingsDangerColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bubble() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         ConstrainedBox(
           constraints: const BoxConstraints(
@@ -336,6 +407,54 @@ class _MessageBubble extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// In place of the input bar when the conversation is Closed or Blocked
+/// (the backend refuses messages to them). Not in the Figma design; styled
+/// like the bar it replaces.
+class _ConversationNotActiveNote extends StatelessWidget {
+  const _ConversationNotActiveNote({required this.status});
+
+  final ChatConversationStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.chatThreadInputBarHorizontalPadding,
+        vertical: AppDimensions.chatThreadInputBarVerticalPadding,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        border: Border(top: BorderSide(color: AppColors.profileStatCardBorder)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.lock_outline,
+            size: AppDimensions.chatThreadNotActiveIconSize,
+            color: AppColors.profileSecondaryText,
+          ),
+          const SizedBox(width: AppDimensions.chatThreadNotSentGap),
+          Flexible(
+            child: Text(
+              status == ChatConversationStatus.blocked
+                  ? AppStrings.chatConversationBlocked
+                  : AppStrings.chatConversationClosed,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: AppDimensions.chatThreadInputFontSize,
+                color: AppColors.profileSecondaryText,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -27,7 +27,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   void _loadConversations() {
-    context.read<ChatBloc>().add(const ChatConversationsRequested());
+    // Same user as the tabs' load, so the list (and the Messages badge)
+    // stays up while it reloads.
+    context.read<ChatBloc>().add(
+      const ChatConversationsRequested(keepShown: true),
+    );
   }
 
   /// Shown instead of the list when there are no conversations to list.
@@ -72,6 +76,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.navMessages,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

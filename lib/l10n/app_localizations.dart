@@ -1060,6 +1060,48 @@ abstract class AppLocalizations {
   /// **'Пораката е избришана'**
   String get chatMessageDeleted;
 
+  /// No description provided for @chatMessageFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Не е испратена.'**
+  String get chatMessageFailed;
+
+  /// No description provided for @chatMessageNotSent.
+  ///
+  /// In mk, this message translates to:
+  /// **'Не е испратена. Допрете за нов обид.'**
+  String get chatMessageNotSent;
+
+  /// No description provided for @chatConversationClosed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Овој разговор е затворен.'**
+  String get chatConversationClosed;
+
+  /// No description provided for @chatConversationBlocked.
+  ///
+  /// In mk, this message translates to:
+  /// **'Овој разговор е блокиран.'**
+  String get chatConversationBlocked;
+
+  /// No description provided for @headerTicketsTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Мои тикети'**
+  String get headerTicketsTooltip;
+
+  /// No description provided for @headerNotificationsTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Известувања'**
+  String get headerNotificationsTooltip;
+
+  /// No description provided for @headerSettingsTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Поставки'**
+  String get headerSettingsTooltip;
+
   /// No description provided for @navProfile.
   ///
   /// In mk, this message translates to:

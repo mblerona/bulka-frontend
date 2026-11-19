@@ -4,7 +4,12 @@ _Rural tourism app for Macedonia (Flutter). This page summarizes what has been b
 
 ## Where we left off
 
-**Latest (2026-11-09): Chat reads from the backend.** The chat list loads `GET /api/chat/conversations` (also feeding the Messages badge) and each thread loads its newest 20 messages from `GET /api/chat/conversations/{id}`. Sending, marking read and older messages are still to do. Full detail in "Chat (backend)" below.
+**Latest (2026-11-18): header icons on every root screen.** The My Tickets / Notifications / Settings icons (style agreed with the team) are now on all signed-in root screens of both roles, not just Tourist Home. See "Header actions".
+
+**Before that (2026-11-16): Chat sends and marks read (responses not seen yet); header icons on Home.** Sending (`POST .../messages` with a `clientMessageKey`) and mark as read (`POST .../read`) are wired, but **no Open conversation exists to test them on**: all test conversations are Closed/Blocked (sending returns 400 `CHAT_CONVERSATION_NOT_ACTIVE`), and starting one returns `CHAT_CONFIRMED_BOOKING_REQUIRED` (the Buyer test account has no Confirmed booking). Waiting on the backend team for a confirmed booking or a reopened conversation. Closed/Blocked conversations now show a note instead of the input box. Tourist Home has three new header icons (My Tickets, Notifications with unread badge, Settings) — **style to be agreed before adding them to other screens**. See "Chat (backend)" and "Header actions".
+
+**Before that (2026-11-09): Chat reads from the backend.**
+ The chat list loads `GET /api/chat/conversations` (also feeding the Messages badge) and each thread loads its newest 20 messages from `GET /api/chat/conversations/{id}`. Sending, marking read and older messages are still to do. Full detail in "Chat (backend)" below.
 
 **Before that (2026-11-08):** support tickets (list + new Ticket Details screen) and notifications (list, unread count, mark read, mark all read) moved to the backend. Creating a ticket and deleting a notification are still to do. See "Support Tickets (backend)" and "Notifications (backend)".
 
@@ -285,18 +290,27 @@ In `ChatBloc` (`lib/blocs/chat/`); the mock conversations are deleted.
 - Strings `chatLoadFailed`, `chatEmpty`, `chatMessagesLoadFailed`, `chatNoMessages` and `chatMessageDeleted` in all 3 languages; bloc tests for the list and the messages; the fake test backend answers `/api/chat/conversations` and `/api/chat/conversations/conv-1`, and the "Chat Thread" dev entry loads the list and opens the first conversation.
 - **Test setup fix:** `test/flutter_test_config.dart` now uses `FlutterSecureStorage.setMockInitialValues({})`. Without it, any signed-in request in a widget test waited forever for the keychain, and since the auth interceptor is queued, every request behind it waited too (Home's categories/listings never loaded once the tabs started loading conversations).
 
+- **Sending** — `POST /api/chat/conversations/{id}/messages` with `{ body, mediaAssetIds: [], clientMessageKey }`. `clientMessageKey` is only in the live Swagger (the local `backend/swagger.json` lacks it); the app sends a random UUID v4 per message, assumed to let the backend drop a repeated send (unconfirmed). The message shows straight away, faded while sending. On success the backend's copy replaces it if the response is a message (has `id`), otherwise it's just marked sent — **the success response hasn't been seen yet**. On failure it shows "Not sent. Tap to try again." under the bubble; a retry sends the same `clientMessageKey`. Messages still sending or failed survive a reload of the list/messages.
+- **Closed/Blocked** — confirmed live: sending to them returns 400 `CHAT_CONVERSATION_NOT_ACTIVE`. The thread shows "This conversation is closed/blocked." with a lock icon instead of the input bar (not in Figma). If a send gets that error, the message is marked failed and the conversation shown as closed.
+- **Mark as read** — `POST /api/chat/conversations/{id}/read` with `{ lastReadMessageId }` (the newest message that's on the backend). Tapping a conversation clears its unread count straight away; the request is sent once the thread's messages have loaded (it needs the newest id) and only if something is unread. If it fails, the count comes back. **Response not seen yet**; whether it resets `unreadCount` to 0 is unconfirmed.
+- **Messages badge no longer flickers** — the chat list reloads with `ChatConversationsRequested(keepShown: true)`, which keeps the list (and badge) while loading. The tabs' load (after sign-in) still drops the old list, as it may belong to another account.
+- **Starting a conversation** — tried live: `POST /api/chat/conversations` (`{ providerProfileId, initialMessage }`) returns 400 `CHAT_CONFIRMED_BOOKING_REQUIRED` ("Start the conversation from your own confirmed booking"). So "Contact the host" belongs on a confirmed reservation, via `POST /api/bookings/{id}/chat` (Buyer) or `POST /api/provider/bookings/{id}/chat` (Provider), body `{ initialMessage }` — not wired yet.
+
 **Still to do:**
 - **Older messages** — only the first page (20, the newest) is loaded. Conversations with more need paging: find out how (`messageId` query? a `page` parameter?) and load more when scrolling up.
 - **Images in messages** — `mediaAssetIds` is always empty so far; needs a media URL endpoint to show them.
 - **Refresh `backend/swagger.json`** from the live Swagger — it's missing at least the `messageId` parameter above.
-- **Send a message** — `POST /api/chat/conversations/{id}/messages` (has a body; response not seen yet, same for the endpoints below). Sending only adds the message on this device; it's gone after the next load.
-- **Mark as read** — `POST /api/chat/conversations/{id}/read` (has a body). Opening a conversation clears its unread count on this device only, so the badge comes back on the next load.
-- **Start a conversation** — `POST /api/chat/conversations` (has a body), e.g. "Contact the host" from Listing Details.
+- **Test send and mark as read against a real Open conversation** (blocked on backend test data, see above): check the success responses, adjust `_sentMessageFrom` if needed, check that sending the same `clientMessageKey` twice doesn't create two messages, and that `read` resets `unreadCount`.
+- **Start a conversation from a confirmed booking** — `POST /api/bookings/{id}/chat` / `POST /api/provider/bookings/{id}/chat`; needs bookings from the backend first.
 - **Delete a message** — `DELETE /api/chat/conversations/{id}/messages/{messageId}`.
-- **Closed / Blocked conversations** still show the message input; they probably shouldn't allow sending (check what the backend does).
 - `bookingContexts` (always empty so far) and `bookingId` aren't used yet — could show the booking a conversation is about.
-- Each time the chat list opens the list reloads from scratch, so the nav badge briefly drops to 0 while it loads.
 - Not yet tested on a device against the real backend.
+
+## Header actions
+
+**New (2026-11-16), Tourist Home only for now — style not agreed yet.** `HeaderActions` (`lib/widgets/header_actions.dart`): three round buttons (faint white circle, white 18px icon, 32px) at the top right of the green header band, above the title: My Tickets (`/tickets`), Notifications (`/notifications`, red badge with `NotificationsBloc.unreadCount`) and Settings (`/settings`). **Not in the Figma design.** They use the space above the title the 56px top padding already leaves; on phones with a tall status bar the title moves down so they sit below it. The tabs now load `GET /api/me/notifications/unread-count` when they open, so the badge has a number before Notifications is visited. These are the first real entry points to My Tickets, Notifications and Settings.
+
+**2026-11-18 — style agreed, added to the other root screens.** `ScreenHeader` has a `showActions` flag that puts `HeaderActions` at the right end of its back-arrow row (where the language switch goes on the sign-in screens; the two can't be used together). Turned on for: Search Results, My Reservations, Profile (Tourist); Dashboard, My Offers, Calendar, Profile (both the individual and legal-entity versions) (Provider); and Messages (both roles). Left out on purpose: sign-in/sign-up screens, the screens the icons open (Settings, Notifications, My Tickets and its sub-screens), screens inside a task (Listing Details, Booking, Confirmation, Reviews, Create Offer, Rate Guest, Chat Thread) and Not Found.
 
 ## Architecture / design system
 

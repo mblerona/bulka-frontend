@@ -53,6 +53,7 @@ class _ProviderOffersScreenState extends State<ProviderOffersScreen> {
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.offersTitle,
             subtitle: AppStrings.offersSubtitle,
             titleFontSize: AppDimensions.dsHeaderSubtitleTitleFontSize,

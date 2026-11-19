@@ -78,6 +78,10 @@ class AppColors {
   // agroForest950.
   static const Color settingsDangerColor = Color(0xFFD82830);
 
+  // Header action buttons: a faint white circle on the green band. Not in
+  // Figma.
+  static const Color headerActionBackground = Color(0x1FFFFFFF);
+
   // PROVIDER DASHBOARD SCREEN ONLY
   // "На преглед" (pending review) counter value — a distinct amber, not
   // the same as agroGold100 above (no shared Figma variable for it).

@@ -114,14 +114,22 @@ class ChatConversation {
       ? messages.last.timestamp
       : (lastMessageAt ?? startedAt);
 
-  ChatConversation copyWith({List<ChatMessage>? messages, int? unreadCount}) {
+  /// Messages can only be sent while it's open; the backend refuses others
+  /// with `CHAT_CONVERSATION_NOT_ACTIVE`.
+  bool get isOpen => status == ChatConversationStatus.open;
+
+  ChatConversation copyWith({
+    List<ChatMessage>? messages,
+    int? unreadCount,
+    ChatConversationStatus? status,
+  }) {
     return ChatConversation(
       id: id,
       buyerUserId: buyerUserId,
       buyerName: buyerName,
       providerName: providerName,
       title: title,
-      status: status,
+      status: status ?? this.status,
       startedAt: startedAt,
       lastMessageText: lastMessageText,
       lastMessageAt: lastMessageAt,

@@ -38,14 +38,15 @@ final class ChatState {
   int get totalUnreadMessages =>
       conversations.fold(0, (sum, c) => sum + c.unreadCount);
 
-  /// The same state with [conversations] (and [details]) replaced.
+  /// The same state with the given fields replaced.
   ChatState copyWith({
     List<ChatConversation>? conversations,
+    ChatStatus? status,
     Map<String, ChatConversation>? details,
     Map<String, ChatStatus>? detailsStatus,
   }) => ChatState(
     conversations: conversations ?? this.conversations,
-    status: status,
+    status: status ?? this.status,
     details: details ?? this.details,
     detailsStatus: detailsStatus ?? this.detailsStatus,
   );

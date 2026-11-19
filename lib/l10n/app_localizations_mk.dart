@@ -525,6 +525,27 @@ class AppLocalizationsMk extends AppLocalizations {
   String get chatMessageDeleted => 'Пораката е избришана';
 
   @override
+  String get chatMessageFailed => 'Не е испратена.';
+
+  @override
+  String get chatMessageNotSent => 'Не е испратена. Допрете за нов обид.';
+
+  @override
+  String get chatConversationClosed => 'Овој разговор е затворен.';
+
+  @override
+  String get chatConversationBlocked => 'Овој разговор е блокиран.';
+
+  @override
+  String get headerTicketsTooltip => 'Мои тикети';
+
+  @override
+  String get headerNotificationsTooltip => 'Известувања';
+
+  @override
+  String get headerSettingsTooltip => 'Поставки';
+
+  @override
   String get navProfile => 'Профил';
 
   @override
