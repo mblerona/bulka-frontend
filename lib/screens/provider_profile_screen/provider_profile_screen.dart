@@ -340,6 +340,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         children: [
           isLegalEntity
               ? ScreenHeader(
+                  showActions: true,
                   title: AppStrings.providerSetupTitle,
                   subtitle: AppStrings.providerSetupSubtitle,
                   titleFontSize: AppDimensions.dsHeaderSubtitleTitleFontSize,
@@ -348,6 +349,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   subtitleFontSize: AppDimensions.dsSubheadingFontSize,
                 )
               : ScreenHeader(
+                  showActions: true,
                   title: AppStrings.profileTitle,
                   titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
                   bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

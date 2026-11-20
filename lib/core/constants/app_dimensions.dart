@@ -267,6 +267,19 @@ class AppDimensions {
   static const double bottomNavBadgeFontSize = 9;
   static const double bottomNavBadgeHorizontalPadding = 3;
 
+  // Header actions (My Tickets / Notifications / Settings), top right of
+  // a green header band. Not in Figma.
+  static const double headerActionSize = 32;
+  static const double headerActionIconSize = 18;
+  static const double headerActionsGap = 8;
+  static const double headerActionBadgeOffset = -4;
+
+  /// Between the actions row and the title row under it.
+  static const double headerActionsBottomGap = 6;
+
+  /// Below the status bar.
+  static const double headerActionsTopGap = 8;
+
   // ── SETTINGS SCREEN ──
   static const double settingsSectionGap = 12;
 
@@ -333,6 +346,12 @@ class AppDimensions {
   static const double chatThreadInputFontSize = 13;
   static const double chatThreadSendButtonSize = 40;
   static const double chatThreadSendIconFontSize = 16;
+  // Not in Figma: a message still sending, or one that failed to send.
+  static const double chatThreadSendingOpacity = 0.6;
+  static const double chatThreadNotSentGap = 4;
+  static const double chatThreadNotSentIconSize = 14;
+  static const double chatThreadNotSentFontSize = 11;
+  static const double chatThreadNotActiveIconSize = 16;
 
   // ── MY TICKETS SCREEN ──
   static const double myTicketsBodyTopPadding = 24;
@@ -357,6 +376,9 @@ class AppDimensions {
 
   static const double newTicketAttachmentRowIconSize = 20;
   static const double newTicketAttachmentRowGap = 10;
+
+  // ── TICKET DETAILS SCREEN ──
+  static const double ticketDetailsAttachmentImageHeight = 200;
 
   // ── PROVIDER DASHBOARD SCREEN ──
   static const double dashboardBodyGap = 24;

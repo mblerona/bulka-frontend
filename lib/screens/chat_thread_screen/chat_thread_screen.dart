@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
+import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
@@ -29,8 +31,36 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     // the chat list underneath is built in the same frame and listens to
     // the controller. A no-op once nothing is unread.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<ChatBloc>().add(ConversationRead(widget.conversationId));
+      if (!mounted) return;
+      final chat = context.read<ChatBloc>();
+      // The list first: loading it clears messages loaded before.
+      if (chat.state.status == ChatStatus.initial) {
+        chat.add(const ChatConversationsRequested());
+      }
+      _loadMessages();
+      chat.add(ConversationRead(widget.conversationId));
+    });
+  }
+
+  void _loadMessages() {
+    context.read<ChatBloc>().add(
+      ChatConversationDetailsRequested(widget.conversationId),
+    );
+  }
+
+  /// Shows the newest message once the messages arrive.
+  void _scrollToNewest({bool animate = false}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final end = _scrollController.position.maxScrollExtent;
+      if (animate) {
+        _scrollController.animateTo(
+          end,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollController.jumpTo(end);
       }
     });
   }
@@ -49,80 +79,135 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       ChatMessageSent(conversationId: widget.conversationId, text: text),
     );
     _inputController.clear();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-    });
+    _scrollToNewest(animate: true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final conversation = context.watch<ChatBloc>().state.byId(
-      widget.conversationId,
-    );
-    // E.g. an old /messages/:id link.
-    if (conversation == null) return const RouteNotFoundScreen();
+    final chat = context.watch<ChatBloc>().state;
+    final id = widget.conversationId;
+    final conversation = chat.detailsFor(id);
+    final messagesStatus = chat.detailsStatusFor(id);
+    if (conversation == null) {
+      // Opened directly (e.g. /messages/:id): wait for the list or the
+      // messages, whichever finds it.
+      final waiting = [
+        chat.status,
+        messagesStatus,
+      ].any((s) => s == ChatStatus.initial || s == ChatStatus.loading);
+      if (waiting) {
+        return const Scaffold(
+          backgroundColor: AppColors.white,
+          body: SectionLoadingIndicator(),
+        );
+      }
+      // E.g. an old /messages/:id link.
+      return const RouteNotFoundScreen();
+    }
     final messages = conversation.messages;
+    final myUserId = context.watch<AuthBloc>().state.user?.id;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Column(
-        children: [
-          _ChatThreadHeader(conversation: conversation),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              color: AppColors.profileStatCardBackground,
-              child: SafeArea(
-                top: false,
-                bottom: false,
-                child: ListView(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.dsBodyHorizontalPadding,
-                    vertical: AppDimensions.chatThreadBodyVerticalPadding,
-                  ),
-                  children: [
-                    if (messages.isNotEmpty)
-                      Text(
-                        _dateDividerLabel(messages.first.timestamp),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: AppDimensions.chatThreadDateDividerFontSize,
-                          color: AppColors.profileSecondaryText,
+    return BlocListener<ChatBloc, ChatState>(
+      listenWhen: (previous, current) =>
+          previous.detailsStatusFor(id) != ChatStatus.loaded &&
+          current.detailsStatusFor(id) == ChatStatus.loaded,
+      listener: (context, _) {
+        _scrollToNewest();
+        // Now the newest message is known, the backend can be told.
+        context.read<ChatBloc>().add(ConversationRead(id));
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: Column(
+          children: [
+            _ChatThreadHeader(
+              conversation: conversation,
+              name: conversation.participantNameFor(myUserId),
+            ),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                color: AppColors.profileStatCardBackground,
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: ListView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.dsBodyHorizontalPadding,
+                      vertical: AppDimensions.chatThreadBodyVerticalPadding,
+                    ),
+                    children: [
+                      if (messages.isEmpty)
+                        switch (messagesStatus) {
+                          ChatStatus.failed => LoadFailedMessage(
+                            message: AppStrings.chatMessagesLoadFailed,
+                            onRetry: _loadMessages,
+                          ),
+                          ChatStatus.loaded || ChatStatus.notFound => Text(
+                            AppStrings.chatNoMessages,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: AppDimensions.dsInputFontSize,
+                              color: AppColors.profileSecondaryText,
+                            ),
+                          ),
+                          _ => const SectionLoadingIndicator(),
+                        },
+                      if (messages.isNotEmpty)
+                        Text(
+                          _dateDividerLabel(messages.first.timestamp),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontSize:
+                                AppDimensions.chatThreadDateDividerFontSize,
+                            color: AppColors.profileSecondaryText,
+                          ),
                         ),
-                      ),
-                    for (final message in messages) ...[
-                      const SizedBox(height: AppDimensions.chatThreadBodyGap),
-                      _MessageBubble(message: message),
+                      for (final message in messages) ...[
+                        const SizedBox(height: AppDimensions.chatThreadBodyGap),
+                        _MessageBubble(
+                          message: message,
+                          isMine: message.isMineFor(myUserId),
+                          onRetry: conversation.isOpen
+                              ? () => context.read<ChatBloc>().add(
+                                  ChatMessageRetried(
+                                    conversationId: id,
+                                    clientMessageKey: message.clientMessageKey!,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-          SafeArea(
-            top: false,
-            child: _ChatInputBar(
-              controller: _inputController,
-              onSend: _handleSend,
+            SafeArea(
+              top: false,
+              child: conversation.isOpen
+                  ? _ChatInputBar(
+                      controller: _inputController,
+                      onSend: _handleSend,
+                    )
+                  : _ConversationNotActiveNote(status: conversation.status),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _ChatThreadHeader extends StatelessWidget {
-  const _ChatThreadHeader({required this.conversation});
+  const _ChatThreadHeader({required this.conversation, required this.name});
 
   final ChatConversation conversation;
+
+  /// The other person's name.
+  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +260,7 @@ class _ChatThreadHeader extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              conversation.avatarInitials,
+              ChatConversation.initialsOf(name),
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: AppDimensions.chatThreadAvatarInitialsFontSize,
@@ -190,7 +275,7 @@ class _ChatThreadHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  conversation.participantName,
+                  name,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
@@ -198,10 +283,10 @@ class _ChatThreadHeader extends StatelessWidget {
                     color: AppColors.white,
                   ),
                 ),
-                if (conversation.contextLabel != null) ...[
+                if (conversation.title != null) ...[
                   const SizedBox(height: AppDimensions.chatThreadNameColGap),
                   Text(
-                    conversation.contextLabel!,
+                    conversation.title!,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
@@ -220,16 +305,77 @@ class _ChatThreadHeader extends StatelessWidget {
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
+  const _MessageBubble({
+    required this.message,
+    required this.isMine,
+    this.onRetry,
+  });
 
   final ChatMessage message;
 
+  /// Sent by the signed-in user (right, green) rather than the other
+  /// person (left, cream).
+  final bool isMine;
+
+  /// Sends a failed message again; null when it can't be (the
+  /// conversation is closed).
+  final VoidCallback? onRetry;
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: message.isMine
+    final failed = message.sendStatus == ChatMessageSendStatus.failed;
+    final bubble = Row(
+      mainAxisAlignment: isMine
           ? MainAxisAlignment.end
           : MainAxisAlignment.start,
+      children: [_bubble()],
+    );
+    if (!failed) {
+      // Faded while it's still being sent.
+      return message.sendStatus == ChatMessageSendStatus.sending
+          ? Opacity(
+              opacity: AppDimensions.chatThreadSendingOpacity,
+              child: bubble,
+            )
+          : bubble;
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onRetry,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          bubble,
+          const SizedBox(height: AppDimensions.chatThreadNotSentGap),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: AppDimensions.chatThreadNotSentIconSize,
+                color: AppColors.settingsDangerColor,
+              ),
+              const SizedBox(width: AppDimensions.chatThreadNotSentGap),
+              Text(
+                onRetry == null
+                    ? AppStrings.chatMessageFailed
+                    : AppStrings.chatMessageNotSent,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: AppDimensions.chatThreadNotSentFontSize,
+                  color: AppColors.settingsDangerColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bubble() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         ConstrainedBox(
           constraints: const BoxConstraints(
@@ -241,10 +387,8 @@ class _MessageBubble extends StatelessWidget {
               vertical: AppDimensions.chatThreadBubbleVerticalPadding,
             ),
             decoration: BoxDecoration(
-              color: message.isMine
-                  ? AppColors.agroGreen700
-                  : AppColors.agroCream100,
-              border: message.isMine
+              color: isMine ? AppColors.agroGreen700 : AppColors.agroCream100,
+              border: isMine
                   ? null
                   : Border.all(color: AppColors.profileStatCardBorder),
               borderRadius: BorderRadius.circular(
@@ -252,18 +396,65 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
             child: Text(
-              message.text,
+              message.isDeleted ? AppStrings.chatMessageDeleted : message.text,
               style: TextStyle(
                 fontWeight: FontWeight.w400,
+                fontStyle: message.isDeleted ? FontStyle.italic : null,
                 fontSize: AppDimensions.chatThreadBubbleFontSize,
-                color: message.isMine
-                    ? AppColors.white
-                    : AppColors.agroForest950,
+                color: isMine ? AppColors.white : AppColors.agroForest950,
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// In place of the input bar when the conversation is Closed or Blocked
+/// (the backend refuses messages to them). Not in the Figma design; styled
+/// like the bar it replaces.
+class _ConversationNotActiveNote extends StatelessWidget {
+  const _ConversationNotActiveNote({required this.status});
+
+  final ChatConversationStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.chatThreadInputBarHorizontalPadding,
+        vertical: AppDimensions.chatThreadInputBarVerticalPadding,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        border: Border(top: BorderSide(color: AppColors.profileStatCardBorder)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.lock_outline,
+            size: AppDimensions.chatThreadNotActiveIconSize,
+            color: AppColors.profileSecondaryText,
+          ),
+          const SizedBox(width: AppDimensions.chatThreadNotSentGap),
+          Flexible(
+            child: Text(
+              status == ChatConversationStatus.blocked
+                  ? AppStrings.chatConversationBlocked
+                  : AppStrings.chatConversationClosed,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: AppDimensions.chatThreadInputFontSize,
+                color: AppColors.profileSecondaryText,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

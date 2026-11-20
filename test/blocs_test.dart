@@ -13,8 +13,10 @@ import 'package:bulka_frontend/blocs/favorites/favorites_bloc.dart';
 import 'package:bulka_frontend/blocs/guest_ratings/guest_ratings_bloc.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
+import 'package:bulka_frontend/blocs/notifications/notifications_bloc.dart';
 import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/support_tickets/support_tickets_bloc.dart';
 import 'package:bulka_frontend/core/network/api_exception.dart';
 import 'package:bulka_frontend/core/network/token_storage.dart';
 import 'package:bulka_frontend/models/auth_user.dart';
@@ -24,8 +26,11 @@ import 'package:bulka_frontend/models/chat_message.dart';
 import 'package:bulka_frontend/models/listing_amenity.dart';
 import 'package:bulka_frontend/models/listing_category.dart';
 import 'package:bulka_frontend/models/listing_search_filter.dart';
+import 'package:bulka_frontend/models/notification_item.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
+import 'package:bulka_frontend/models/support_attachment.dart';
+import 'package:bulka_frontend/models/support_ticket.dart';
 import 'package:bulka_frontend/models/user_role.dart';
 
 ProviderListing _listing({
@@ -218,39 +223,585 @@ void main() {
   });
 
   group('ChatBloc', () {
-    ChatConversation conversation() => ChatConversation(
-      id: 'c1',
-      participantName: 'Стефан',
-      avatarInitials: 'С',
-      messages: [
-        ChatMessage(
-          id: 'm1',
-          conversationId: 'c1',
-          text: 'Здраво',
-          timestamp: DateTime(2026),
-          isMine: false,
+    ChatBloc chatWith((int, Object) response) => ChatBloc(
+      dio: Dio(BaseOptions(baseUrl: 'https://test'))
+        ..httpClientAdapter = _FakeAdapter({
+          '/api/chat/conversations': response,
+        }),
+    );
+
+    ChatConversation conversation({String id = 'c1', int unread = 1}) =>
+        ChatConversation(
+          id: id,
+          buyerUserId: 'buyer',
+          buyerName: 'Local Buyer',
+          providerName: 'Local Provider',
+          lastMessageText: 'Здраво',
+          lastMessageAt: DateTime.utc(2026, 9),
+          unreadCount: unread,
+        );
+
+    const older = {
+      'id': '3d227cad-9691-426c-bff5-fa2b07bb9eb6',
+      'buyerUserId': 'ac302986-d44a-4317-9b7b-7fb51d04dbab',
+      'providerProfileId': 'd50f49c4-4236-4243-98aa-2533d6d6fd74',
+      'bookingId': null,
+      'title': 'Убав локален бизнис',
+      'buyerDisplayName': 'Local Buyer',
+      'providerDisplayName': 'Local Provider',
+      'status': 'Blocked',
+      'startedAtUtc': '2026-06-01T08:26:09.228527+00:00',
+      'lastMessageAtUtc': '2026-06-01T08:27:14.770808+00:00',
+      'unreadCount': 0,
+      'lastMessageBody': 'kiako ste',
+      'bookingContexts': <Object>[],
+    };
+    const newer = {
+      'id': '77b8dddd-6f02-4fe2-95d3-0a94dada9514',
+      'buyerUserId': 'ac302986-d44a-4317-9b7b-7fb51d04dbab',
+      'title': 'Убав локален бизнис',
+      'buyerDisplayName': 'Local Buyer',
+      'providerDisplayName': 'Local Provider',
+      'status': 'Closed',
+      'startedAtUtc': '2026-07-22T13:56:19.913761+00:00',
+      'lastMessageAtUtc': '2026-09-16T21:39:25.265009+00:00',
+      'unreadCount': 3,
+      'lastMessageBody': 'yes',
+    };
+
+    blocTest<ChatBloc, ChatState>(
+      'loads the conversations, newest message first',
+      build: () => chatWith((
+        200,
+        {
+          'success': true,
+          'data': [older, newer],
+          'errors': <Object>[],
+          'traceId': null,
+        },
+      )),
+      act: (bloc) => bloc.add(const ChatConversationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<ChatState>().having((s) => s.status, 'status', ChatStatus.loading),
+        isA<ChatState>().having((s) => s.status, 'status', ChatStatus.loaded),
+      ],
+      verify: (bloc) {
+        final [first, second] = bloc.state.conversations;
+        expect(first.id, newer['id']);
+        expect(first.status, ChatConversationStatus.closed);
+        expect(first.previewText, 'yes');
+        expect(
+          first.previewTime,
+          DateTime.utc(2026, 9, 16, 21, 39, 25, 265, 9),
+        );
+        expect(first.title, 'Убав локален бизнис');
+        expect(second.status, ChatConversationStatus.blocked);
+        expect(bloc.state.totalUnreadMessages, 3);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'a failed request ends in failed',
+      build: () => chatWith((401, const {'success': false})),
+      act: (bloc) => bloc.add(const ChatConversationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, ChatStatus.failed);
+        expect(bloc.state.conversations, isEmpty);
+      },
+    );
+
+    test('shows the other person: the Provider to the Buyer, and back', () {
+      final c = ChatConversation.fromJson(older);
+      expect(
+        c.participantNameFor('ac302986-d44a-4317-9b7b-7fb51d04dbab'),
+        'Local Provider',
+      );
+      expect(c.participantNameFor('someone-else'), 'Local Buyer');
+      expect(ChatConversation.initialsOf('Local Provider'), 'LP');
+      expect(ChatConversation.initialsOf('Љубица'), 'Љ');
+    });
+
+    const conversationId = '77b8dddd-6f02-4fe2-95d3-0a94dada9514';
+    const buyerId = 'ac302986-d44a-4317-9b7b-7fb51d04dbab';
+    const providerUserId = '52109fc1-0b16-4e2f-953c-fa838297c633';
+    Map<String, Object?> message(
+      String id,
+      String sender,
+      String body,
+      String at, {
+      String? deletedAt,
+    }) => {
+      'id': id,
+      'conversationId': conversationId,
+      'senderUserId': sender,
+      'senderRole': sender == buyerId ? 'Buyer' : 'Provider',
+      'body': body,
+      'createdAtUtc': at,
+      'mediaAssetIds': <Object>[],
+      'deletedAtUtc': deletedAt,
+      'isFlagged': false,
+      'flaggedReason': null,
+    };
+    final details = {
+      ...newer,
+      'unreadCount': 0,
+      'messages': {
+        'items': [
+          message('m3', providerUserId, 'yes', '2026-09-16T21:39:25.265009Z'),
+          message(
+            'm2',
+            buyerId,
+            'Dali moze so Drugarce?',
+            '2026-09-16T21:37:16.185131Z',
+            deletedAt: '2026-09-16T21:38:00Z',
+          ),
+          message(
+            'm1',
+            providerUserId,
+            'Zdravo, kako si?',
+            '2026-07-22T13:56:25.249442Z',
+          ),
+        ],
+        'page': 1,
+        'pageSize': 20,
+        'totalCount': 3,
+        'totalPages': 1,
+      },
+    };
+
+    ChatBloc detailsWith((int, Object) response) => ChatBloc(
+      dio: Dio(BaseOptions(baseUrl: 'https://test'))
+        ..httpClientAdapter = _FakeAdapter({
+          '/api/chat/conversations/$conversationId': response,
+        }),
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'loads a conversation\'s messages, oldest first',
+      build: () => detailsWith((
+        200,
+        {'success': true, 'data': details, 'errors': <Object>[]},
+      )),
+      act: (bloc) =>
+          bloc.add(const ChatConversationDetailsRequested(conversationId)),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<ChatState>().having(
+          (s) => s.detailsStatusFor(conversationId),
+          'detailsStatus',
+          ChatStatus.loading,
         ),
+        isA<ChatState>().having(
+          (s) => s.detailsStatusFor(conversationId),
+          'detailsStatus',
+          ChatStatus.loaded,
+        ),
+      ],
+      verify: (bloc) {
+        final conversation = bloc.state.detailsFor(conversationId)!;
+        final [first, second, third] = conversation.messages;
+        expect(first.text, 'Zdravo, kako si?');
+        expect(third.text, 'yes');
+        expect(conversation.previewText, 'yes');
+        // Whose message it is depends on who's signed in.
+        expect(first.isMineFor(buyerId), isFalse);
+        expect(first.isMineFor(providerUserId), isTrue);
+        expect(second.isMineFor(buyerId), isTrue);
+        expect(second.isDeleted, isTrue);
+        expect(third.isDeleted, isFalse);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'an unknown conversation ends in notFound',
+      build: () => detailsWith((404, const {'success': false})),
+      act: (bloc) =>
+          bloc.add(const ChatConversationDetailsRequested(conversationId)),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(
+          bloc.state.detailsStatusFor(conversationId),
+          ChatStatus.notFound,
+        );
+        expect(bloc.state.detailsFor(conversationId), isNull);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'a failed reload keeps the messages already shown',
+      build: () => detailsWith((500, const {})),
+      seed: () => ChatState(
+        details: {conversationId: ChatConversation.fromJson(details)},
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      ),
+      act: (bloc) =>
+          bloc.add(const ChatConversationDetailsRequested(conversationId)),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.detailsStatusFor(conversationId), ChatStatus.failed);
+        expect(bloc.state.detailsFor(conversationId)!.messages, hasLength(3));
+      },
+    );
+
+    group('sending', () {
+      const sendPath = '/api/chat/conversations/$conversationId/messages';
+      late _FakeAdapter adapter;
+      ChatBloc sendingWith(Map<String, (int, Object)> responses) {
+        adapter = _FakeAdapter(responses);
+        return ChatBloc(
+          dio: Dio(BaseOptions(baseUrl: 'https://test'))
+            ..httpClientAdapter = adapter,
+        );
+      }
+
+      ChatState loaded({String status = 'Closed'}) => ChatState(
+        conversations: [
+          ChatConversation.fromJson({...newer, 'status': status}),
+        ],
+        status: ChatStatus.loaded,
+        details: {
+          conversationId: ChatConversation.fromJson({
+            ...details,
+            'status': status,
+          }),
+        },
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      );
+
+      Map<String, Object?> sentBody() =>
+          adapter.requests.singleWhere((r) => r.path == sendPath).data
+              as Map<String, Object?>;
+
+      blocTest<ChatBloc, ChatState>(
+        'shows the message as sending, then replaces it with the '
+        'backend\'s copy',
+        build: () => sendingWith({
+          sendPath: (
+            200,
+            {
+              'success': true,
+              'data': message('m4', buyerId, 'Супер', '2026-09-17T10:00:00Z'),
+            },
+          ),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(
+            conversationId: conversationId,
+            text: ' Супер ',
+          ),
+        ),
+        wait: const Duration(milliseconds: 50),
+        expect: () => [
+          isA<ChatState>().having(
+            (s) => s.detailsFor(conversationId)!.messages.last.sendStatus,
+            'sendStatus',
+            ChatMessageSendStatus.sending,
+          ),
+          isA<ChatState>().having(
+            (s) => s.detailsFor(conversationId)!.messages.last.id,
+            'id',
+            'm4',
+          ),
+        ],
+        verify: (bloc) {
+          final body = sentBody();
+          expect(body['body'], 'Супер');
+          expect(body['mediaAssetIds'], isEmpty);
+          expect(
+            body['clientMessageKey'],
+            matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-')),
+          );
+          final messages = bloc.state.detailsFor(conversationId)!.messages;
+          expect(messages, hasLength(4));
+          expect(messages.last.isPending, isFalse);
+          expect(messages.last.isMineFor(buyerId), isTrue);
+          expect(messages.last.clientMessageKey, body['clientMessageKey']);
+          expect(bloc.state.byId(conversationId)!.previewText, 'Супер');
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'a reply without a message just marks it sent',
+        build: () => sendingWith({
+          sendPath: (200, {'success': true, 'data': null}),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+        ),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final last = bloc.state.detailsFor(conversationId)!.messages.last;
+          expect(last.text, 'Да');
+          expect(last.sendStatus, ChatMessageSendStatus.sent);
+          expect(last.isMineFor(null), isTrue);
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'a failed send is marked failed, and a retry sends the same key',
+        build: () => sendingWith({}),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) async {
+          bloc.add(
+            const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          final failed = bloc.state.detailsFor(conversationId)!.messages.last;
+          expect(failed.sendStatus, ChatMessageSendStatus.failed);
+          adapter.responses[sendPath] = (200, {'success': true, 'data': null});
+          bloc.add(
+            ChatMessageRetried(
+              conversationId: conversationId,
+              clientMessageKey: failed.clientMessageKey!,
+            ),
+          );
+        },
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final sends = adapter.requests.where((r) => r.path == sendPath);
+          expect(sends, hasLength(2));
+          final [first, second] = [
+            for (final r in sends)
+              (r.data as Map<String, Object?>)['clientMessageKey'],
+          ];
+          expect(second, first);
+          final messages = bloc.state.detailsFor(conversationId)!.messages;
+          expect(messages, hasLength(4));
+          expect(messages.last.sendStatus, ChatMessageSendStatus.sent);
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'CHAT_CONVERSATION_NOT_ACTIVE marks it failed and the conversation '
+        'closed',
+        build: () => sendingWith({
+          sendPath: (
+            400,
+            {
+              'success': false,
+              'data': null,
+              'errors': [
+                {
+                  'code': 'CHAT_CONVERSATION_NOT_ACTIVE',
+                  'message': 'Conversation is not active.',
+                  'field': null,
+                },
+              ],
+            },
+          ),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+        ),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final conversation = bloc.state.detailsFor(conversationId)!;
+          expect(conversation.isOpen, isFalse);
+          expect(bloc.state.byId(conversationId)!.isOpen, isFalse);
+          expect(
+            conversation.messages.last.sendStatus,
+            ChatMessageSendStatus.failed,
+          );
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'nothing is sent to a Closed or Blocked conversation',
+        build: () => sendingWith({}),
+        seed: () => loaded(status: 'Blocked'),
+        act: (bloc) => bloc.add(
+          const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+        ),
+        wait: const Duration(milliseconds: 50),
+        expect: () => <ChatState>[],
+        verify: (_) => expect(adapter.requests, isEmpty),
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'a message still sending survives a reload of the messages',
+        build: () => sendingWith({
+          '/api/chat/conversations/$conversationId': (
+            200,
+            {'success': true, 'data': details},
+          ),
+        }),
+        seed: () => loaded(status: 'Open'),
+        act: (bloc) async {
+          bloc.add(
+            const ChatMessageSent(conversationId: conversationId, text: 'Да'),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          bloc.add(const ChatConversationDetailsRequested(conversationId));
+        },
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final messages = bloc.state.detailsFor(conversationId)!.messages;
+          expect(messages, hasLength(4));
+          expect(messages.last.text, 'Да');
+          expect(messages.last.isPending, isTrue);
+        },
+      );
+    });
+
+    group('reading', () {
+      const readPath = '/api/chat/conversations/$conversationId/read';
+      late _FakeAdapter adapter;
+      ChatBloc readingWith((int, Object) response) {
+        adapter = _FakeAdapter({readPath: response});
+        return ChatBloc(
+          dio: Dio(BaseOptions(baseUrl: 'https://test'))
+            ..httpClientAdapter = adapter,
+        );
+      }
+
+      ChatState unread() => ChatState(
+        conversations: [ChatConversation.fromJson(newer)],
+        status: ChatStatus.loaded,
+        details: {
+          conversationId: ChatConversation.fromJson({
+            ...details,
+            'unreadCount': 3,
+          }),
+        },
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'tells the backend up to the newest message',
+        build: () => readingWith((200, {'success': true, 'data': null})),
+        seed: unread,
+        act: (bloc) => bloc.add(const ConversationRead(conversationId)),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          final request = adapter.requests.single;
+          expect(request.path, readPath);
+          expect(request.method, 'POST');
+          expect(request.data, {'lastReadMessageId': 'm3'});
+          expect(bloc.state.totalUnreadMessages, 0);
+          expect(bloc.state.detailsFor(conversationId)!.unreadCount, 0);
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'if the backend refuses, the unread count comes back',
+        build: () => readingWith((500, const {})),
+        seed: unread,
+        act: (bloc) => bloc.add(const ConversationRead(conversationId)),
+        wait: const Duration(milliseconds: 50),
+        expect: () => [
+          isA<ChatState>().having((s) => s.totalUnreadMessages, 'unread', 0),
+          isA<ChatState>().having((s) => s.totalUnreadMessages, 'unread', 3),
+        ],
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'nothing is sent when it\'s already read, or before the messages '
+        'load',
+        build: () => readingWith((200, {'success': true, 'data': null})),
+        seed: () => ChatState(
+          conversations: [
+            ChatConversation.fromJson(newer),
+            ChatConversation.fromJson(older),
+          ],
+          status: ChatStatus.loaded,
+        ),
+        act: (bloc) => bloc
+          ..add(const ConversationRead(conversationId))
+          ..add(ConversationRead(older['id']! as String)),
+        wait: const Duration(milliseconds: 50),
+        verify: (bloc) {
+          expect(adapter.requests, isEmpty);
+          // Still cleared on this device straight away.
+          expect(bloc.state.totalUnreadMessages, 0);
+        },
+      );
+    });
+
+    blocTest<ChatBloc, ChatState>(
+      'a reload by the same user keeps the list (and badge) while loading',
+      build: () => chatWith((200, {'success': true, 'data': <Object>[]})),
+      seed: () => ChatState(
+        conversations: [conversation(unread: 2)],
+        status: ChatStatus.loaded,
+      ),
+      act: (bloc) =>
+          bloc.add(const ChatConversationsRequested(keepShown: true)),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<ChatState>()
+            .having((s) => s.status, 'status', ChatStatus.loading)
+            .having((s) => s.totalUnreadMessages, 'unread', 2),
+        isA<ChatState>()
+            .having((s) => s.status, 'status', ChatStatus.loaded)
+            .having((s) => s.conversations, 'conversations', isEmpty),
       ],
     );
 
     blocTest<ChatBloc, ChatState>(
+      'a sent message is added to the loaded messages too',
+      build: () => detailsWith((500, const {})),
+      seed: () => ChatState(
+        conversations: [
+          ChatConversation.fromJson({...newer, 'status': 'Open'}),
+        ],
+        status: ChatStatus.loaded,
+        details: {
+          conversationId: ChatConversation.fromJson({
+            ...details,
+            'status': 'Open',
+          }),
+        },
+        detailsStatus: {conversationId: ChatStatus.loaded},
+      ),
+      act: (bloc) => bloc.add(
+        const ChatMessageSent(conversationId: conversationId, text: 'Супер'),
+      ),
+      verify: (bloc) {
+        final messages = bloc.state.detailsFor(conversationId)!.messages;
+        expect(messages, hasLength(4));
+        expect(messages.last.text, 'Супер');
+        expect(messages.last.isMineFor(null), isTrue);
+        expect(bloc.state.byId(conversationId)!.previewText, 'Супер');
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
       'opening a conversation clears its unread count',
-      build: () => ChatBloc(initialConversations: [conversation()]),
+      build: () => chatWith((500, const {})),
+      seed: () => ChatState(
+        conversations: [conversation(unread: 2)],
+        status: ChatStatus.loaded,
+      ),
       act: (bloc) => bloc.add(const ConversationRead('c1')),
       verify: (bloc) => expect(bloc.state.totalUnreadMessages, 0),
     );
 
     blocTest<ChatBloc, ChatState>(
-      'sending appends a trimmed message; blank text is ignored',
-      build: () => ChatBloc(initialConversations: [conversation()]),
+      'sending appends a trimmed message and moves it to the top; blank '
+      'text is ignored',
+      build: () => chatWith((500, const {})),
+      seed: () => ChatState(
+        conversations: [
+          conversation(id: 'c0'),
+          conversation(),
+        ],
+        status: ChatStatus.loaded,
+      ),
       act: (bloc) => bloc
         ..add(const ChatMessageSent(conversationId: 'c1', text: '  Да  '))
         ..add(const ChatMessageSent(conversationId: 'c1', text: '   ')),
       verify: (bloc) {
-        final messages = bloc.state.byId('c1')!.messages;
-        expect(messages, hasLength(2));
-        expect(messages.last.text, 'Да');
-        expect(messages.last.isMine, isTrue);
+        final top = bloc.state.conversations.first;
+        expect(top.id, 'c1');
+        expect(top.messages, hasLength(1));
+        expect(top.messages.single.text, 'Да');
+        expect(top.messages.single.isMine, isTrue);
+        expect(top.previewText, 'Да');
       },
     );
   });
@@ -567,6 +1118,657 @@ void main() {
         bloc.state.detailsStatusFor('nope'),
         ListingsLoadStatus.notFound,
       ),
+    );
+  });
+
+  group('SupportTicketsBloc', () {
+    SupportTicketsBloc ticketsWith((int, Object) response) {
+      return SupportTicketsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({'/api/me/tickets': response}),
+      );
+    }
+
+    const older = {
+      'id': '11111111-1111-1111-1111-111111111111',
+      'ticketNumber': 'TCK-1',
+      'type': 'Payment',
+      'status': 'Closed',
+      'subject': 'Older',
+      'createdAtUtc': '2026-01-01T10:00:00Z',
+      'closedAtUtc': '2026-01-03T10:00:00Z',
+    };
+    const newer = {
+      'id': '22222222-2222-2222-2222-222222222222',
+      'ticketNumber': 'TCK-2',
+      'type': 'Technical',
+      'status': 'InProgress',
+      'subject': 'Newer',
+      'createdAtUtc': '2026-02-01T10:00:00Z',
+    };
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'loads the tickets, newest first',
+      build: () => ticketsWith((
+        200,
+        {
+          'success': true,
+          'data': [older, newer],
+        },
+      )),
+      act: (bloc) => bloc.add(const SupportTicketsRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<SupportTicketsState>().having(
+          (s) => s.status,
+          'status',
+          SupportTicketsStatus.loading,
+        ),
+        isA<SupportTicketsState>().having(
+          (s) => s.status,
+          'status',
+          SupportTicketsStatus.loaded,
+        ),
+      ],
+      verify: (bloc) {
+        final tickets = bloc.state.tickets;
+        expect(tickets.map((t) => t.number), ['TCK-2', 'TCK-1']);
+        expect(tickets.first.title, 'Newer');
+        expect(tickets.first.status, TicketStatus.inProgress);
+        expect(tickets.first.updatedAt, tickets.first.createdAt);
+        expect(tickets.last.status, TicketStatus.closed);
+        expect(tickets.last.updatedAt, DateTime.utc(2026, 1, 3, 10));
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'reads a ticket as the backend sends it',
+      build: () => ticketsWith((
+        200,
+        {
+          'success': true,
+          'data': [
+            {
+              'id': '9ffeb922-7c9c-4c15-9672-239849966ba6',
+              'ticketNumber': 'HD-20260826190835-9486',
+              'type': 'Other',
+              'status': 'Closed',
+              'priority': 'Normal',
+              'subject': 'asdf',
+              'description': 'asdfasdfsafsdafasdfasdf',
+              'createdAtUtc': '2026-08-26T19:08:35.015267+00:00',
+              'closedAtUtc': '2026-09-15T07:53:40.036639+00:00',
+              'assignedTo': null,
+              'attachments': <Object>[],
+              'messages': [
+                {'createdAtUtc': '2026-08-26T19:08:35.015267+00:00'},
+                {'createdAtUtc': '2026-09-15T07:51:26.750158+00:00'},
+              ],
+            },
+          ],
+          'errors': <Object>[],
+          'traceId': null,
+        },
+      )),
+      act: (bloc) => bloc.add(const SupportTicketsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, SupportTicketsStatus.loaded);
+        final ticket = bloc.state.tickets.single;
+        expect(ticket.number, 'HD-20260826190835-9486');
+        expect(ticket.title, 'asdf');
+        expect(ticket.description, 'asdfasdfsafsdafasdfasdf');
+        expect(ticket.status, TicketStatus.closed);
+        expect(ticket.createdAt, DateTime.utc(2026, 8, 26, 19, 8, 35, 15, 267));
+        expect(ticket.updatedAt, DateTime.utc(2026, 9, 15, 7, 53, 40, 36, 639));
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'a message after the last change counts as the last update',
+      build: () => ticketsWith((
+        200,
+        {
+          'success': true,
+          'data': [
+            {
+              ...newer,
+              'messages': [
+                {'createdAtUtc': '2026-03-01T10:00:00Z'},
+                {'createdAtUtc': '2026-02-15T10:00:00Z'},
+              ],
+            },
+          ],
+        },
+      )),
+      act: (bloc) => bloc.add(const SupportTicketsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(
+          bloc.state.tickets.single.updatedAt,
+          DateTime.utc(2026, 3, 1, 10),
+        );
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'data that isn\'t a list ends in failed',
+      build: () =>
+          ticketsWith((200, {'success': true, 'data': <String, Object>{}})),
+      act: (bloc) => bloc.add(const SupportTicketsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, SupportTicketsStatus.failed);
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'a failed request ends in failed',
+      build: () => ticketsWith((401, const {'success': false})),
+      act: (bloc) => bloc.add(const SupportTicketsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, SupportTicketsStatus.failed);
+        expect(bloc.state.tickets, isEmpty);
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'a reload drops the previous list straight away',
+      build: () => ticketsWith((500, const {})),
+      seed: () => SupportTicketsState(
+        tickets: [SupportTicket.fromJson(older)],
+        status: SupportTicketsStatus.loaded,
+      ),
+      act: (bloc) => bloc.add(const SupportTicketsRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<SupportTicketsState>()
+            .having((s) => s.status, 'status', SupportTicketsStatus.loading)
+            .having((s) => s.tickets, 'tickets', isEmpty),
+        isA<SupportTicketsState>()
+            .having((s) => s.status, 'status', SupportTicketsStatus.failed)
+            .having((s) => s.tickets, 'tickets', isEmpty),
+      ],
+    );
+
+    const detailsId = 'b646d4c2-e887-4969-8f24-5c2c9824107d';
+    const detailsPath = '/api/me/tickets/$detailsId';
+    const details = {
+      'id': detailsId,
+      'ticketNumber': 'HD-20260821063731-3332',
+      'type': 'Booking',
+      'status': 'InProgress',
+      'priority': 'High',
+      'subject': 'E2E тикет',
+      'description': 'Реална локална E2E проверка на кориснички тикет.',
+      'createdAtUtc': '2026-08-21T06:37:31.405668+00:00',
+      'closedAtUtc': null,
+      'attachments': [
+        {
+          'id': 'm1',
+          'originalFileName': 'screenshot.png',
+          'contentType': 'image/png',
+          'publicUrl': 'https://cdn.test/screenshot.png',
+        },
+        {'id': 'm2', 'fileName': 'invoice.pdf', 'url': '/media/invoice.pdf'},
+      ],
+      'messages': [
+        {'createdAtUtc': '2026-08-21T06:37:31.405668+00:00'},
+        {'createdAtUtc': '2026-08-21T06:37:32.267118+00:00'},
+      ],
+    };
+
+    SupportTicketsBloc detailsWith((int, Object) response) {
+      return SupportTicketsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({detailsPath: response}),
+      );
+    }
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'loads one ticket\'s details with its attachments',
+      build: () => detailsWith((200, {'success': true, 'data': details})),
+      act: (bloc) => bloc.add(const SupportTicketDetailsRequested(detailsId)),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<SupportTicketsState>().having(
+          (s) => s.detailsStatusFor(detailsId),
+          'detailsStatus',
+          SupportTicketsStatus.loading,
+        ),
+        isA<SupportTicketsState>().having(
+          (s) => s.detailsStatusFor(detailsId),
+          'detailsStatus',
+          SupportTicketsStatus.loaded,
+        ),
+      ],
+      verify: (bloc) {
+        final ticket = bloc.state.detailsFor(detailsId)!;
+        expect(ticket.number, 'HD-20260821063731-3332');
+        expect(ticket.category, 'Booking');
+        expect(ticket.status, TicketStatus.inProgress);
+        expect(
+          ticket.updatedAt,
+          DateTime.utc(2026, 8, 21, 6, 37, 32, 267, 118),
+        );
+        final [image, document] = ticket.attachments;
+        expect(image.type, SupportAttachmentType.image);
+        expect(image.fileName, 'screenshot.png');
+        expect(image.url, 'https://cdn.test/screenshot.png');
+        expect(document.type, SupportAttachmentType.document);
+        expect(document.url, endsWith('/media/invoice.pdf'));
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'an unknown ticket ends in notFound',
+      build: () => detailsWith((404, const {'success': false})),
+      act: (bloc) => bloc.add(const SupportTicketDetailsRequested(detailsId)),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(
+          bloc.state.detailsStatusFor(detailsId),
+          SupportTicketsStatus.notFound,
+        );
+        expect(bloc.state.detailsFor(detailsId), isNull);
+      },
+    );
+
+    blocTest<SupportTicketsBloc, SupportTicketsState>(
+      'a failed reload keeps the details already shown',
+      build: () => detailsWith((500, const {})),
+      seed: () => SupportTicketsState(
+        details: {detailsId: SupportTicket.fromJson(details)},
+        detailsStatus: {detailsId: SupportTicketsStatus.loaded},
+      ),
+      act: (bloc) => bloc.add(const SupportTicketDetailsRequested(detailsId)),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(
+          bloc.state.detailsStatusFor(detailsId),
+          SupportTicketsStatus.failed,
+        );
+        expect(bloc.state.detailsFor(detailsId)?.title, 'E2E тикет');
+      },
+    );
+
+    test('a ticket created on this device isn\'t requested', () async {
+      final adapter = _FakeAdapter({});
+      final bloc = SupportTicketsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = adapter,
+      );
+      bloc.add(
+        const SupportTicketCreated(
+          category: 'Other',
+          title: 'Local',
+          description: 'Only here',
+        ),
+      );
+      await bloc.stream.first;
+      final id = bloc.state.tickets.single.id;
+      bloc.add(SupportTicketDetailsRequested(id));
+      await bloc.stream.first;
+      expect(adapter.requests, isEmpty);
+      expect(bloc.state.detailsStatusFor(id), SupportTicketsStatus.loaded);
+      expect(bloc.state.detailsFor(id)?.title, 'Local');
+      await bloc.close();
+    });
+  });
+
+  group('NotificationsBloc', () {
+    NotificationsBloc notificationsWith((int, Object) response) {
+      return NotificationsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({
+            '/api/me/notifications': response,
+          }),
+      );
+    }
+
+    const read = {
+      'id': '85113d40-b944-44f8-84f0-c854565e7e81',
+      'type': 'Booking',
+      'title': 'Резервацијата е потврдена',
+      'body':
+          'Потврдена е резервацијата за Работилница за традиционално сирење.',
+      'linkUrl': '/bookings/a3fbcd24-d96d-4aa9-96a3-2b831920b30f',
+      'readAtUtc': '2026-10-06T11:27:22.047409+00:00',
+      'dismissedAtUtc': null,
+      'createdAtUtc': '2026-10-01T16:07:00.846648+00:00',
+    };
+    const unread = {
+      'id': 'n2',
+      'type': 'Message',
+      'title': 'Нова порака',
+      'body': 'Здраво!',
+      'linkUrl': null,
+      'readAtUtc': null,
+      'dismissedAtUtc': null,
+      'createdAtUtc': '2026-10-02T09:00:00Z',
+    };
+    final dismissed = {
+      ...unread,
+      'id': 'n3',
+      'dismissedAtUtc': '2026-10-03T09:00:00Z',
+    };
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'loads the notifications, newest first, without dismissed ones',
+      build: () => notificationsWith((
+        200,
+        {
+          'success': true,
+          'data': [read, unread, dismissed],
+          'errors': <Object>[],
+          'traceId': null,
+        },
+      )),
+      act: (bloc) => bloc.add(const NotificationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<NotificationsState>().having(
+          (s) => s.status,
+          'status',
+          NotificationsStatus.loading,
+        ),
+        isA<NotificationsState>().having(
+          (s) => s.status,
+          'status',
+          NotificationsStatus.loaded,
+        ),
+      ],
+      verify: (bloc) {
+        final notifications = bloc.state.notifications;
+        expect(notifications.map((n) => n.id), ['n2', read['id']]);
+        expect(bloc.state.unreadCount, 1);
+        final booking = notifications.last;
+        expect(booking.title, 'Резервацијата е потврдена');
+        expect(booking.message, read['body']);
+        expect(booking.isRead, isTrue);
+        expect(booking.type, 'Booking');
+        expect(booking.linkUrl, read['linkUrl']);
+        expect(
+          booking.timestamp,
+          DateTime.utc(2026, 10, 1, 16, 7, 0, 846, 648),
+        );
+      },
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'a failed request ends in failed',
+      build: () => notificationsWith((401, const {'success': false})),
+      act: (bloc) => bloc.add(const NotificationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, NotificationsStatus.failed);
+        expect(bloc.state.notifications, isEmpty);
+      },
+    );
+
+    test(
+      'tapping an unread notification marks it read on the backend',
+      () async {
+        final adapter = _FakeAdapter({
+          '/api/me/notifications/n2/read': (
+            200,
+            {
+              'success': true,
+              'data': {
+                ...unread,
+                'readAtUtc': '2026-10-06T11:27:22.047409+00:00',
+              },
+              'errors': <Object>[],
+              'traceId': null,
+            },
+          ),
+        });
+        final bloc = NotificationsBloc(
+          dio: Dio(BaseOptions(baseUrl: 'https://test'))
+            ..httpClientAdapter = adapter,
+        );
+        bloc.emit(
+          NotificationsState(
+            notifications: [NotificationItem.fromJson(unread)],
+            status: NotificationsStatus.loaded,
+          ),
+        );
+        bloc.add(const NotificationRead('n2'));
+        // Read straight away, before the backend answers.
+        final shown = await bloc.stream.first;
+        expect(shown.unreadCount, 0);
+        await bloc.stream.first;
+        expect(bloc.state.notifications.single.isRead, isTrue);
+        expect(bloc.state.status, NotificationsStatus.loaded);
+        final request = adapter.requests.single;
+        expect(request.method, 'POST');
+        expect(request.path, '/api/me/notifications/n2/read');
+        await bloc.close();
+      },
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'if the backend refuses, it shows as unread again',
+      build: () => notificationsWith((500, const {})),
+      seed: () => NotificationsState(
+        notifications: [NotificationItem.fromJson(unread)],
+        status: NotificationsStatus.loaded,
+      ),
+      act: (bloc) => bloc.add(const NotificationRead('n2')),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<NotificationsState>().having((s) => s.unreadCount, 'unread', 0),
+        isA<NotificationsState>().having((s) => s.unreadCount, 'unread', 1),
+      ],
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'an already read notification isn\'t sent again',
+      build: () => notificationsWith((500, const {})),
+      seed: () => NotificationsState(
+        notifications: [NotificationItem.fromJson(read)],
+        status: NotificationsStatus.loaded,
+      ),
+      act: (bloc) => bloc.add(NotificationRead(read['id']!)),
+      wait: const Duration(milliseconds: 50),
+      expect: () => <Object>[],
+    );
+  });
+
+  group('NotificationsBloc mark all as read', () {
+    const readAllPath = '/api/me/notifications/read-all';
+    const first = {
+      'id': 'a',
+      'title': 'A',
+      'body': '',
+      'readAtUtc': null,
+      'createdAtUtc': '2026-10-02T09:00:00Z',
+    };
+    const second = {
+      'id': 'b',
+      'title': 'B',
+      'body': '',
+      'readAtUtc': '2026-10-02T10:00:00Z',
+      'createdAtUtc': '2026-10-01T09:00:00Z',
+    };
+    final seeded = NotificationsState(
+      notifications: [
+        NotificationItem.fromJson(first),
+        NotificationItem.fromJson(second),
+      ],
+      status: NotificationsStatus.loaded,
+      serverUnreadCount: 1,
+    );
+
+    test('marks every notification read on the backend', () async {
+      final adapter = _FakeAdapter({
+        readAllPath: (
+          200,
+          {
+            'success': true,
+            'data': {'count': 1},
+            'errors': <Object>[],
+            'traceId': null,
+          },
+        ),
+      });
+      final bloc = NotificationsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = adapter,
+      );
+      bloc.emit(seeded);
+      bloc.add(const AllNotificationsRead());
+      final shown = await bloc.stream.first;
+      expect(shown.notifications.every((n) => n.isRead), isTrue);
+      expect(shown.unreadCount, 0);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(bloc.state.unreadCount, 0);
+      final request = adapter.requests.single;
+      expect(request.method, 'POST');
+      expect(request.path, readAllPath);
+      await bloc.close();
+    });
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'if the backend refuses, the unread ones show as unread again',
+      build: () => NotificationsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({readAllPath: (500, const {})}),
+      ),
+      seed: () => seeded,
+      act: (bloc) => bloc.add(const AllNotificationsRead()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<NotificationsState>().having((s) => s.unreadCount, 'unread', 0),
+        isA<NotificationsState>().having((s) => s.unreadCount, 'unread', 1),
+      ],
+      verify: (bloc) {
+        final [a, b] = bloc.state.notifications;
+        expect(a.isRead, isFalse);
+        expect(b.isRead, isTrue);
+      },
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'nothing is sent when nothing is unread',
+      build: () => NotificationsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter({}),
+      ),
+      seed: () => NotificationsState(
+        notifications: [NotificationItem.fromJson(second)],
+        status: NotificationsStatus.loaded,
+        serverUnreadCount: 0,
+      ),
+      act: (bloc) => bloc.add(const AllNotificationsRead()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => <Object>[],
+    );
+  });
+
+  group('NotificationsBloc unread count', () {
+    const countPath = '/api/me/notifications/unread-count';
+    const listPath = '/api/me/notifications';
+    const unread = {
+      'id': 'n1',
+      'title': 'Нова порака',
+      'body': 'Здраво!',
+      'readAtUtc': null,
+      'createdAtUtc': '2026-10-02T09:00:00Z',
+    };
+
+    NotificationsBloc notificationsWith(Map<String, (int, Object)> responses) {
+      return NotificationsBloc(
+        dio: Dio(BaseOptions(baseUrl: 'https://test'))
+          ..httpClientAdapter = _FakeAdapter(responses),
+      );
+    }
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'the backend\'s count is the unread count',
+      build: () => notificationsWith({
+        listPath: (
+          200,
+          {
+            'success': true,
+            'data': [unread],
+          },
+        ),
+        countPath: (
+          200,
+          {
+            'success': true,
+            'data': {'count': 7},
+            'errors': <Object>[],
+            'traceId': null,
+          },
+        ),
+      }),
+      act: (bloc) => bloc
+        ..add(const NotificationsRequested())
+        ..add(const UnreadNotificationsCountRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, NotificationsStatus.loaded);
+        expect(bloc.state.serverUnreadCount, 7);
+        expect(bloc.state.unreadCount, 7);
+      },
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'a failed count falls back to counting the list',
+      build: () => notificationsWith({
+        listPath: (
+          200,
+          {
+            'success': true,
+            'data': [unread],
+          },
+        ),
+        countPath: (500, const {}),
+      }),
+      act: (bloc) => bloc
+        ..add(const NotificationsRequested())
+        ..add(const UnreadNotificationsCountRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.serverUnreadCount, isNull);
+        expect(bloc.state.unreadCount, 1);
+      },
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'reading a notification lowers the backend\'s count',
+      build: () => notificationsWith({
+        '/api/me/notifications/n1/read': (
+          200,
+          {
+            'success': true,
+            'data': {...unread, 'readAtUtc': '2026-10-06T11:27:22Z'},
+          },
+        ),
+      }),
+      wait: const Duration(milliseconds: 50),
+      seed: () => NotificationsState(
+        notifications: [NotificationItem.fromJson(unread)],
+        status: NotificationsStatus.loaded,
+        serverUnreadCount: 3,
+      ),
+      act: (bloc) => bloc.add(const NotificationRead('n1')),
+      verify: (bloc) => expect(bloc.state.unreadCount, 2),
+    );
+
+    blocTest<NotificationsBloc, NotificationsState>(
+      'a list reload clears the count from before',
+      build: () => notificationsWith({}),
+      seed: () => NotificationsState(serverUnreadCount: 3),
+      act: (bloc) => bloc.add(const NotificationsRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (bloc) {
+        expect(bloc.state.status, NotificationsStatus.failed);
+        expect(bloc.state.serverUnreadCount, isNull);
+      },
     );
   });
 

@@ -128,6 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.profileTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

@@ -510,6 +510,42 @@ class AppLocalizationsMk extends AppLocalizations {
   String get navMessages => 'Пораки';
 
   @override
+  String get chatLoadFailed => 'Пораките не можеа да се вчитаат.';
+
+  @override
+  String get chatEmpty => 'Сè уште немате разговори.';
+
+  @override
+  String get chatMessagesLoadFailed => 'Пораките не можеа да се вчитаат.';
+
+  @override
+  String get chatNoMessages => 'Сè уште нема пораки.';
+
+  @override
+  String get chatMessageDeleted => 'Пораката е избришана';
+
+  @override
+  String get chatMessageFailed => 'Не е испратена.';
+
+  @override
+  String get chatMessageNotSent => 'Не е испратена. Допрете за нов обид.';
+
+  @override
+  String get chatConversationClosed => 'Овој разговор е затворен.';
+
+  @override
+  String get chatConversationBlocked => 'Овој разговор е блокиран.';
+
+  @override
+  String get headerTicketsTooltip => 'Мои тикети';
+
+  @override
+  String get headerNotificationsTooltip => 'Известувања';
+
+  @override
+  String get headerSettingsTooltip => 'Поставки';
+
+  @override
   String get navProfile => 'Профил';
 
   @override
@@ -547,6 +583,15 @@ class AppLocalizationsMk extends AppLocalizations {
   String get notificationsUnreadSuffix => 'непрочитани известувања';
 
   @override
+  String get notificationsLoadFailed => 'Известувањата не можеа да се вчитаат.';
+
+  @override
+  String get notificationsEmpty => 'Немате известувања.';
+
+  @override
+  String get notificationsMarkAllRead => 'Означи ги сите како прочитани';
+
+  @override
   String get timeJustNow => 'сега';
 
   @override
@@ -580,7 +625,28 @@ class AppLocalizationsMk extends AppLocalizations {
   String get ticketStatusResolved => 'РЕШЕН';
 
   @override
+  String get ticketStatusClosed => 'ЗАТВОРЕН';
+
+  @override
+  String get ticketsLoadFailed => 'Тикетите не можат да се вчитаат.';
+
+  @override
+  String get ticketsEmpty => 'Сè уште немате тикети.';
+
+  @override
   String get ticketLastChangedLabel => 'Последна промена';
+
+  @override
+  String get ticketDetailsTitle => 'Детали за тикетот';
+
+  @override
+  String get ticketDetailsLoadFailed => 'Тикетот не можеше да се вчита.';
+
+  @override
+  String get ticketCreatedLabel => 'Креиран';
+
+  @override
+  String get ticketAttachmentLabel => 'Прилог';
 
   @override
   String get newTicketTitle => 'Нов тикет за поддршка';

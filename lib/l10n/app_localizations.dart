@@ -1030,6 +1030,78 @@ abstract class AppLocalizations {
   /// **'Пораки'**
   String get navMessages;
 
+  /// No description provided for @chatLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пораките не можеа да се вчитаат.'**
+  String get chatLoadFailed;
+
+  /// No description provided for @chatEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште немате разговори.'**
+  String get chatEmpty;
+
+  /// No description provided for @chatMessagesLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пораките не можеа да се вчитаат.'**
+  String get chatMessagesLoadFailed;
+
+  /// No description provided for @chatNoMessages.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште нема пораки.'**
+  String get chatNoMessages;
+
+  /// No description provided for @chatMessageDeleted.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пораката е избришана'**
+  String get chatMessageDeleted;
+
+  /// No description provided for @chatMessageFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Не е испратена.'**
+  String get chatMessageFailed;
+
+  /// No description provided for @chatMessageNotSent.
+  ///
+  /// In mk, this message translates to:
+  /// **'Не е испратена. Допрете за нов обид.'**
+  String get chatMessageNotSent;
+
+  /// No description provided for @chatConversationClosed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Овој разговор е затворен.'**
+  String get chatConversationClosed;
+
+  /// No description provided for @chatConversationBlocked.
+  ///
+  /// In mk, this message translates to:
+  /// **'Овој разговор е блокиран.'**
+  String get chatConversationBlocked;
+
+  /// No description provided for @headerTicketsTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Мои тикети'**
+  String get headerTicketsTooltip;
+
+  /// No description provided for @headerNotificationsTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Известувања'**
+  String get headerNotificationsTooltip;
+
+  /// No description provided for @headerSettingsTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Поставки'**
+  String get headerSettingsTooltip;
+
   /// No description provided for @navProfile.
   ///
   /// In mk, this message translates to:
@@ -1102,6 +1174,24 @@ abstract class AppLocalizations {
   /// **'непрочитани известувања'**
   String get notificationsUnreadSuffix;
 
+  /// No description provided for @notificationsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Известувањата не можеа да се вчитаат.'**
+  String get notificationsLoadFailed;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Немате известувања.'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In mk, this message translates to:
+  /// **'Означи ги сите како прочитани'**
+  String get notificationsMarkAllRead;
+
   /// No description provided for @timeJustNow.
   ///
   /// In mk, this message translates to:
@@ -1168,11 +1258,53 @@ abstract class AppLocalizations {
   /// **'РЕШЕН'**
   String get ticketStatusResolved;
 
+  /// No description provided for @ticketStatusClosed.
+  ///
+  /// In mk, this message translates to:
+  /// **'ЗАТВОРЕН'**
+  String get ticketStatusClosed;
+
+  /// No description provided for @ticketsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Тикетите не можат да се вчитаат.'**
+  String get ticketsLoadFailed;
+
+  /// No description provided for @ticketsEmpty.
+  ///
+  /// In mk, this message translates to:
+  /// **'Сè уште немате тикети.'**
+  String get ticketsEmpty;
+
   /// No description provided for @ticketLastChangedLabel.
   ///
   /// In mk, this message translates to:
   /// **'Последна промена'**
   String get ticketLastChangedLabel;
+
+  /// No description provided for @ticketDetailsTitle.
+  ///
+  /// In mk, this message translates to:
+  /// **'Детали за тикетот'**
+  String get ticketDetailsTitle;
+
+  /// No description provided for @ticketDetailsLoadFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Тикетот не можеше да се вчита.'**
+  String get ticketDetailsLoadFailed;
+
+  /// No description provided for @ticketCreatedLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Креиран'**
+  String get ticketCreatedLabel;
+
+  /// No description provided for @ticketAttachmentLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Прилог'**
+  String get ticketAttachmentLabel;
 
   /// No description provided for @newTicketTitle.
   ///

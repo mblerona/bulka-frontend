@@ -8,6 +8,7 @@ import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
 import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
+import 'package:bulka_frontend/blocs/support_tickets/support_tickets_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
@@ -178,16 +179,30 @@ class DevLauncherScreen extends StatelessWidget {
     ]),
     _DevScreenSection('Messaging', [
       DevScreenEntry.route('Chat List', (_) => AppRoutes.messages),
-      DevScreenEntry.route(
-        'Chat Thread (first mock conversation)',
-        (context) => AppRoutes.chat(
-          context.read<ChatBloc>().state.conversations.first.id,
-        ),
+      DevScreenEntry.widget(
+        'Chat Thread (first conversation)',
+        (_) => const _OpenFirstConversationScreen(),
       ),
     ]),
     _DevScreenSection('Support', [
       DevScreenEntry.route('My Tickets', (_) => AppRoutes.tickets),
       DevScreenEntry.route('New Support Ticket', (_) => AppRoutes.newTicket),
+      DevScreenEntry.route('Ticket Details (first ticket, or a local one)', (
+        context,
+      ) async {
+        final tickets = context.read<SupportTicketsBloc>();
+        if (tickets.state.tickets.isEmpty) {
+          tickets.add(
+            const SupportTicketCreated(
+              category: 'Other',
+              title: 'Dev ticket',
+              description: 'A ticket created by the dev launcher.',
+            ),
+          );
+          await tickets.stream.firstWhere((s) => s.tickets.isNotEmpty);
+        }
+        return AppRoutes.ticket(tickets.state.tickets.first.id);
+      }),
     ]),
     _DevScreenSection('Other', [
       DevScreenEntry.route('Notifications', (_) => AppRoutes.notifications),
@@ -321,6 +336,74 @@ class _SearchFiltersPreviewScreenState
 /// (or, with [bookable], the booking form of the first one that has a
 /// nightly item). Listings are opened by slug, which isn't known until
 /// they're loaded.
+/// Loads the conversations from the backend and opens the first one.
+class _OpenFirstConversationScreen extends StatefulWidget {
+  const _OpenFirstConversationScreen();
+
+  @override
+  State<_OpenFirstConversationScreen> createState() =>
+      _OpenFirstConversationScreenState();
+}
+
+class _OpenFirstConversationScreenState
+    extends State<_OpenFirstConversationScreen> {
+  bool _opened = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // After the first frame: opening the conversation pops this screen.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chat = context.read<ChatBloc>();
+      if (chat.state.conversations.isEmpty) {
+        _load();
+      } else {
+        _step(chat.state);
+      }
+    });
+  }
+
+  void _load() =>
+      context.read<ChatBloc>().add(const ChatConversationsRequested());
+
+  void _step(ChatState state) {
+    final first = state.conversations.firstOrNull;
+    if (_opened || first == null) return;
+    _opened = true;
+    final router = GoRouter.of(context);
+    Navigator.of(context).pop();
+    router.push(AppRoutes.chat(first.id));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<ChatBloc>().state;
+    return BlocListener<ChatBloc, ChatState>(
+      listener: (context, state) => _step(state),
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(
+              AppDimensions.dsBodyHorizontalPadding,
+            ),
+            child: switch (state.status) {
+              ChatStatus.failed => LoadFailedMessage(
+                message: AppStrings.chatLoadFailed,
+                onRetry: _load,
+              ),
+              ChatStatus.loaded when state.conversations.isEmpty => Text(
+                AppStrings.chatEmpty,
+              ),
+              _ => const SectionLoadingIndicator(),
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OpenPublicListingScreen extends StatefulWidget {
   const _OpenPublicListingScreen({required this.bookable});
 

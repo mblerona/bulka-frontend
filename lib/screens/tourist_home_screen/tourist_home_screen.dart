@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/categories/categories_bloc.dart';
@@ -17,6 +19,7 @@ import 'package:bulka_frontend/models/promo_banner.dart';
 import 'package:bulka_frontend/models/public_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
+import 'package:bulka_frontend/widgets/header_actions.dart';
 import 'package:bulka_frontend/widgets/listing_image.dart';
 import 'package:bulka_frontend/widgets/load_failed_message.dart';
 
@@ -234,12 +237,21 @@ class _HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The actions row takes the space above the title that the top padding
+    // already leaves; it only pushes the title down when the status bar
+    // needs more of that space.
+    const actionsHeight =
+        AppDimensions.headerActionSize + AppDimensions.headerActionsBottomGap;
+    final top = max(
+      AppDimensions.dsHeaderTopPadding - actionsHeight,
+      MediaQuery.paddingOf(context).top + AppDimensions.headerActionsTopGap,
+    );
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(
+      padding: EdgeInsets.only(
         left: AppDimensions.dsHeaderHorizontalPadding,
         right: AppDimensions.dsHeaderHorizontalPadding,
-        top: AppDimensions.dsHeaderTopPadding,
+        top: top,
         bottom: AppDimensions.dsCompactHeaderBottomPadding,
       ),
       decoration: const BoxDecoration(
@@ -252,6 +264,8 @@ class _HomeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Align(alignment: Alignment.centerRight, child: HeaderActions()),
+          const SizedBox(height: AppDimensions.headerActionsBottomGap),
           Row(
             children: [
               SizedBox(

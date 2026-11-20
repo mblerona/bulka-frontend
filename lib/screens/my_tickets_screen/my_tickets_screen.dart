@@ -8,6 +8,7 @@ import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
 import 'package:bulka_frontend/core/utils/ago_label.dart';
 import 'package:bulka_frontend/models/support_ticket.dart';
+import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/status_badge.dart';
@@ -20,13 +21,47 @@ class MyTicketsScreen extends StatefulWidget {
 }
 
 class _MyTicketsScreenState extends State<MyTicketsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadTickets();
+  }
+
+  void _loadTickets() {
+    context.read<SupportTicketsBloc>().add(const SupportTicketsRequested());
+  }
+
   void _openNewTicket() {
     context.push(AppRoutes.newTicket);
   }
 
+  /// Shown above the button when there are no tickets to list.
+  Widget _noTicketsMessage(SupportTicketsStatus status) {
+    switch (status) {
+      case SupportTicketsStatus.initial:
+      case SupportTicketsStatus.loading:
+        return const SectionLoadingIndicator();
+      case SupportTicketsStatus.failed:
+      case SupportTicketsStatus.notFound: // Only for a ticket's details.
+        return LoadFailedMessage(
+          message: AppStrings.ticketsLoadFailed,
+          onRetry: _loadTickets,
+        );
+      case SupportTicketsStatus.loaded:
+        return Text(
+          AppStrings.ticketsEmpty,
+          style: const TextStyle(
+            fontSize: AppDimensions.dsInputFontSize,
+            color: AppColors.profileSecondaryText,
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final tickets = context.watch<SupportTicketsBloc>().state.tickets;
+    final state = context.watch<SupportTicketsBloc>().state;
+    final tickets = state.tickets;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -51,6 +86,10 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (tickets.isEmpty) ...[
+                      _noTicketsMessage(state.status),
+                      const SizedBox(height: AppDimensions.myTicketsCardGap),
+                    ],
                     for (final ticket in tickets) ...[
                       _TicketCard(ticket: ticket),
                       const SizedBox(height: AppDimensions.myTicketsCardGap),
@@ -78,6 +117,14 @@ class _TicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.push(AppRoutes.ticket(ticket.id)),
+      child: _card(),
+    );
+  }
+
+  Widget _card() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppDimensions.myTicketsCardPadding),
@@ -92,12 +139,15 @@ class _TicketCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '#${ticket.id}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: AppDimensions.myTicketsTicketNumberFontSize,
-                  color: AppColors.agroGreen700,
+              // Backend numbers are long ("HD-20260826190835-9486").
+              Flexible(
+                child: Text(
+                  ticket.number,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: AppDimensions.myTicketsTicketNumberFontSize,
+                    color: AppColors.agroGreen700,
+                  ),
                 ),
               ),
               StatusBadge(

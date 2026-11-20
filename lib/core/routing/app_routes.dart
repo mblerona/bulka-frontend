@@ -24,6 +24,7 @@ abstract final class AppRoutes {
   static const notifications = '/notifications';
   static const tickets = '/tickets';
   static const newTicket = '/tickets/new';
+  static String ticket(String ticketId) => '$tickets/$ticketId';
 
   /// Reset Password for the account the reset code was emailed to.
   static String resetPassword(String email) => Uri(

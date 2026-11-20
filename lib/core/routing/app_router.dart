@@ -38,6 +38,7 @@ import 'package:bulka_frontend/screens/search_results_screen/search_results_scre
 import 'package:bulka_frontend/screens/settings_screen/settings_screen.dart';
 import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
 import 'package:bulka_frontend/screens/terms_privacy_screen/terms_privacy_screen.dart';
+import 'package:bulka_frontend/screens/ticket_details_screen/ticket_details_screen.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.dart';
 import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
 import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
@@ -165,6 +166,13 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
           GoRoute(
             path: 'new',
             builder: (context, state) => const NewSupportTicketScreen(),
+          ),
+          // After 'new', so /tickets/new isn't read as a ticket id.
+          GoRoute(
+            path: ':ticketId',
+            builder: (context, state) => TicketDetailsScreen(
+              ticketId: state.pathParameters['ticketId']!,
+            ),
           ),
         ],
       ),

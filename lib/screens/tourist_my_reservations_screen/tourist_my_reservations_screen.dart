@@ -116,6 +116,7 @@ class _TouristMyReservationsScreenState
       body: Column(
         children: [
           ScreenHeader(
+            showActions: true,
             title: AppStrings.myReservationsTitle,
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,

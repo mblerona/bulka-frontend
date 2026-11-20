@@ -4,6 +4,17 @@ _Rural tourism app for Macedonia (Flutter). This page summarizes what has been b
 
 ## Where we left off
 
+**Latest (2026-11-18): header icons on every root screen.** The My Tickets / Notifications / Settings icons (style agreed with the team) are now on all signed-in root screens of both roles, not just Tourist Home. See "Header actions".
+
+**Before that (2026-11-16): Chat sends and marks read (responses not seen yet); header icons on Home.** Sending (`POST .../messages` with a `clientMessageKey`) and mark as read (`POST .../read`) are wired, but **no Open conversation exists to test them on**: all test conversations are Closed/Blocked (sending returns 400 `CHAT_CONVERSATION_NOT_ACTIVE`), and starting one returns `CHAT_CONFIRMED_BOOKING_REQUIRED` (the Buyer test account has no Confirmed booking). Waiting on the backend team for a confirmed booking or a reopened conversation. Closed/Blocked conversations now show a note instead of the input box. Tourist Home has three new header icons (My Tickets, Notifications with unread badge, Settings) — **style to be agreed before adding them to other screens**. See "Chat (backend)" and "Header actions".
+
+**Before that (2026-11-09): Chat reads from the backend.**
+ The chat list loads `GET /api/chat/conversations` (also feeding the Messages badge) and each thread loads its newest 20 messages from `GET /api/chat/conversations/{id}`. Sending, marking read and older messages are still to do. Full detail in "Chat (backend)" below.
+
+**Before that (2026-11-08):** support tickets (list + new Ticket Details screen) and notifications (list, unread count, mark read, mark all read) moved to the backend. Creating a ticket and deleting a notification are still to do. See "Support Tickets (backend)" and "Notifications (backend)".
+
+_The rest of this section is from the earlier auth round:_
+
 Last worked on: **the start of real backend integration** — the app now makes real HTTP calls against the hosted API instead of every action being local-only state. Login, registration (Buyer + Provider), `GET /api/users/me`, and logout are wired for real; the Tourist/Buyer and Provider flows from the previous round are otherwise untouched. Short-point summary below (see "Backend / Auth Integration" section for full detail); next up, whenever we pick this back up:
 
 - **Real Buyer and Provider logins both now route correctly.** Confirmed role strings: `"Admin"` (no destination), `"Buyer"`, and `"Provider"`. **Critical, confirmed live:** a real Provider account's `roles` was `["Buyer", "Provider"]`, not just `["Provider"]` — a Provider account is apparently also a Buyer. `mapBackendRoleToUserRole` (`lib/models/backend_role_mapper.dart`) checks for `"Provider"` first via `List.contains` specifically because of this — an iterate-and-return-on-first-match approach would have routed every real Provider account to Tourist Home instead of the Provider Dashboard, since `"Buyer"` is listed first.
@@ -46,11 +57,12 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Provider · Rate Guest | ✅ Implemented | Opened only from a completed reservation's "Оцени гостин" on the Dashboard |
 | Provider · Rating Saved (Success) | ✅ Implemented | Reached only after a successful rating submit |
 | Settings | ✅ Implemented | No screen navigates here yet; "Одjава" really logs out to Login |
-| Notifications | ✅ Implemented | No screen navigates here yet |
-| Messages · Chat List | ✅ Implemented | Reachable via "Пораки" on both the Tourist and Provider bottom nav; no bottom nav of its own (see "Confusing" section) |
-| Messages · Chat Thread | ✅ Implemented | Reachable from Chat List only |
-| Support · My Tickets | ✅ Implemented | No screen navigates here yet — reachable via Dev Launcher only |
-| Support · New Ticket | ✅ Implemented | Reachable from My Tickets only |
+| Notifications | ✅ Implemented, **real backend call** | Loads the list and unread count; tapping marks read on the backend. No screen navigates here yet |
+| Messages · Chat List | ✅ Implemented, **real backend call** (`GET /api/chat/conversations`) | Reachable via "Пораки" on both the Tourist and Provider bottom nav; no bottom nav of its own (see "Confusing" section) |
+| Messages · Chat Thread | ✅ Implemented, **real backend call** (`GET /api/chat/conversations/{id}`) | Reachable from Chat List only. Shows the newest 20 messages; sending and marking read are still local only |
+| Support · My Tickets | ✅ Implemented, **real backend call** | Loads `GET /api/me/tickets`; tapping a ticket opens Ticket Details. No screen navigates here yet, so it's reachable via the Dev Launcher only |
+| Support · New Ticket | ✅ Implemented, 🟡 **local only** | Reachable from My Tickets only. Submitting adds the ticket on this device only; `POST /api/me/tickets` isn't connected yet |
+| Support · Ticket Details | ✅ Implemented, **real backend call**, **not a Figma screen** | Loads `GET /api/me/tickets/{id}`. Shows number, status, dates, category, title, description and attachments. Built from the My Tickets card and the New Ticket field styles |
 | Dev Screen Launcher | ✅ Implemented (debug-only) | Boots automatically in debug builds; never present in release |
 | Choose Role | ❌ Not started | No Figma frame implemented yet |
 | Edit Listing screen | ❌ Not started | Blocks 2 Offers-screen actions |
@@ -134,6 +146,7 @@ flowchart TD
     DevLauncher -.-> Notifications
     MyTickets -->|Креирај нов тикет| NewTicket["New Support Ticket"]
     NewTicket -->|Испрати барање, success| MyTickets
+    MyTickets -->|Tap a ticket| TicketDetails["Ticket Details"]
     Settings -->|Одјава| Login
 ```
 
@@ -218,6 +231,86 @@ The API contract is `backend/swagger.json` (gitignored — kept locally, not in 
 - **Logout** (`POST /api/auth/logout`) — takes `{ refreshToken }` (the request body's schema is actually shared with `/api/auth/refresh` in the OpenAPI contract — `RefreshRequest`, not a logout-specific one), no `Authorization` header (the refresh token itself identifies the session). Response is now fully confirmed live too: `{ loggedOut: true }`, decodes into `LogoutResult`. Implemented as **best-effort**: the backend call's success/failure is irrelevant to whether the local session gets cleared — it always does. Wired to Settings' "Одjава", which calls `SessionController.logout()` and disables itself while the call is in flight (to avoid a double-tap firing two concurrent logout calls), then navigates to Login regardless of backend outcome.
 - **Base URL**: `ApiEnvironment.baseUrl` defaults to `https://agro.finki.net.mk`, overridable via `--dart-define=API_BASE_URL=...`.
 - **Not implemented yet, on purpose**: `/api/auth/invitations/accept` (no UI/entry point anywhere in the app for it), `/api/auth/external/complete` (not even documented in the local `backend/swagger.json` — may need a fresh pull from the live Swagger UI; also blocked on the still-UI-only Google sign-in button, which needs real OAuth SDK integration).
+
+## Support Tickets (backend)
+
+All in `SupportTicketsBloc` (`lib/blocs/support_tickets/`); the mock ticket data is deleted.
+
+**Implemented:**
+- **List** (`GET /api/me/tickets`), confirmed live. `SupportTicketsRequested` is sent each time My Tickets opens. The state has a `status` (initial/loading/loaded/failed) and My Tickets shows a spinner, "Couldn't load your tickets" with "Try again", or "You don't have any tickets yet". A reload drops the old list straight away (it may belong to a previous account), and a late response from an older request is ignored. Newest ticket first.
+- **Details** (`GET /api/me/tickets/{id}`), response confirmed live. `SupportTicketDetailsRequested(id)` is sent each time Ticket Details opens; results are kept per id (`detailsFor(id)`, `detailsStatusFor(id)`). The ticket from the list shows straight away while the details load, and a failed reload keeps what's shown. A 404 shows the Not Found screen. Tickets created on this device aren't requested (the backend doesn't know them).
+- **Ticket Details screen** (`lib/screens/ticket_details_screen/`, route `/tickets/:ticketId`, `AppRoutes.ticket(id)`). **Not a Figma screen**: the summary card matches the My Tickets card (number, status pill, title, created date, last updated), and category/title/description are read-only boxes styled like the New Ticket fields. Image attachments show as a preview, other files as a file-name row; the section is hidden when there are none.
+- **`SupportTicket` model**: `fromJson`, the backend's `ticketNumber` as `number`, a new `closed` status (`TicketStatus.fromApi` maps `Open`/`InProgress`/`Resolved`/`Closed`), and `attachments` is now a list. The response has no "last changed" time, so `updatedAt` is the latest of created, closed and message times. `categoryLabel` translates the backend type (`Booking` → Reservations, `Listing`, `Payment`, `Account`/`Profile`, `Other`).
+- **`SupportAttachment`**: gained `url` and `fromJson`; `localPath` is now optional (empty for a backend file).
+- New strings in all 3 languages: `ticketStatusClosed`, `ticketsLoadFailed`, `ticketsEmpty`, `ticketDetailsTitle`, `ticketDetailsLoadFailed`, `ticketCreatedLabel`, `ticketAttachmentLabel`.
+- Dev Launcher entry "Ticket Details" (opens the first ticket, creating a local one if the list is empty), so the all-languages overflow test covers it. Bloc tests in `test/blocs_test.dart` cover list loading, parsing, failures, details, 404, failed reload, and local tickets.
+
+**Still to do:**
+- **Create a ticket on the backend (`POST /api/me/tickets`).** Body: `type`, `priority`, `subject`, `description`, optional `linkedBookingId`/`linkedListingId`/`linkedPaymentTransactionId`/`linkedReviewId`/`linkedConversationId`, `attachmentMediaAssetIds`, `turnstileToken`. A Swagger test returned 404 `MEDIA_NOT_FOUND` only because it sent Swagger's placeholder GUID; it needs to be retried with the linked ids `null` and `attachmentMediaAssetIds: []`. Open questions:
+  - The allowed `type` and `priority` values. Seen so far: types `Booking`, `Payment`, `Technical`, `Other`; priorities `High`, `Normal`. New Ticket's categories (Reservations/Listings/Payment/Profile/Other) need mapping to real types, and the form has no priority field.
+  - Whether `turnstileToken` is checked (auth sends an empty string today).
+  - Attachments need an upload endpoint that returns a media asset id first; none found yet.
+  - Until this is done, a ticket created in the app disappears the next time My Tickets loads.
+- **Attachment JSON shape is a guess.** No ticket with an attachment has been seen yet; `SupportAttachment.fromJson` reads `publicUrl`/`url`, `originalFileName`/`fileName`, `contentType`/`mimeType`, `sizeBytes`/`fileSizeBytes`. Check it against a real response.
+- **Unknown ticket types show as the raw English word** (e.g. `Technical`) until the full list of types is known.
+- **Not shown on Ticket Details:** the `messages` thread (replies from support), priority, assigned moderator and resolution note. A message thread with a reply box is the natural next step (needs the send-message endpoint).
+- **No real entry point to My Tickets** — still Dev Launcher only (same as Settings/Notifications).
+- Not yet tested on a device against the real backend (Android/Windows; web is blocked by CORS).
+
+## Notifications (backend)
+
+In `NotificationsBloc` (`lib/blocs/notifications/`); the mock data is deleted.
+
+**Implemented:**
+- `GET /api/me/notifications`, response confirmed live. `NotificationsRequested` is sent each time Notifications opens; the state has a `status` (initial/loading/loaded/failed), and the screen shows a spinner, "Couldn't load your notifications" with "Try again", or "You don't have any notifications". Newest first; a reload drops the old list (may belong to a previous account) and late responses from older requests are ignored.
+- `NotificationItem.fromJson`: `body` → `message`, `createdAtUtc` → `timestamp`, read = `readAtUtc` is set. Also keeps `type` and `linkUrl`. Notifications with `dismissedAtUtc` set are left out.
+- **Unread count** — `GET /api/me/notifications/unread-count`, response confirmed live (`data: { count }`). `UnreadNotificationsCountRequested` is sent right after the list each time Notifications opens, and the "N unread notifications" subtitle uses it (`serverUnreadCount`). If it fails, the subtitle counts the unread ones in the loaded list instead. Reading a notification lowers it by one, and a list reload clears it (may belong to a previous account).
+- **Mark as read** — `POST /api/me/notifications/{id}/read` (id in the path, no body), response confirmed live: the updated notification with `readAtUtc` set. Tapping an unread notification shows it read straight away, then sends the request; on success the backend's copy replaces it, on failure it shows as unread again (and the count goes back up). Already-read notifications aren't sent again.
+- **Mark all as read** — `POST /api/me/notifications/read-all` (no parameters, no body), response confirmed live: `data: { count }`, how many it marked (not needed by the app). A "Mark all as read" text link sits above the list while any notification is unread — **not in the Figma design**, styled like the app's other text links. It shows everything read straight away; on failure the ones that were unread show as unread again and the count is restored. New string `notificationsMarkAllRead` in all 3 languages.
+- Strings `notificationsLoadFailed` and `notificationsEmpty` in all 3 languages; bloc tests in `test/blocs_test.dart`.
+
+**Still to do** (all listed in `backend/swagger.json`, responses not seen yet):
+- **Dismiss / delete** — `DELETE /api/me/notifications/{id}` (id in the path, no body; the spec has no description or response shape). **Waiting on test data:** the test account has only one notification, and the backend team has been asked to add more so this can be tried without losing it. To find out what it does: note an id from `GET /api/me/notifications`, call the DELETE and save its response, then list again. If the notification is still there with `dismissedAtUtc` set, it's a dismiss (likely — the app already hides dismissed ones); if it's gone, it's a real delete. Also compare `GET .../unread-count` before/after when deleting an unread one. Planned UI: swipe a card to dismiss it, shown gone straight away and put back if the request fails (same pattern as mark as read).
+- **Unread badge** — the count is loaded, but only the Notifications screen uses it. No bell icon with a badge exists anywhere in the app yet (it would also be the missing entry point to Notifications).
+- **Opening `linkUrl`** — it's a web path (e.g. `/bookings/{id}`); tapping should open the matching app screen (needs a Reservation Details screen for bookings).
+- No real entry point to Notifications — still Dev Launcher only.
+- Not yet tested on a device against the real backend.
+
+## Chat (backend)
+
+In `ChatBloc` (`lib/blocs/chat/`); the mock conversations are deleted.
+
+**Implemented:**
+- **Conversation list** — `GET /api/chat/conversations` (no parameters; both roles), response confirmed live. `ChatConversationsRequested` is sent when the Tourist/Provider tabs open (so the Messages badge has a count) and each time the chat list opens. The state has a `status` (initial/loading/loaded/failed); the chat list shows a spinner, "Couldn't load your messages" with "Try again", or "You don't have any conversations yet". Newest message first; a reload drops the old list (may belong to a previous account) and late responses from older requests are ignored.
+- **`ChatConversation` model** rebuilt around the response: buyer/provider names, `buyerUserId`, `title` (shown under the name), `status` (`Open`/`Closed`/`Blocked`), `startedAtUtc`, `lastMessageBody`/`lastMessageAtUtc` (the row's preview and time) and the backend's `unreadCount` (the row badge and the nav badge). The name shown is the other person's: `participantNameFor(myUserId)` gives the Provider's name when the signed-in user is the conversation's Buyer, otherwise the Buyer's. Initials come from that name.
+- **Messages** — `GET /api/chat/conversations/{id}`, response confirmed live: the conversation plus `messages: { items, page, pageSize, totalCount, totalPages }`, items newest first (shown oldest first). `ChatConversationDetailsRequested` is sent each time a thread opens; results are kept per conversation (`detailsFor(id)`, `detailsStatusFor(id)`). The header shows straight away from the list while messages load; the thread shows a spinner, "Couldn't load the messages" with "Try again", or "No messages yet", and jumps to the newest message once they arrive. A failed reload keeps the messages shown; a 404 with no list entry shows Not Found.
+- **Whose message:** `ChatMessage.isMineFor(myUserId)` compares `senderUserId` with the signed-in user's id (right/green bubble when it matches). Messages with `deletedAtUtc` set show as "This message was deleted" in italics. `senderRole`, `senderDisplayName`, `mediaAssetIds` and the flag fields are read from the response but not used yet.
+- Chat Thread opened directly (e.g. `/messages/:id`) loads the list and the messages, and shows a spinner until one of them finds the conversation.
+- The live Swagger has an optional `messageId` **query** parameter on this endpoint (the local `backend/swagger.json` is out of date and doesn't show it). It isn't sent; what it does is unknown (probably paging from a given message).
+- Strings `chatLoadFailed`, `chatEmpty`, `chatMessagesLoadFailed`, `chatNoMessages` and `chatMessageDeleted` in all 3 languages; bloc tests for the list and the messages; the fake test backend answers `/api/chat/conversations` and `/api/chat/conversations/conv-1`, and the "Chat Thread" dev entry loads the list and opens the first conversation.
+- **Test setup fix:** `test/flutter_test_config.dart` now uses `FlutterSecureStorage.setMockInitialValues({})`. Without it, any signed-in request in a widget test waited forever for the keychain, and since the auth interceptor is queued, every request behind it waited too (Home's categories/listings never loaded once the tabs started loading conversations).
+
+- **Sending** — `POST /api/chat/conversations/{id}/messages` with `{ body, mediaAssetIds: [], clientMessageKey }`. `clientMessageKey` is only in the live Swagger (the local `backend/swagger.json` lacks it); the app sends a random UUID v4 per message, assumed to let the backend drop a repeated send (unconfirmed). The message shows straight away, faded while sending. On success the backend's copy replaces it if the response is a message (has `id`), otherwise it's just marked sent — **the success response hasn't been seen yet**. On failure it shows "Not sent. Tap to try again." under the bubble; a retry sends the same `clientMessageKey`. Messages still sending or failed survive a reload of the list/messages.
+- **Closed/Blocked** — confirmed live: sending to them returns 400 `CHAT_CONVERSATION_NOT_ACTIVE`. The thread shows "This conversation is closed/blocked." with a lock icon instead of the input bar (not in Figma). If a send gets that error, the message is marked failed and the conversation shown as closed.
+- **Mark as read** — `POST /api/chat/conversations/{id}/read` with `{ lastReadMessageId }` (the newest message that's on the backend). Tapping a conversation clears its unread count straight away; the request is sent once the thread's messages have loaded (it needs the newest id) and only if something is unread. If it fails, the count comes back. **Response not seen yet**; whether it resets `unreadCount` to 0 is unconfirmed.
+- **Messages badge no longer flickers** — the chat list reloads with `ChatConversationsRequested(keepShown: true)`, which keeps the list (and badge) while loading. The tabs' load (after sign-in) still drops the old list, as it may belong to another account.
+- **Starting a conversation** — tried live: `POST /api/chat/conversations` (`{ providerProfileId, initialMessage }`) returns 400 `CHAT_CONFIRMED_BOOKING_REQUIRED` ("Start the conversation from your own confirmed booking"). So "Contact the host" belongs on a confirmed reservation, via `POST /api/bookings/{id}/chat` (Buyer) or `POST /api/provider/bookings/{id}/chat` (Provider), body `{ initialMessage }` — not wired yet.
+
+**Still to do:**
+- **Older messages** — only the first page (20, the newest) is loaded. Conversations with more need paging: find out how (`messageId` query? a `page` parameter?) and load more when scrolling up.
+- **Images in messages** — `mediaAssetIds` is always empty so far; needs a media URL endpoint to show them.
+- **Refresh `backend/swagger.json`** from the live Swagger — it's missing at least the `messageId` parameter above.
+- **Test send and mark as read against a real Open conversation** (blocked on backend test data, see above): check the success responses, adjust `_sentMessageFrom` if needed, check that sending the same `clientMessageKey` twice doesn't create two messages, and that `read` resets `unreadCount`.
+- **Start a conversation from a confirmed booking** — `POST /api/bookings/{id}/chat` / `POST /api/provider/bookings/{id}/chat`; needs bookings from the backend first.
+- **Delete a message** — `DELETE /api/chat/conversations/{id}/messages/{messageId}`.
+- `bookingContexts` (always empty so far) and `bookingId` aren't used yet — could show the booking a conversation is about.
+- Not yet tested on a device against the real backend.
+
+## Header actions
+
+**New (2026-11-16), Tourist Home only for now — style not agreed yet.** `HeaderActions` (`lib/widgets/header_actions.dart`): three round buttons (faint white circle, white 18px icon, 32px) at the top right of the green header band, above the title: My Tickets (`/tickets`), Notifications (`/notifications`, red badge with `NotificationsBloc.unreadCount`) and Settings (`/settings`). **Not in the Figma design.** They use the space above the title the 56px top padding already leaves; on phones with a tall status bar the title moves down so they sit below it. The tabs now load `GET /api/me/notifications/unread-count` when they open, so the badge has a number before Notifications is visited. These are the first real entry points to My Tickets, Notifications and Settings.
+
+**2026-11-18 — style agreed, added to the other root screens.** `ScreenHeader` has a `showActions` flag that puts `HeaderActions` at the right end of its back-arrow row (where the language switch goes on the sign-in screens; the two can't be used together). Turned on for: Search Results, My Reservations, Profile (Tourist); Dashboard, My Offers, Calendar, Profile (both the individual and legal-entity versions) (Provider); and Messages (both roles). Left out on purpose: sign-in/sign-up screens, the screens the icons open (Settings, Notifications, My Tickets and its sub-screens), screens inside a task (Listing Details, Booking, Confirmation, Reviews, Create Offer, Rate Guest, Chat Thread) and Not Found.
 
 ## Architecture / design system
 

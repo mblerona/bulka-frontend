@@ -1,7 +1,9 @@
-/// A single message within a [ChatConversation]. Shaped to map directly
-/// onto a future chat API/WebSocket payload (id/conversationId/text/
-/// timestamp/isMine/isRead) so the mock data in `ChatBloc` can be
-/// swapped for real fetched/streamed messages without changing this model.
+/// Where a message sent from this device is. Messages from the backend are
+/// always [sent].
+enum ChatMessageSendStatus { sent, sending, failed }
+
+/// A single message within a [ChatConversation], from the `messages` of
+/// `GET /api/chat/conversations/{id}`, or one sent on this device.
 class ChatMessage {
   const ChatMessage({
     required this.id,
@@ -10,21 +12,65 @@ class ChatMessage {
     required this.timestamp,
     required this.isMine,
     this.isRead = false,
+    this.senderUserId,
+    this.isDeleted = false,
+    this.clientMessageKey,
+    this.sendStatus = ChatMessageSendStatus.sent,
   });
+
+  /// Messages the backend sends are already read or counted in the
+  /// conversation's `unreadCount`, so they start read here.
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] as String? ?? '',
+      conversationId: json['conversationId'] as String? ?? '',
+      text: json['body'] as String? ?? '',
+      timestamp: _parseDate(json['createdAtUtc']) ?? DateTime.now(),
+      isMine: false,
+      isRead: true,
+      senderUserId: json['senderUserId'] as String?,
+      isDeleted: _parseDate(json['deletedAtUtc']) != null,
+      clientMessageKey: json['clientMessageKey'] as String?,
+    );
+  }
+
+  static DateTime? _parseDate(Object? value) =>
+      value is String ? DateTime.tryParse(value) : null;
 
   final String id;
   final String conversationId;
   final String text;
   final DateTime timestamp;
 
-  /// True for messages sent by the current user (outgoing, right-aligned
-  /// green bubble); false for messages from the other participant
-  /// (incoming, left-aligned cream bubble).
+  /// True for a message sent on this device. For one from the backend, use
+  /// [isMineFor].
   final bool isMine;
 
   final bool isRead;
 
-  ChatMessage copyWith({bool? isRead}) {
+  /// Who sent it (from the backend); null for one sent on this device.
+  final String? senderUserId;
+
+  /// Deleted on the backend (`deletedAtUtc` set); shown as "deleted".
+  final bool isDeleted;
+
+  /// The id this device made up when sending it (`clientMessageKey`), so a
+  /// retry is the same message to the backend and its reply replaces this
+  /// one. Null for messages from other devices.
+  final String? clientMessageKey;
+
+  final ChatMessageSendStatus sendStatus;
+
+  /// Not on the backend yet (sending or failed).
+  bool get isPending => sendStatus != ChatMessageSendStatus.sent;
+
+  /// Whether the user with [myUserId] sent it (outgoing, right-aligned
+  /// green bubble) rather than the other person (incoming, left-aligned
+  /// cream bubble).
+  bool isMineFor(String? myUserId) =>
+      isMine || (myUserId != null && senderUserId == myUserId);
+
+  ChatMessage copyWith({bool? isRead, ChatMessageSendStatus? sendStatus}) {
     return ChatMessage(
       id: id,
       conversationId: conversationId,
@@ -32,6 +78,10 @@ class ChatMessage {
       timestamp: timestamp,
       isMine: isMine,
       isRead: isRead ?? this.isRead,
+      senderUserId: senderUserId,
+      isDeleted: isDeleted,
+      clientMessageKey: clientMessageKey,
+      sendStatus: sendStatus ?? this.sendStatus,
     );
   }
 }

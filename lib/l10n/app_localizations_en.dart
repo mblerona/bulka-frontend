@@ -508,6 +508,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navMessages => 'Messages';
 
   @override
+  String get chatLoadFailed => 'Couldn\'t load your messages.';
+
+  @override
+  String get chatEmpty => 'You don\'t have any conversations yet.';
+
+  @override
+  String get chatMessagesLoadFailed => 'Couldn\'t load the messages.';
+
+  @override
+  String get chatNoMessages => 'No messages yet.';
+
+  @override
+  String get chatMessageDeleted => 'This message was deleted';
+
+  @override
+  String get chatMessageFailed => 'Not sent.';
+
+  @override
+  String get chatMessageNotSent => 'Not sent. Tap to try again.';
+
+  @override
+  String get chatConversationClosed => 'This conversation is closed.';
+
+  @override
+  String get chatConversationBlocked => 'This conversation is blocked.';
+
+  @override
+  String get headerTicketsTooltip => 'My tickets';
+
+  @override
+  String get headerNotificationsTooltip => 'Notifications';
+
+  @override
+  String get headerSettingsTooltip => 'Settings';
+
+  @override
   String get navProfile => 'Profile';
 
   @override
@@ -545,6 +581,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsUnreadSuffix => 'unread notifications';
 
   @override
+  String get notificationsLoadFailed => 'Couldn\'t load your notifications.';
+
+  @override
+  String get notificationsEmpty => 'You don\'t have any notifications.';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+
+  @override
   String get timeJustNow => 'now';
 
   @override
@@ -578,7 +623,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketStatusResolved => 'RESOLVED';
 
   @override
+  String get ticketStatusClosed => 'CLOSED';
+
+  @override
+  String get ticketsLoadFailed => 'Couldn\'t load your tickets.';
+
+  @override
+  String get ticketsEmpty => 'You don\'t have any tickets yet.';
+
+  @override
   String get ticketLastChangedLabel => 'Last updated';
+
+  @override
+  String get ticketDetailsTitle => 'Ticket details';
+
+  @override
+  String get ticketDetailsLoadFailed => 'Couldn\'t load the ticket.';
+
+  @override
+  String get ticketCreatedLabel => 'Created';
+
+  @override
+  String get ticketAttachmentLabel => 'Attachment';
 
   @override
   String get newTicketTitle => 'New support ticket';

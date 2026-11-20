@@ -9,7 +9,22 @@ import 'package:bulka_frontend/models/support_attachment.dart';
 enum TicketStatus {
   open,
   inProgress,
-  resolved;
+  resolved,
+  closed;
+
+  /// The backend's status name. Anything unrecognized shows as [open].
+  static TicketStatus fromApi(String? value) {
+    switch (value) {
+      case 'InProgress':
+        return TicketStatus.inProgress;
+      case 'Resolved':
+        return TicketStatus.resolved;
+      case 'Closed':
+        return TicketStatus.closed;
+      default:
+        return TicketStatus.open;
+    }
+  }
 
   String get label {
     switch (this) {
@@ -19,6 +34,8 @@ enum TicketStatus {
         return AppStrings.ticketStatusInProgress;
       case TicketStatus.resolved:
         return AppStrings.ticketStatusResolved;
+      case TicketStatus.closed:
+        return AppStrings.ticketStatusClosed;
     }
   }
 
@@ -32,28 +49,61 @@ enum TicketStatus {
         return AppColors.agroGold100;
       case TicketStatus.resolved:
         return AppColors.agroForest950;
+      case TicketStatus.closed:
+        return AppColors.profileSecondaryText;
     }
   }
 }
 
-/// A support ticket. Shaped to map directly onto a future support API
-/// response so the mock data + local creation in `SupportTicketsBloc`
-/// can be swapped for real fetched/created records without changing this
-/// model or anything that reads it.
+/// A support ticket, from `GET /api/me/tickets`.
 class SupportTicket {
   const SupportTicket({
     required this.id,
+    required this.number,
     required this.category,
     required this.title,
     required this.description,
     required this.createdAt,
     required this.updatedAt,
     required this.status,
-    this.attachment,
+    this.attachments = const [],
   });
 
-  /// Numeric-looking ticket reference, e.g. "58" — rendered as "#58".
+  /// The response has no "last changed" time, so [updatedAt] is the latest
+  /// of when the ticket was created, was closed or got a message.
+  factory SupportTicket.fromJson(Map<String, dynamic> json) {
+    final createdAt = _parseDate(json['createdAtUtc']) ?? DateTime.now();
+    final activity = [
+      json['closedAtUtc'],
+      for (final message in json['messages'] as List<dynamic>? ?? const [])
+        if (message is Map<String, dynamic>) message['createdAtUtc'],
+    ].map(_parseDate).whereType<DateTime>();
+    return SupportTicket(
+      id: json['id'] as String? ?? '',
+      number: json['ticketNumber'] as String? ?? '',
+      category: json['type'] as String? ?? '',
+      title: json['subject'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      createdAt: createdAt,
+      updatedAt: activity.fold(
+        createdAt,
+        (latest, time) => time.isAfter(latest) ? time : latest,
+      ),
+      status: TicketStatus.fromApi(json['status'] as String?),
+      attachments: [
+        for (final item in json['attachments'] as List<dynamic>? ?? const [])
+          if (item is Map<String, dynamic>) SupportAttachment.fromJson(item),
+      ],
+    );
+  }
+
+  static DateTime? _parseDate(Object? value) =>
+      value is String ? DateTime.tryParse(value) : null;
+
   final String id;
+
+  /// The reference shown to the user, as the backend formats it.
+  final String number;
 
   final String category;
   final String title;
@@ -61,5 +111,25 @@ class SupportTicket {
   final DateTime createdAt;
   final DateTime updatedAt;
   final TicketStatus status;
-  final SupportAttachment? attachment;
+  final List<SupportAttachment> attachments;
+
+  /// [category] in the current language. The backend sends a type name
+  /// ("Booking"); a ticket created on this device already holds the label.
+  String get categoryLabel {
+    switch (category) {
+      case 'Booking':
+        return AppStrings.newTicketCategoryReservations;
+      case 'Listing':
+        return AppStrings.newTicketCategoryListings;
+      case 'Payment':
+        return AppStrings.newTicketCategoryPayments;
+      case 'Account':
+      case 'Profile':
+        return AppStrings.newTicketCategoryProfile;
+      case 'Other':
+        return AppStrings.newTicketCategoryOther;
+      default:
+        return category;
+    }
+  }
 }
