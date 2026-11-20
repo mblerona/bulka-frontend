@@ -144,6 +144,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       onPressed: isSubmitting ? null : _handleSubmit,
                     ),
                     const SizedBox(
+                      height: AppDimensions.forgotPasswordHeadingGap * 2,
+                    ),
+                    Text(
+                      AppStrings.forgotPasswordSpamNote,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: AppDimensions.dsSubheadingFontSize,
+                        color: AppColors.agroInk500,
+                      ),
+                    ),
+                    const SizedBox(
                       height: AppDimensions.forgotPasswordBodyGap * 4,
                     ),
                     Row(

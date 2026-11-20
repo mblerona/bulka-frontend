@@ -605,6 +605,14 @@ class AppDimensions {
   static const double filtersFieldHeadingGap = 8;
   static const double filtersChevronIconSize = 18;
 
+  // "Гости" steppers (Figma "Guests Field")
+  static const double filtersStepperButtonSize = 30;
+  static const double filtersStepperIconSize = 16;
+  static const double filtersStepperGap = 14;
+  static const double filtersStepperValueWidth = 20;
+  static const double filtersStepperRowGap = 10;
+  static const double filtersGuestsAdultsFontSize = 12;
+
   static const double filtersPriceLabelRowGap = 10;
   static const double filtersPriceValueFontSize = 13;
   static const double filtersSliderHeight = 20;

@@ -51,16 +51,22 @@ abstract final class AppRoutes {
   static String leaveReview(String reservationId) =>
       '$reservations/$reservationId/review';
 
-  /// Listings open inside whichever tab you're in (Home or Search), so the
-  /// bottom nav keeps that tab selected and back returns to it.
+  /// Listings open inside whichever tab you're in (Home, Search or
+  /// Reservations), so the bottom nav keeps that tab selected and back
+  /// returns to it.
   static String listing(BuildContext context, String listingId) =>
       '${listingTabRoot(context)}/listings/$listingId';
   static String booking(BuildContext context, String listingId) =>
       '${listing(context, listingId)}/book';
 
-  /// [search] when [context] is inside the Search tab, otherwise [home].
-  static String listingTabRoot(BuildContext context) =>
-      GoRouterState.of(context).uri.path.startsWith(search) ? search : home;
+  /// The tab [context] is inside: [search] or [reservations], otherwise
+  /// [home].
+  static String listingTabRoot(BuildContext context) {
+    final path = GoRouterState.of(context).uri.path;
+    if (path.startsWith(search)) return search;
+    if (path.startsWith(reservations)) return reservations;
+    return home;
+  }
 
   // ── Provider tabs ──
   static const dashboard = '/dashboard';

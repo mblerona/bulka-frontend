@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/notifications/notifications_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bulka_frontend/core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
+import 'package:bulka_frontend/models/user_role.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
@@ -8,6 +12,33 @@ import 'package:bulka_frontend/core/utils/relative_time.dart';
 import 'package:bulka_frontend/models/notification_item.dart';
 import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
+
+/// Where tapping [notification] goes, or null for nowhere. Read from the
+/// backend's web `linkUrl` (e.g. `/bookings/{id}`, `/tickets/{id}`) and,
+/// without one, its `type` (e.g. "Booking").
+String? notificationTarget(NotificationItem notification, UserRole? role) {
+  // Original casing kept for ids; matched lower-case.
+  final segments =
+      Uri.tryParse(notification.linkUrl ?? '')?.pathSegments ??
+      const <String>[];
+  final lower = segments.map((s) => s.toLowerCase()).toList();
+  final type = notification.type.toLowerCase();
+  bool about(String word) =>
+      lower.any((s) => s.contains(word)) || type.contains(word);
+
+  if (about('ticket') || about('support')) {
+    final i = lower.indexWhere((s) => s.contains('ticket'));
+    return i >= 0 && i + 1 < segments.length
+        ? AppRoutes.ticket(segments[i + 1])
+        : AppRoutes.tickets;
+  }
+  if (about('booking') || about('reservation')) {
+    return role == UserRole.owner
+        ? AppRoutes.dashboard
+        : AppRoutes.reservations;
+  }
+  return null;
+}
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -28,6 +59,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     context.read<NotificationsBloc>()
       ..add(const NotificationsRequested())
       ..add(const UnreadNotificationsCountRequested());
+  }
+
+  /// Marks [notification] read and, as in Figma, opens what it's about:
+  /// a booking → Reservations (Dashboard for a Provider), a support reply
+  /// → that ticket (or the tickets list). Anything else only gets marked
+  /// read.
+  void _openNotification(NotificationItem notification) {
+    context.read<NotificationsBloc>().add(NotificationRead(notification.id));
+    final role = context.read<AuthBloc>().state.user?.role;
+    final target = notificationTarget(notification, role);
+    if (target == null) return;
+    if (target.startsWith(AppRoutes.tickets)) {
+      context.push(target);
+    } else {
+      context.go(target);
+    }
   }
 
   /// Shown instead of the list when there are no notifications to list.
@@ -105,9 +152,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         final notification = notifications[index];
                         return _NotificationCard(
                           notification: notification,
-                          onTap: () => context.read<NotificationsBloc>().add(
-                            NotificationRead(notification.id),
-                          ),
+                          onTap: () => _openNotification(notification),
                         );
                       },
                     ),

@@ -14,8 +14,8 @@ import 'package:bulka_frontend/widgets/screen_header.dart';
 /// Second step of Forgot Password: the code from the email plus the new
 /// password. On success the user goes to Login with their email filled in.
 ///
-/// Not a Figma screen: it reuses Forgot Password's layout, since no design
-/// exists for this step yet.
+/// The Figma "04b – Reset Password" frame, which reuses Forgot Password's
+/// layout.
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key, required this.email});
 

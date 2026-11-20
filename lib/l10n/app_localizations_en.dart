@@ -176,6 +176,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPasswordSubmitButton => 'SEND CODE';
 
   @override
+  String get forgotPasswordSpamNote =>
+      'If you didn\'t receive the email, check your spam folder.';
+
+  @override
   String get forgotPasswordFooterPrompt => 'Remembered your password? ';
 
   @override
@@ -1160,7 +1164,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filtersRatingAllOption => 'All';
 
   @override
-  String get filtersGuestCountLabel => 'Number of guests';
+  String get filtersGuestCountLabel => 'Guests';
+
+  @override
+  String get filtersGuestsTotalLabel => 'Total guests';
+
+  @override
+  String get filtersGuestsChildrenLabel => 'Of them children';
+
+  @override
+  String filtersGuestsAdults(int count) {
+    return 'Adults: $count';
+  }
+
+  @override
+  String get filtersStepperDecrease => 'Decrease';
+
+  @override
+  String get filtersStepperIncrease => 'Increase';
 
   @override
   String get filtersAmenityHeading => 'Amenities';

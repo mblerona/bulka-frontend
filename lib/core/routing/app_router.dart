@@ -210,6 +210,8 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
                       : ReservationsTab.upcoming,
                 ),
                 routes: [
+                  // An upcoming booking's card opens its listing here.
+                  ..._listingRoutes(),
                   GoRoute(
                     path: 'review-submitted',
                     builder: (context, state) => const ReviewSubmittedScreen(),
@@ -310,7 +312,8 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
   );
 }
 
-/// Listing details + booking, used under both the Home and Search tabs.
+/// Listing details + booking, used under the Home, Search and Reservations
+/// tabs.
 /// Listings come from the backend, by slug.
 List<RouteBase> _listingRoutes() => [
   GoRoute(

@@ -28,9 +28,18 @@ class ListingSearchFilter {
   /// From the Figma "Оценка" chips (Сите/3+★/4+★/4.5+★) — null = "Сите".
   double? minRating;
 
-  /// "Број на гости" (1/2/3/4/5+) — null = unset (no restriction). A
-  /// minimum the listing must fit, not a booking's exact headcount.
+  /// "Вкупно гости", children included — null = unset (no restriction).
+  /// A minimum the listing must fit, not a booking's exact headcount.
+  /// Sent as `guests`.
   int? minimumGuests;
+
+  /// "Од нив деца": how many of [minimumGuests] are children, so adults =
+  /// [minimumGuests] - [children]. Always 0 while [minimumGuests] is null
+  /// and at most [minimumGuests] - 1 (at least one adult). Not sent: the
+  /// backend only filters on the total.
+  int children = 0;
+
+  int? get adults => minimumGuests == null ? null : minimumGuests! - children;
 
   /// A top-level `HomeCategory.id`; null = all. One at a time: the backend
   /// filters by a single category.
@@ -61,6 +70,7 @@ class ListingSearchFilter {
       ..endDate = endDate
       ..minRating = minRating
       ..minimumGuests = minimumGuests
+      ..children = children
       ..categoryId = categoryId
       ..amenityIds = Set.of(amenityIds);
   }
@@ -74,6 +84,7 @@ class ListingSearchFilter {
     endDate = null;
     minRating = null;
     minimumGuests = null;
+    children = 0;
     categoryId = null;
     amenityIds = {};
   }

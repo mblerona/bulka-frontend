@@ -403,6 +403,15 @@ class _BannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // As in Figma, a banner opens Search Results. The banners are local
+    // samples with no search of their own, so it shows the current one.
+    return GestureDetector(
+      onTap: () => context.go(AppRoutes.search),
+      child: _buildCard(),
+    );
+  }
+
+  Widget _buildCard() {
     return Container(
       width: AppDimensions.homeBannerWidth,
       padding: const EdgeInsets.all(AppDimensions.homeBannerPadding),

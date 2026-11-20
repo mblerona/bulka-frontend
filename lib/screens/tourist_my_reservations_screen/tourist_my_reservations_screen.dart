@@ -315,10 +315,19 @@ class _UpcomingCard extends StatelessWidget {
       statusLabel: reservation.status.touristLabel,
       metaLine: _metaLine,
       actionLabel: _actionLabel,
-      // TODO: navigate to a Reservation Details screen once one exists.
-      // This already carries the exact `reservation`/`listing` such a
-      // screen would need — nothing hardcoded to resolve later.
-      onTap: () {},
+      // As in Figma: opens the booked listing's details. Only listings
+      // from the backend have a page (by slug); the local sample ones
+      // don't, so their card does nothing.
+      onTap: () {
+        final listingId = reservation.listingId;
+        if (listingId == null) return;
+        final slug = context
+            .read<PublicListingsBloc>()
+            .state
+            .byId(listingId)
+            ?.slug;
+        if (slug != null) context.push(AppRoutes.listing(context, slug));
+      },
     );
   }
 }

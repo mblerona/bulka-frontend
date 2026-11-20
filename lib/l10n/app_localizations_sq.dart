@@ -175,6 +175,10 @@ class AppLocalizationsSq extends AppLocalizations {
   String get forgotPasswordSubmitButton => 'DËRGO KODIN';
 
   @override
+  String get forgotPasswordSpamNote =>
+      'Nëse nuk ju ka ardhur email-i, kontrolloni dosjen e spam-it.';
+
+  @override
   String get forgotPasswordFooterPrompt => 'E kujtuat fjalëkalimin? ';
 
   @override
@@ -1164,7 +1168,24 @@ class AppLocalizationsSq extends AppLocalizations {
   String get filtersRatingAllOption => 'Të gjitha';
 
   @override
-  String get filtersGuestCountLabel => 'Numri i mysafirëve';
+  String get filtersGuestCountLabel => 'Mysafirë';
+
+  @override
+  String get filtersGuestsTotalLabel => 'Gjithsej mysafirë';
+
+  @override
+  String get filtersGuestsChildrenLabel => 'Prej tyre fëmijë';
+
+  @override
+  String filtersGuestsAdults(int count) {
+    return 'Të rritur: $count';
+  }
+
+  @override
+  String get filtersStepperDecrease => 'Zvogëlo';
+
+  @override
+  String get filtersStepperIncrease => 'Rrit';
 
   @override
   String get filtersAmenityHeading => 'Pajisjet';

@@ -29,9 +29,9 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Screen | Status | Notes |
 |---|---|---|
 | Splash & Language | ✅ Implemented, **real backend call** | Vertically responsive on short devices; "Продолжи" now attempts `SessionController.restoreSession()` first and routes straight to Tourist Home/Provider Dashboard on a still-valid stored session, falling back to Login otherwise |
-| Login | ✅ Implemented, **real backend auth** | `POST /api/auth/login` for real; role-based routing exists but can't reach Buyer/Provider yet (see "Where we left off"); Google sign-in button still UI-only |
+| Login | ✅ Implemented, **real backend auth** | `POST /api/auth/login` for real; routes Buyer accounts to Tourist Home and Provider accounts to the Provider Dashboard; Google sign-in button still UI-only |
 | Forgot Password | ✅ Implemented, **real backend call** | "Send code" calls `POST /api/auth/forgot-password` for real, then opens the new Reset Password screen |
-| Reset Password | ✅ Implemented, **real backend call**, **not a Figma screen** | Code + new password calls `POST /api/auth/reset-password` for real; built from existing app primitives like `BookingRequestScreen` since no Figma frame defines this step |
+| Reset Password | ✅ Implemented, **real backend call**, Figma "04b – Reset Password" | Code + new password calls `POST /api/auth/reset-password` for real; the Figma frame was drawn afterwards from this screen, reusing Forgot Password's layout |
 | Register | ✅ Implemented | Submit gated on Terms checkbox; now collects first/last/display name (+ business name for Provider) needed by the real register endpoints |
 | Terms & Privacy Acceptance | ✅ Implemented, **real backend call** | Submit gated on all 3 consents; "ПРИФАТИ И ПРОДОЛЖИ" now calls `POST /api/auth/register/buyer` or `.../provider` for real (see "Backend / Auth Integration") |
 | Email Verification | ✅ Implemented, **real backend calls** | Now has a real code-entry field + "ПОТВРДИ" calling `POST /api/auth/verify-email` for real; "Resend" now calls `POST /api/auth/resend-email-verification` for real too. Temporary dev button removed. |
@@ -39,8 +39,8 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Profile (Provider · Физичко лице) | ✅ Implemented | Active Offers/Average Rating stat cards now derive from real listing + review data |
 | Profile Setup (Provider · Правно лице) | ✅ Implemented | Full alternate screen (logo upload, business fields) shown when the subject-type toggle is set to "Правно лице" |
 | Bottom Nav — Tourist / Provider | ✅ Implemented | **Both** roles fully wired now — `TouristBottomNav` centrally resolves all 5 tabs (Дома/Пребарај/Резервации/Пораки/Профил), mirroring `ProviderBottomNav`'s pattern |
-| Tourist · Home (Дома) | ✅ Implemented | Search bar → Search Filters sheet; recommended listings from active `ProviderListing`s; category chips still `TODO` |
-| Tourist · Search Filters (sheet) | ✅ Implemented | Keyword/location/price range/dates/rating/**guest count**/categories/amenities — one `ListingSearchFilter`, live result count |
+| Tourist · Home (Дома) | ✅ Implemented, **real backend call** | Search bar → Search Filters sheet; listings from `GET /api/listings`, categories from `GET /api/categories`; category chips still `TODO` |
+| Tourist · Search Filters (sheet) | ✅ Implemented, **real backend call** | Categories, regions and amenities from `GET /api/categories`, `/api/regions`, `/api/amenities`; Keyword/location/price range/dates/rating/**guest count**/categories/amenities — one `ListingSearchFilter`, live result count |
 | Tourist · Search Results | ✅ Implemented | List view only; quick-filter row; "Карта" button is `TODO` (see Map View below) |
 | Tourist · Map View | ❌ Not started | Blocked on a real map-package + coordinates decision — see "Known gaps" |
 | Tourist · Listing Details | ✅ Implemented | Gallery, favorites, host row, description, amenities, location placeholder, reviews, booking footer (accommodation-only) |
@@ -56,11 +56,11 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Provider · Offer Published (Success) | ✅ Implemented | Reached only after a successful publish |
 | Provider · Rate Guest | ✅ Implemented | Opened only from a completed reservation's "Оцени гостин" on the Dashboard |
 | Provider · Rating Saved (Success) | ✅ Implemented | Reached only after a successful rating submit |
-| Settings | ✅ Implemented | No screen navigates here yet; "Одjава" really logs out to Login |
-| Notifications | ✅ Implemented, **real backend call** | Loads the list and unread count; tapping marks read on the backend. No screen navigates here yet |
+| Settings | ✅ Implemented | Reachable from the Settings icon in the root screens' headers (see "Header actions"); "Одjава" really logs out to Login |
+| Notifications | ✅ Implemented, **real backend call** | Loads the list and unread count; tapping marks read on the backend. Reachable from the bell icon in the root screens' headers, which shows the unread count as a badge |
 | Messages · Chat List | ✅ Implemented, **real backend call** (`GET /api/chat/conversations`) | Reachable via "Пораки" on both the Tourist and Provider bottom nav; no bottom nav of its own (see "Confusing" section) |
-| Messages · Chat Thread | ✅ Implemented, **real backend call** (`GET /api/chat/conversations/{id}`) | Reachable from Chat List only. Shows the newest 20 messages; sending and marking read are still local only |
-| Support · My Tickets | ✅ Implemented, **real backend call** | Loads `GET /api/me/tickets`; tapping a ticket opens Ticket Details. No screen navigates here yet, so it's reachable via the Dev Launcher only |
+| Messages · Chat Thread | ✅ Implemented, **real backend call** (`GET /api/chat/conversations/{id}`) | Reachable from Chat List only. Shows the newest 20 messages. Sending (`POST .../messages`) and marking read (`POST .../read`) call the backend, but neither has been tested on an Open conversation yet; Closed/Blocked conversations show a note instead of the input box |
+| Support · My Tickets | ✅ Implemented, **real backend call** | Loads `GET /api/me/tickets`; tapping a ticket opens Ticket Details. Reachable from the My Tickets icon in the root screens' headers |
 | Support · New Ticket | ✅ Implemented, 🟡 **local only** | Reachable from My Tickets only. Submitting adds the ticket on this device only; `POST /api/me/tickets` isn't connected yet |
 | Support · Ticket Details | ✅ Implemented, **real backend call**, **not a Figma screen** | Loads `GET /api/me/tickets/{id}`. Shows number, status, dates, category, title, description and attachments. Built from the My Tickets card and the New Ticket field styles |
 | Dev Screen Launcher | ✅ Implemented (debug-only) | Boots automatically in debug builds; never present in release |
@@ -68,7 +68,7 @@ Last worked on: **the start of real backend integration** — the app now makes 
 | Edit Listing screen | ❌ Not started | Blocks 2 Offers-screen actions |
 | Reservation Details screen | ❌ Not started | Blocks 1 My Reservations action ("Прегледај детали") |
 | Real Map View / coordinates | ❌ Not started | Needs a package + `ProviderListing` lat/lng decision — see "Known gaps" |
-| Backend / API integration | 🟡 Started — auth only | Login, Buyer/Provider registration, `GET /api/users/me`, and logout call the real hosted API (`https://agro.finki.net.mk`); every other screen/feature is still local UI state only |
+| Backend / API integration | 🟡 In progress | Calls the real hosted API (`https://agro.finki.net.mk`) for: auth (login, registration, email verification, password reset, token refresh, `GET /api/users/me`, logout); public listings, categories, regions and amenities; notifications (list, unread count, mark read, mark all read); support tickets (list, details); chat (conversation list, messages, sending, marking read — the last two not yet tested on an Open conversation). Still local only: creating tickets, deleting notifications, reservations, reviews, favorites, availability, and everything on the Provider side (offers, dashboard, rate guest) |
 
 All screens above were built directly from the team's Figma file ("Rural Tourism"), matched frame-by-frame — colors, typography, spacing, and assets pulled from Figma via MCP rather than eyeballed.
 
@@ -137,26 +137,28 @@ flowchart TD
 
 Same simplification note as the Provider diagram — the 5-tab ring is really "every tab resolves independently from wherever you are," not a literal cycle. `ListingDetailsScreen`/`BookingRequestScreen` carry an `originTabIndex` (0 from Home, 1 from Search Results) so the navbar highlights the section the user actually came from instead of hardcoding "Дома" — only `ReservationConfirmationScreen` onward switches to "Резервации", once a reservation genuinely exists. **Map View has no entry point yet** — Search Results' "Карта" button is a `TODO`.
 
-**A third, separate cluster of screens still has no entry point from either flow above:**
+**A third cluster of screens opens from the header icons** (`HeaderActions`, see "Header actions") on the root screens of both roles:
 
 ```mermaid
 flowchart TD
-    DevLauncher["Dev Screen Launcher (debug-only)"] -.-> Settings
-    DevLauncher -.-> MyTickets["My Tickets"]
-    DevLauncher -.-> Notifications
+    Header["Header icons (root screens, both roles)"] --> Settings
+    Header --> MyTickets["My Tickets"]
+    Header --> Notifications
     MyTickets -->|Креирај нов тикет| NewTicket["New Support Ticket"]
     NewTicket -->|Испрати барање, success| MyTickets
     MyTickets -->|Tap a ticket| TicketDetails["Ticket Details"]
     Settings -->|Одјава| Login
 ```
 
-Solid arrows are real, working `Navigator` transitions. Dashed arrows exist only in debug builds — in a release build there is currently **no way to reach Settings, My Tickets, New Ticket, or Notifications at all**.
+All of these work in release builds too. The Dev Screen Launcher (debug builds only) can still open each of them directly.
 
-**Data flow.** The name/email/phone entered on Register are carried forward via a small `RegistrationProfile` model passed as a constructor parameter screen-to-screen — no state-management library, just plain data passed down.
+**Navigation** is `go_router` (`lib/core/routing/app_router.dart`, paths in `AppRoutes`). The diagrams above show screen-to-screen transitions, not literal `Navigator` calls.
 
-**Shared feature state** (Notifications, Chat, Support tickets, Provider listings, Reservations, Availability, Guest ratings, and now **Listing Reviews, Favorites, and Search**) all use the same pattern: a `ChangeNotifier` singleton per feature under `lib/services/`, listened to via manual `addListener`+`setState`. Any screen or widget can read the same singleton — this is what lets, for example, accepting a reservation on the Dashboard, publishing a new listing from the wizard, submitting a guest rating, or **a Tourist submitting a listing review, be visible everywhere that depends on it immediately** (Listing Details, Search Results, Provider Offers, Provider Profile's average rating, and the rating search filter all update live off the exact same `ListingReviewController`) with zero manual cross-screen sync.
+**Data flow.** The data entered on Register travels to Terms & Privacy as a `SignUpData` (a `RegistrationProfile` plus the password) in GoRouter's `extra`, in memory only, because it contains the password. Every other screen that needs an object gets its id in the URL and looks it up in a bloc.
 
-**The Create Offer wizard uses a different, narrower pattern on purpose**: its `CreateListingDraft` is a plain **mutable object scoped to one wizard session** (owned by the wizard screen's own `State`, not a singleton) — see the wizard's own notes below for why. **The Search Filters sheet follows the same narrower pattern**: `ListingSearchFilter` is a mutable draft edited by one sheet session, only becoming the shared `SearchController.instance.filter` once "Прикажи резултати" is pressed.
+**Shared feature state** uses `flutter_bloc`: one Bloc per feature in `lib/blocs/<feature>/` (auth, locale, public listings, categories, regions, amenities, Provider listings, reservations, availability, listing reviews, guest ratings, search, favorites, chat, notifications, support tickets). All of them are created once in `AppBlocProviders` (`lib/blocs/app_bloc_providers.dart`) above the router, and screens read them with `context.read`/`context.watch`/`BlocBuilder`. Because every screen reads the same bloc, a change made on one screen shows up on every other screen straight away. For example, a Tourist's new review updates the rating on Listing Details, Search Results, Provider Offers and Provider Profile at once, since they all read `ListingReviewsBloc`. Blocs don't depend on each other; logic that needs two features is a pure function taking both states (e.g. `AvailabilityState.statusFor`).
+
+**Two pieces of state stay local on purpose**: the Create Offer wizard's `CreateListingDraft` is a mutable object owned by the wizard screen's own `State`, and the Search Filters sheet edits its own copy of `ListingSearchFilter`, which only reaches `SearchBloc` (`SearchFilterApplied`) when "Прикажи резултати" is pressed.
 
 ## Screen-by-screen notes
 
@@ -248,13 +250,12 @@ All in `SupportTicketsBloc` (`lib/blocs/support_tickets/`); the mock ticket data
 **Still to do:**
 - **Create a ticket on the backend (`POST /api/me/tickets`).** Body: `type`, `priority`, `subject`, `description`, optional `linkedBookingId`/`linkedListingId`/`linkedPaymentTransactionId`/`linkedReviewId`/`linkedConversationId`, `attachmentMediaAssetIds`, `turnstileToken`. A Swagger test returned 404 `MEDIA_NOT_FOUND` only because it sent Swagger's placeholder GUID; it needs to be retried with the linked ids `null` and `attachmentMediaAssetIds: []`. Open questions:
   - The allowed `type` and `priority` values. Seen so far: types `Booking`, `Payment`, `Technical`, `Other`; priorities `High`, `Normal`. New Ticket's categories (Reservations/Listings/Payment/Profile/Other) need mapping to real types, and the form has no priority field.
-  - Whether `turnstileToken` is checked (auth sends an empty string today).
+  - Whether `turnstileToken` is checked (auth requests don't send one today).
   - Attachments need an upload endpoint that returns a media asset id first; none found yet.
   - Until this is done, a ticket created in the app disappears the next time My Tickets loads.
 - **Attachment JSON shape is a guess.** No ticket with an attachment has been seen yet; `SupportAttachment.fromJson` reads `publicUrl`/`url`, `originalFileName`/`fileName`, `contentType`/`mimeType`, `sizeBytes`/`fileSizeBytes`. Check it against a real response.
 - **Unknown ticket types show as the raw English word** (e.g. `Technical`) until the full list of types is known.
 - **Not shown on Ticket Details:** the `messages` thread (replies from support), priority, assigned moderator and resolution note. A message thread with a reply box is the natural next step (needs the send-message endpoint).
-- **No real entry point to My Tickets** — still Dev Launcher only (same as Settings/Notifications).
 - Not yet tested on a device against the real backend (Android/Windows; web is blocked by CORS).
 
 ## Notifications (backend)
@@ -271,9 +272,7 @@ In `NotificationsBloc` (`lib/blocs/notifications/`); the mock data is deleted.
 
 **Still to do** (all listed in `backend/swagger.json`, responses not seen yet):
 - **Dismiss / delete** — `DELETE /api/me/notifications/{id}` (id in the path, no body; the spec has no description or response shape). **Waiting on test data:** the test account has only one notification, and the backend team has been asked to add more so this can be tried without losing it. To find out what it does: note an id from `GET /api/me/notifications`, call the DELETE and save its response, then list again. If the notification is still there with `dismissedAtUtc` set, it's a dismiss (likely — the app already hides dismissed ones); if it's gone, it's a real delete. Also compare `GET .../unread-count` before/after when deleting an unread one. Planned UI: swipe a card to dismiss it, shown gone straight away and put back if the request fails (same pattern as mark as read).
-- **Unread badge** — the count is loaded, but only the Notifications screen uses it. No bell icon with a badge exists anywhere in the app yet (it would also be the missing entry point to Notifications).
 - **Opening `linkUrl`** — it's a web path (e.g. `/bookings/{id}`); tapping should open the matching app screen (needs a Reservation Details screen for bookings).
-- No real entry point to Notifications — still Dev Launcher only.
 - Not yet tested on a device against the real backend.
 
 ## Chat (backend)
@@ -314,49 +313,48 @@ In `ChatBloc` (`lib/blocs/chat/`); the mock conversations are deleted.
 
 ## Architecture / design system
 
-**New this round — backend integration (`lib/core/network/`, `lib/services/`, `lib/models/`):**
-- **`ApiClient`** (`api_client.dart`) — single shared `Dio` singleton. Holds two interceptors: `_AuthHeaderInterceptor` attaches `Authorization: Bearer <token>` to every call except a hardcoded public-path exclusion list (login, both register endpoints, verify-email, resend-verification, forgot/reset-password, refresh, logout), and `_RefreshOnUnauthorizedInterceptor` (a `QueuedInterceptor`, so a burst of concurrent requests that all 401 at once triggers exactly one refresh attempt, not one per request) reacts to a 401 from any other path by calling a registered refresh handler and either retrying the original request (on success) or letting the 401 through (on anything else). Both interceptors read the token/call the refresh handler via provider callbacks `SessionController` registers on construction, specifically to avoid a `core` → `services` import cycle.
+**Backend integration (`lib/core/network/`, `lib/blocs/`, `lib/models/`):**
+- **`ApiClient`** (`api_client.dart`) — one shared `Dio` instance (`ApiClient.instance.dio`). Every request sends `X-Client-Type: mobile` (without it the auth endpoints use a web cookie session and return no tokens) and `Accept-Language` set to the app's current language. In debug builds it also logs requests.
+- **`AuthInterceptor`** (`auth_interceptor.dart`) — a `QueuedInterceptor` that adds `Authorization: Bearer <token>` to every request, except those marked `extra: {skipAuth: true}` (login, register, refresh, public endpoints). On a 401 it refreshes the tokens once through `POST /api/auth/refresh`, using a separate Dio so the refresh can't loop into itself, then retries the request. When several requests get a 401 at once, only the first refreshes; the rest retry with the new token. If the refresh fails it clears the tokens and calls `ApiClient.onSessionExpired`, which `AppBlocProviders` points at `AuthBloc` (`AuthSessionExpired`).
+- **`public_api.dart`** — `getPublicData`/`getPublicList` for public GETs (listings, categories, regions, amenities): no token sent, and a 401 doesn't trigger a refresh.
 - **`ApiEnvironment`** (`api_environment.dart`) — the one place `baseUrl` is defined.
-- **`ApiResponse<T>`** (`api_response.dart`) / **`ApiErrorItem`**/**`ApiException`**/**`ApiExceptionKind`** (`api_exception.dart`) — generic decode of the backend's one confirmed envelope shape (`success`/`data`/`errors`/`traceId`), and the one exception type the rest of the app ever catches for a failed call. `ApiException.hasErrorCode(code)` lets a caller react to one specific confirmed backend error code (e.g. `AUTH_EMAIL_NOT_VERIFIED`) without matching on free-form `message` text.
-- **`ApiErrorMapper`** (`api_error_mapper.dart`) — the single place a `DioException` is turned into an `ApiException`; maps HTTP status → `ApiExceptionKind`, prefers the backend's own error message, falls back to a Macedonian `AppStrings` message otherwise (never shows raw Dio text to a user).
-- **`TokenStorage`** (`token_storage.dart`) — wraps `flutter_secure_storage`; the only thing that touches it. Stores access token, refresh token, and access-token expiry; never a password.
-- **`AuthRepository`** (`lib/services/auth_repository.dart`) — all `/api/auth/*` and `/api/users/me` HTTP calls: `login`, `registerBuyer`, `registerProvider`, `getCurrentUser`, `logout`.
-- **`SessionController`** (`lib/services/session_controller.dart`) — `ChangeNotifier` singleton, same pattern as every other controller in the app; the one source of truth for `currentUser`/`isAuthenticated`/`appRole`/`isLoading`/`errorMessage`/`emailNotVerified`. `refreshCurrentUser()` exists but isn't called from anywhere yet. `restoreSession()` is new — called from `SplashScreen` on every app start, it re-populates `currentUser` from a stored token via `GET /api/users/me` without requiring a fresh login. `attemptTokenRefresh()` is new too — registered with `ApiClient` as its 401 handler, it calls the now-confirmed `POST /api/auth/refresh` and applies the (rotated) tokens on success, or forces a local logout on any failure (see "Backend / Auth Integration").
-- **`AuthUser`, `LoginRequest`, `LoginResponseData`, `BuyerRegisterRequest`, `ProviderRegisterRequest`, `RegisterResult`, `ProviderRegisterResult`, `ResendEmailVerificationResult`** (`lib/models/`) — request/response models, field names matching the confirmed live JSON exactly. `RegisterResult`/`ProviderRegisterResult` are kept as two separate classes rather than one shared type, since the two confirmed responses name their status field differently (`status` vs. `userStatus`). `AuthUser` now also has `phone`/`phoneCompletionRequired`/`providerQuestionnaireRequired`, confirmed on a real Buyer login; `LoginResponseData` has a `webSession` field too, kept untyped (only ever observed as `null`). `LogoutResult` (`lib/models/`) is new too — logout's response is now fully confirmed and typed, same as everything else here.
-- **`mapBackendRoleToUserRole`** (`lib/models/backend_role_mapper.dart`) — the one centralized place a raw backend role string maps to this app's `UserRole`; now maps the confirmed `"Buyer"` to `UserRole.buyer` and `"Admin"` to `null` (no Admin destination exists) — Provider's real role string is still unconfirmed, see "Where we left off".
-- **`RegistrationProfile`** extended with `firstName`/`lastName`/`displayName`/`password`/`businessName`, carried from `RegisterScreen` to `TermsPrivacyScreen` only (nothing downstream reads them) — `password` is never logged and is discarded once those two screens are left.
+- **`ApiResponse<T>`/`PaginatedResponse<T>`/`ApiError`** (`api_response.dart`) and **`ApiException`/`ApiErrorKind`** (`api_exception.dart`) — decode the backend's envelope (`success`/`data`/`errors`/`traceId`) and its paged lists. `ApiException` is the one error type blocs catch, built with `ApiException.fromDio` or `.fromEnvelope`; `hasErrorCode(code)` checks for a specific backend code such as `AUTH_EMAIL_NOT_VERIFIED`.
+- **`translateApiError`** (`api_error_translator.dart`) — the backend's error messages are always English, so the app shows its own text in the current language, picked by the error's `code` and `field`. Unknown errors fall back to a generic message. To support a new error, add its code here and its text to the `.arb` files.
+- **`TokenStorage`** (`token_storage.dart`) — wraps `flutter_secure_storage` and is the only thing that touches it. Stores the access and refresh tokens; never a password.
+- **`AuthBloc`** (`lib/blocs/auth/`) — every `/api/auth/*` call and `GET /api/users/me`: login, registration, email verification and resend, password reset code and reset, session restore, logout, and session expiry. `AuthState` holds the signed-in `user` plus the latest `operation` and its `status`/`error`, so each screen reacts only to its own request through a `BlocListener`. `SplashScreen` sends `AuthSessionRestoreRequested` on start. A restore that gets rejected clears the tokens, but after a network error they're kept so the next start can try again.
+- **`AuthUser`** (`lib/models/auth_user.dart`) — the user from login and `GET /api/users/me`, with the fields confirmed live (including `phone`, `phoneCompletionRequired`, `providerQuestionnaireRequired`, `providerProfileStatus`). **`AuthUser.role`** maps the backend's `roles` to the app's `UserRole`: `"Provider"` → `owner`, `"Buyer"` → `buyer`, anything else (e.g. `"Admin"`) → `null`, ignoring case. Provider is checked first because real Provider accounts have `roles: ["Buyer", "Provider"]`. An account whose role is `null` is signed out again, and the user sees an "unsupported account" error.
+- **`RegistrationProfile`** (`lib/models/`) — name, email, phone, display name and business name entered on Register. It travels to Terms & Privacy inside `SignUpData` (`lib/core/routing/app_routes.dart`) together with the password, as GoRouter `extra`, so the password is only ever held in memory.
 
 **From the Rate Guest round:**
 - **`lib/widgets/xfile_image.dart`** — **`Image.file`/`FileImage` (both backed by `dart:io`) hard-fail on Flutter Web** — the browser has no real filesystem. `XFileImage`/`xfileImageProvider` branch on `kIsWeb`: `Image.network`/`NetworkImage` on web (a picked file's `.path` is a `blob:` URL there), `Image.file`/`FileImage` everywhere else. Used everywhere the app renders a locally-picked image, including every new Tourist card/gallery this round.
-- **`GuestRating`/`GuestRatingController`** — Provider rates a guest after a completed reservation. `submitRating` enforces "only completed" + "no duplicates"; safe to call regardless of what the UI already checked.
+- **`GuestRating`/`GuestRatingsBloc`** — Provider rates a guest after a completed reservation. Submitting checks "only completed" and "no duplicates" again, whatever the UI already checked.
 
 **From this round (Tourist/Buyer flow) — new models:**
-- **`ListingSearchFilter`** (`lib/models/`) — mutable search-filter draft (keyword, location, price range, dates, rating, guest count, categories, amenities). Edited by the Search Filters sheet; committed to `SearchController` on apply.
+- **`ListingSearchFilter`** (`lib/models/`) — mutable search-filter draft (keyword, location, price range, dates, rating, guest count, categories, amenities). Edited by the Search Filters sheet; sent to `SearchBloc` on apply.
 - **`ListingReview`** (`lib/models/`) — a guest's review of a *listing*, deliberately the opposite direction from `GuestRating` (different author, different subject). Has `reservationId` (nullable — the 2 original mock reviews predate this relationship) as the duplicate-review boundary.
 - **`Reservation`** extended with `listingId` (real FK, backfilled onto mock data), `bookingReference`, `nightlyPriceAtBooking`, `serviceFee`, `totalAmount` — a price/reference *snapshot* taken at booking time, deliberately not re-derived from the listing's current price later.
 
-**New services:**
-- **`SearchController`** — holds the Tourist's *current* search (filter + derived `matchingListings`), so Search Results/Map View share one result set instead of each owning a copy.
-- **`ListingReviewController`** — `reviewsForListing`, `hasReviewForReservation`, **`effectiveRating(listing)`** (the one authoritative rating calc — see "Tourist / Buyer flow" above), `submitReview` (same "re-validate regardless of UI" idiom as `GuestRatingController.submitRating`).
-- **`FavoritesController`** — local `Set<String>` of favorited listing ids; `toggle`/`isFavorite`. No backend sync yet.
-- **`ReservationController.createReservation(...)`** — the one place a real Tourist booking is created; see "Tourist / Buyer flow" above for what it snapshots and why it always starts `pending`.
+**Tourist blocs** (all in `lib/blocs/`):
+- **`SearchBloc`** — holds the Tourist's current search filter, so Search Results and Map View (once built) share one search. The results themselves come from `PublicListingsBloc` (`GET /api/listings`).
+- **`ListingReviewsBloc`** — reviews per listing and **`ListingReviewsState.effectiveRating(listing)`**, the one rating calculation used app-wide (see "Tourist / Buyer flow" above). Submitting a review checks eligibility and duplicates again, the same way `GuestRatingsBloc` does.
+- **`FavoritesBloc`** — the ids of favorited listings, on this device only. No backend sync yet.
+- **`ReservationsBloc`** — the one place a Tourist booking is created; see "Tourist / Buyer flow" above for what it snapshots and why it always starts `pending`. Screens learn about the new reservation from `ReservationsState.lastCreated`.
 
 **New shared constant:**
 - **`lib/core/constants/mock_tourist_identity.dart`** — `mockTouristGuestName` ("Јована Јованова"), the one place "who is the current Tourist" is defined, since there's no auth. Used by `BookingRequestScreen` (as `guestName`), `TouristMyReservationsScreen` (as the ownership filter), and `LeaveReviewScreen` (as `authorName`) — previously this was a private constant duplicated only in `BookingRequestScreen`.
 
-- Everything else (colors/dimensions/strings conventions, `ProviderListingController`, `AvailabilityController`, `CreateListingDraft`, the wizard's shared widgets) is unchanged in shape — `ProviderListingController.searchListings` and a few Provider-side rating displays were extended (not rewritten) to call `ListingReviewController.effectiveRating` — see the codebase for specifics.
+- Provider-side state lives in `ListingsBloc` (the Provider's own listings, still mock data) and `AvailabilityBloc` (blocked dates; booked dates are computed from reservations through `AvailabilityState.statusFor`). The Provider-side rating displays use `ListingReviewsState.effectiveRating`.
 
 ## Known gaps / not yet implemented
 
 **Carried over from before:**
-- **Backend/API wiring exists only for auth so far** (login, Buyer/Provider registration, `/api/users/me`, logout — see "Backend / Auth Integration"). Every other "submit"/"save"/"send"/"publish"/"rate"/"review"/"book" action across every other screen is still local state only, with a `TODO` marking where a real API call would go.
-- **Most of the older secondary screens still have no real navigation entry point.** Settings, Notifications, My Tickets, and New Ticket are only reachable via the Dev Screen Launcher (debug builds only) or each other's internal navigation.
+- **Most actions that change data are still local only.** The backend is used for auth, public listings/categories/regions/amenities, notifications, reading tickets, and chat (see the "Backend / API integration" row in "Status at a glance"). Booking, reviewing, rating, favoriting, publishing offers and creating tickets still only change state on the device.
 - **No "already rated" visual treatment** on Provider Dashboard's "Оцени гостин" (unchanged from last time) — the exact same shape of gap now also exists for Tourist's "Остави рецензија" (see below), so there are now two places waiting on the same kind of design.
 - **No Edit Listing screen** — blocks "Уреди"/"Уреди и поднеси повторно" on Provider Offers.
 - **Verification status** on the Provider profile is still hardcoded to "not verified."
 - **Choose Role screen** still has no Figma frame implemented.
-- **Everything is lost on app restart** — no persistence layer exists for any in-memory singleton (now including Tourist searches/reviews/favorites/reservations too).
-- Test coverage is still limited to the Splash screen's responsive-layout behavior.
+- **Local-only state is lost on app restart** — reservations, reviews, ratings, favorites, searches and the Provider's listings live only in memory. Only the login tokens (secure storage) and the chosen language (`shared_preferences`) survive a restart.
+- Tests: bloc tests (`test/blocs_test.dart`), the all-screens-in-every-language overflow test (`test/all_screens_localized_test.dart`), and the Splash screen's responsive-layout test.
 
 **New this round (Tourist/Buyer flow):**
 - **Map View has no real implementation.** `SearchResultsScreen`'s "Карта" button is a styled `TODO`. Building the *real* thing (not a decorative placeholder — explicitly ruled out) needs, at minimum: (1) picking a map package (no map package is in `pubspec.yaml` today), (2) adding nullable `latitude`/`longitude` to `ProviderListing`, (3) a way to actually collect them — the Create Offer wizard's location step is still a static pin placeholder with its own pre-existing `TODO`. None of this exists yet; do not invent random coordinates to make markers render.
@@ -372,7 +370,7 @@ In `ChatBloc` (`lib/blocs/chat/`); the mock conversations are deleted.
 
 **New this round (Backend / Auth Integration):**
 - **Flutter Web can't reach the real backend** — `agro.finki.net.mk` sends no CORS headers, so every request from Chrome/web fails at the browser's preflight check before it reaches the app. Backend-integration testing must happen on Android or Windows desktop until the backend adds a CORS policy for the app's web origin(s).
-- **`turnstileToken` is always sent as an empty string** (`AuthRepository`'s `_placeholderTurnstileToken`) — confirmed to reach real credential validation rather than being rejected outright, but not a real Cloudflare Turnstile integration.
+- **No `turnstileToken` is sent** with auth requests — the backend accepts login and registration without one so far, but there's no real Cloudflare Turnstile integration.
 
 ## Confusing / worth knowing before touching this again
 
@@ -380,7 +378,7 @@ Things that aren't bugs, but aren't obvious from reading the code cold either:
 
 - **The Figma file has a second, entirely different "01–14" numbered frame set** (Splash, Choose Role, Home, Filter, Property Detail, Calendar Picker, Availability, Booking Confirmation, Messages, Profile Edit, Map View) using a completely different visual design system — different green (`#118e43` vs. the app's real `agro-forest-950`), different fonts/tokens, an MK/AL/EN language switch styled nothing like the real one. **None of the implemented app is based on these** — they're an earlier, superseded design pass. If a frame link ever resolves to one of these, it's the wrong one; the real design system is the "20–27 – Buyer ·"/equivalent Provider-numbered frames.
 - **`BookingRequestScreen` has no Figma design at all.** It was built from existing app primitives (the filter sheet's date picker, the wizard's capacity stepper) because no current-design frame defines a date/guest-count input step between Listing Details and the booking confirmation. If a real frame for this ever gets designed, this screen should be reconciled against it rather than assumed correct forever.
-- **`ResetPasswordScreen` has no Figma design either**, for the same reason — built from `ForgotPasswordScreen`'s own composition (icon/heading/fields/button) since no frame defines a code + new-password step. Same rule: reconcile against a real frame if one ever gets designed, rather than assuming this is final.
+- **`ResetPasswordScreen` now has a Figma frame**, "04b – Reset Password" (node `930:1066`, below "04 – Forgot Password"). It was drawn from this screen, which is built from `ForgotPasswordScreen`'s composition (icon/heading/fields/button), so the two match. Forgot Password's primary button links to it in the prototype.
 - **Guest count in the search filter is a *minimum threshold* ("2+"), not an exact headcount** — conceptually different from `Reservation.guestCount` (a real booking's exact number of guests), even though both render as "N гости" in different places. Don't conflate the two if extending either.
 - **Villa Zdravkovski's displayed rating visibly changed from 4.8 to 5.0** the moment review-based rating aggregation shipped, with no user action involved — it already had 2 seeded reviews (5, 5) that were previously disconnected from the displayed number. This is correct (the review collection is now the one authoritative source), not a regression, but it can look like one if you're comparing screenshots before/after.
 - **`ListingDetailsScreen`/`BookingRequestScreen`'s selected nav tab depends on where the user came from** (`originTabIndex`, 0 from Home / 1 from Search Results), not a fixed value. Any *new* entry point into either screen needs to explicitly pass the right origin — the default is 0, which will silently look right coming from Home and silently wrong coming from anywhere else.

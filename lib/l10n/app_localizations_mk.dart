@@ -176,6 +176,10 @@ class AppLocalizationsMk extends AppLocalizations {
   String get forgotPasswordSubmitButton => 'ИСПРАТИ КОД';
 
   @override
+  String get forgotPasswordSpamNote =>
+      'Доколку не Ви стигна мејл, проверете го спам фолдерот на Вашиот мејл.';
+
+  @override
   String get forgotPasswordFooterPrompt => 'Се сетивте на лозинката? ';
 
   @override
@@ -1163,7 +1167,24 @@ class AppLocalizationsMk extends AppLocalizations {
   String get filtersRatingAllOption => 'Сите';
 
   @override
-  String get filtersGuestCountLabel => 'Број на гости';
+  String get filtersGuestCountLabel => 'Гости';
+
+  @override
+  String get filtersGuestsTotalLabel => 'Вкупно гости';
+
+  @override
+  String get filtersGuestsChildrenLabel => 'Од нив деца';
+
+  @override
+  String filtersGuestsAdults(int count) {
+    return 'Возрасни: $count';
+  }
+
+  @override
+  String get filtersStepperDecrease => 'Намали';
+
+  @override
+  String get filtersStepperIncrease => 'Зголеми';
 
   @override
   String get filtersAmenityHeading => 'Опрема';

@@ -17,9 +17,11 @@ import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 
 /// The Figma "21 – Buyer · Search & Filters (Overlay)" frame's Filter
-/// Sheet — opened as a modal bottom sheet over `TouristHomeScreen` (the X
-/// closes without applying; "Прикажи резултати" pops with the applied
-/// [ListingSearchFilter] for the caller to commit). Edits a local *copy* of
+/// Sheet — a modal bottom sheet over whichever screen opened it
+/// (`TouristHomeScreen`, `SearchResultsScreen`). The X, a tap outside or
+/// back only closes it, back to that screen, without applying; "Прикажи
+/// резултати" pops with the applied [ListingSearchFilter] for the caller
+/// to commit. Edits a local *copy* of
 /// [initialFilter] so a dismissed sheet never mutates the caller's already
 /// -applied filter.
 ///
@@ -41,14 +43,6 @@ class SearchFiltersSheet extends StatefulWidget {
 const String _allLocationsSentinel = '\u0000all-locations';
 
 const List<double?> _ratingOptions = [null, 3.0, 4.0, 4.5];
-
-/// 1, 2, 3, 4, 5+ — only the last (open-ended) option shows a "+"; the
-/// others are plain counts even though the underlying filter is still "at
-/// least N" (`ListingSearchFilter.minimumGuests`). No "Сите" chip: "1" is
-/// already functionally unrestrictive (every real listing has
-/// `guestCapacity >= 1`), so tapping the already-selected chip again
-/// clears it back to null instead.
-const List<int> _guestCountOptions = [1, 2, 3, 4, 5];
 
 const ({double min, double max}) _priceBounds = (
   min: ListingSearchFilter.priceSliderMin,
@@ -73,6 +67,17 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
       _filter.maxPrice ?? _priceBounds.max,
     );
     _loadFilterOptions(context);
+  }
+
+  /// Lowering the total keeps at least one adult; clearing it clears the
+  /// children too.
+  void _setTotalGuests(int? total) {
+    setState(() {
+      _filter.minimumGuests = total;
+      _filter.children = total == null
+          ? 0
+          : _filter.children.clamp(0, total - 1);
+    });
   }
 
   @override
@@ -254,18 +259,20 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
                     const SizedBox(
                       height: AppDimensions.filtersSheetContentGap,
                     ),
-                    _RatingField(
-                      selected: _filter.minRating,
-                      onSelect: (rating) =>
-                          setState(() => _filter.minRating = rating),
+                    _GuestsField(
+                      total: _filter.minimumGuests,
+                      children: _filter.children,
+                      onTotalChanged: _setTotalGuests,
+                      onChildrenChanged: (children) =>
+                          setState(() => _filter.children = children),
                     ),
                     const SizedBox(
                       height: AppDimensions.filtersSheetContentGap,
                     ),
-                    _GuestCountField(
-                      selected: _filter.minimumGuests,
-                      onSelect: (guests) =>
-                          setState(() => _filter.minimumGuests = guests),
+                    _RatingField(
+                      selected: _filter.minRating,
+                      onSelect: (rating) =>
+                          setState(() => _filter.minRating = rating),
                     ),
                     const SizedBox(
                       height: AppDimensions.filtersSheetContentGap,
@@ -518,42 +525,172 @@ class _RatingField extends StatelessWidget {
   }
 }
 
-/// Separate from [_RatingField] — its own field, own label, own chip row —
-/// though visually identical (reuses [_Pill]), per "Број на гости" being a
-/// genuinely distinct filter from "Оценка", not a variant of it.
-class _GuestCountField extends StatelessWidget {
-  const _GuestCountField({required this.selected, required this.onSelect});
+/// The Figma "Guests Field", like the website's "Гости" / "Од нив деца":
+/// a total (null = no restriction, shown as "—") and how many of them are
+/// children, with the adults left over shown underneath.
+class _GuestsField extends StatelessWidget {
+  const _GuestsField({
+    required this.total,
+    required this.children,
+    required this.onTotalChanged,
+    required this.onChildrenChanged,
+  });
 
-  final int? selected;
-  final ValueChanged<int?> onSelect;
-
-  String _label(int guests) =>
-      guests == _guestCountOptions.last ? '$guests+' : '$guests';
+  final int? total;
+  final int children;
+  final ValueChanged<int?> onTotalChanged;
+  final ValueChanged<int> onChildrenChanged;
 
   @override
   Widget build(BuildContext context) {
+    final total = this.total;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         _fieldLabel(AppStrings.filtersGuestCountLabel),
         const SizedBox(height: AppDimensions.filtersFieldHeadingGap),
-        Wrap(
-          spacing: AppDimensions.wizardChipGap,
-          runSpacing: AppDimensions.wizardChipGap,
-          children: [
-            for (final guests in _guestCountOptions)
-              _Pill(
-                label: _label(guests),
-                isSelected: guests == selected,
-                // No "Сите" chip to tap back to — tapping the already
-                // -selected value clears it instead, so the filter can
-                // still be unset without hitting "Избриши филтри".
-                onTap: () => onSelect(guests == selected ? null : guests),
-              ),
-          ],
+        _StepperRow(
+          label: AppStrings.filtersGuestsTotalLabel,
+          value: total?.toString() ?? '—',
+          // Down from 1 clears the filter again.
+          onDecrease: total == null
+              ? null
+              : () => onTotalChanged(total == 1 ? null : total - 1),
+          onIncrease: () => onTotalChanged((total ?? 0) + 1),
         ),
+        const SizedBox(height: AppDimensions.filtersStepperRowGap),
+        _StepperRow(
+          label: AppStrings.filtersGuestsChildrenLabel,
+          value: '$children',
+          onDecrease: children == 0
+              ? null
+              : () => onChildrenChanged(children - 1),
+          // At least one adult.
+          onIncrease: total == null || children >= total - 1
+              ? null
+              : () => onChildrenChanged(children + 1),
+        ),
+        if (total != null) ...[
+          const SizedBox(height: AppDimensions.filtersFieldHeadingGap),
+          Text(
+            AppStrings.filtersGuestsAdults(total - children),
+            style: const TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: AppDimensions.filtersGuestsAdultsFontSize,
+              color: AppColors.agroInk500,
+            ),
+          ),
+        ],
       ],
+    );
+  }
+}
+
+/// A [_SelectBox]-styled row with − value + on the right. A null callback
+/// disables that button.
+class _StepperRow extends StatelessWidget {
+  const _StepperRow({
+    required this.label,
+    required this.value,
+    required this.onDecrease,
+    required this.onIncrease,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback? onDecrease;
+  final VoidCallback? onIncrease;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.dsInputHorizontalPadding,
+        vertical: AppDimensions.dsInputVerticalPadding,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        border: Border.all(color: AppColors.agroBorder300),
+        borderRadius: BorderRadius.circular(AppDimensions.dsRadiusMd),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: AppDimensions.dsInputFontSize,
+                color: AppColors.agroForest950,
+              ),
+            ),
+          ),
+          _StepperButton(
+            icon: Icons.remove,
+            tooltip: AppStrings.filtersStepperDecrease,
+            onTap: onDecrease,
+          ),
+          const SizedBox(width: AppDimensions.filtersStepperGap),
+          SizedBox(
+            width: AppDimensions.filtersStepperValueWidth,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: AppDimensions.dsInputFontSize,
+                color: AppColors.agroForest950,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppDimensions.filtersStepperGap),
+          _StepperButton(
+            icon: Icons.add,
+            tooltip: AppStrings.filtersStepperIncrease,
+            onTap: onIncrease,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: AppDimensions.filtersStepperButtonSize,
+          height: AppDimensions.filtersStepperButtonSize,
+          decoration: BoxDecoration(
+            color: enabled ? AppColors.agroGreen100 : AppColors.agroBorder300,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: AppDimensions.filtersStepperIconSize,
+            color: enabled ? AppColors.agroForest950 : AppColors.agroInk500,
+          ),
+        ),
+      ),
     );
   }
 }

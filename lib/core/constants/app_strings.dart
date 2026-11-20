@@ -73,6 +73,7 @@ class AppStrings {
   static String get forgotPasswordHeading => _s.forgotPasswordHeading;
   static String get forgotPasswordSubheading => _s.forgotPasswordSubheading;
   static String get forgotPasswordSubmitButton => _s.forgotPasswordSubmitButton;
+  static String get forgotPasswordSpamNote => _s.forgotPasswordSpamNote;
   static String get forgotPasswordFooterPrompt => _s.forgotPasswordFooterPrompt;
   static String get resetPasswordTitle => _s.resetPasswordTitle;
   static String get resetPasswordHeading => _s.resetPasswordHeading;
@@ -445,6 +446,11 @@ class AppStrings {
   static String get filtersRatingLabel => _s.filtersRatingLabel;
   static String get filtersRatingAllOption => _s.filtersRatingAllOption;
   static String get filtersGuestCountLabel => _s.filtersGuestCountLabel;
+  static String get filtersGuestsTotalLabel => _s.filtersGuestsTotalLabel;
+  static String get filtersGuestsChildrenLabel => _s.filtersGuestsChildrenLabel;
+  static String filtersGuestsAdults(int count) => _s.filtersGuestsAdults(count);
+  static String get filtersStepperDecrease => _s.filtersStepperDecrease;
+  static String get filtersStepperIncrease => _s.filtersStepperIncrease;
   static String get filtersAmenityHeading => _s.filtersAmenityHeading;
   static String get filtersAmenitiesLoadFailed => _s.filtersAmenitiesLoadFailed;
   static String get filtersClearButton => _s.filtersClearButton;

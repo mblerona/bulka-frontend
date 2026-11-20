@@ -400,6 +400,12 @@ abstract class AppLocalizations {
   /// **'ИСПРАТИ КОД'**
   String get forgotPasswordSubmitButton;
 
+  /// No description provided for @forgotPasswordSpamNote.
+  ///
+  /// In mk, this message translates to:
+  /// **'Доколку не Ви стигна мејл, проверете го спам фолдерот на Вашиот мејл.'**
+  String get forgotPasswordSpamNote;
+
   /// No description provided for @forgotPasswordFooterPrompt.
   ///
   /// In mk, this message translates to:
@@ -2311,8 +2317,38 @@ abstract class AppLocalizations {
   /// No description provided for @filtersGuestCountLabel.
   ///
   /// In mk, this message translates to:
-  /// **'Број на гости'**
+  /// **'Гости'**
   String get filtersGuestCountLabel;
+
+  /// No description provided for @filtersGuestsTotalLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Вкупно гости'**
+  String get filtersGuestsTotalLabel;
+
+  /// No description provided for @filtersGuestsChildrenLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Од нив деца'**
+  String get filtersGuestsChildrenLabel;
+
+  /// No description provided for @filtersGuestsAdults.
+  ///
+  /// In mk, this message translates to:
+  /// **'Возрасни: {count}'**
+  String filtersGuestsAdults(int count);
+
+  /// No description provided for @filtersStepperDecrease.
+  ///
+  /// In mk, this message translates to:
+  /// **'Намали'**
+  String get filtersStepperDecrease;
+
+  /// No description provided for @filtersStepperIncrease.
+  ///
+  /// In mk, this message translates to:
+  /// **'Зголеми'**
+  String get filtersStepperIncrease;
 
   /// No description provided for @filtersAmenityHeading.
   ///

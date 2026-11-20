@@ -2113,10 +2113,23 @@ void main() {
         '/api/auth/reset-password': (200, {'success': true}),
       }),
       act: (bloc) async {
+        // Wait for each request to finish, not a fixed time: a fixed
+        // delay made this test fail on slower runs.
+        Future<void> finished(AuthOperation operation) => bloc.stream
+            .firstWhere(
+              (s) =>
+                  s.operation == operation &&
+                  s.status != AuthOperationStatus.inProgress,
+            )
+            .timeout(const Duration(seconds: 5));
+
+        final codeSent = finished(AuthOperation.requestPasswordReset);
         bloc.add(const AuthPasswordResetCodeRequested('ana@example.com'));
-        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await codeSent;
         expect(bloc.state.operation, AuthOperation.requestPasswordReset);
         expect(bloc.state.status, AuthOperationStatus.succeeded);
+
+        final reset = finished(AuthOperation.resetPassword);
         bloc.add(
           const AuthPasswordResetRequested(
             email: 'ana@example.com',
@@ -2124,6 +2137,7 @@ void main() {
             newPassword: 'Secret1!',
           ),
         );
+        await reset;
       },
       verify: (bloc) {
         expect(bloc.state.operation, AuthOperation.resetPassword);
