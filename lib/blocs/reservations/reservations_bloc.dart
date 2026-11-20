@@ -42,6 +42,7 @@ class ReservationsBloc extends Bloc<ReservationsEvent, ReservationsState> {
     final serviceFee = calculateServiceFee(subtotal);
     final reservation = Reservation(
       id: '${_nextReservationSequence++}',
+      guestId: event.guestId,
       guestName: event.guestName,
       listingName: event.listing.title,
       listingId: event.listing.id,

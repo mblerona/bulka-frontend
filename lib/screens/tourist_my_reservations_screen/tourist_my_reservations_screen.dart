@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/public_listings/public_listings_bloc.dart';
@@ -10,7 +11,6 @@ import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/core/utils/price_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
@@ -55,11 +55,9 @@ class _TouristMyReservationsScreenState
     _tab = widget.initialTab;
   }
 
-  /// "Mine" per [mockTouristGuestName] — see that constant's own TODO for
-  /// the real auth-based identity this stands in for.
-  List<Reservation> get _myReservations => _reservations.reservations
-      .where((r) => r.guestName == mockTouristGuestName)
-      .toList();
+  /// The signed-in Tourist's own bookings, matched by account id.
+  List<Reservation> get _myReservations =>
+      _reservations.forGuest(context.read<AuthBloc>().state.user?.id);
 
   List<Reservation> get _upcoming => _myReservations
       .where(
@@ -105,6 +103,7 @@ class _TouristMyReservationsScreenState
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AuthBloc>();
     context.watch<ReservationsBloc>();
     context.watch<ListingsBloc>();
     context.watch<PublicListingsBloc>();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/reservation.dart';
@@ -59,7 +59,11 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
       ListingReviewSubmitted(
         listing: widget.listing,
         reservation: widget.reservation,
-        authorName: mockTouristGuestName,
+        // The signed-in Tourist; the name the booking was made under if
+        // the session is gone.
+        authorName:
+            context.read<AuthBloc>().state.user?.fullName ??
+            widget.reservation.guestName,
         rating: _rating,
         comment: _reviewController.text,
       ),

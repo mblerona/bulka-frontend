@@ -8,6 +8,7 @@ sealed class ReservationsEvent {
 final class ReservationRequested extends ReservationsEvent {
   const ReservationRequested({
     required this.listing,
+    required this.guestId,
     required this.guestName,
     required this.startDate,
     required this.endDate,
@@ -15,6 +16,10 @@ final class ReservationRequested extends ReservationsEvent {
   });
 
   final ProviderListing listing;
+
+  /// The signed-in Tourist's `AuthUser.id` (null only for dev seed
+  /// bookings made while signed out).
+  final String? guestId;
   final String guestName;
   final DateTime startDate;
   final DateTime endDate;

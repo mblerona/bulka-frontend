@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/auth/auth_bloc.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/blocs/listings/listings_bloc.dart';
 import 'package:bulka_frontend/blocs/availability/availability_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/core/constants/app_colors.dart';
 import 'package:bulka_frontend/core/constants/app_dimensions.dart';
 import 'package:bulka_frontend/core/constants/app_strings.dart';
-import 'package:bulka_frontend/core/constants/mock_tourist_identity.dart';
 import 'package:bulka_frontend/core/routing/app_router.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/utils/date_range_format.dart';
@@ -122,11 +123,18 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
 
   void _handleSubmit() {
     if (!_canSubmit || _submitted) return;
+    // A booking belongs to the signed-in Tourist; without one, sign in first.
+    final user = context.read<AuthBloc>().state.user;
+    if (user == null) {
+      context.push(AppRoutes.login);
+      return;
+    }
     _submitted = true;
     context.read<ReservationsBloc>().add(
       ReservationRequested(
         listing: widget.listing,
-        guestName: mockTouristGuestName,
+        guestId: user.id,
+        guestName: user.fullName,
         startDate: _startDate!,
         endDate: _endDate!,
         guestCount: _guestCount,
