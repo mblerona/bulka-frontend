@@ -553,9 +553,7 @@ class _MapButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // TODO: push MapViewScreen once the map architecture is approved —
-      // the backend has `/api/listings/map-clusters` for it.
-      onTap: () {},
+      onTap: () => context.push(AppRoutes.map),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.resultsMapButtonHorizontalPadding,

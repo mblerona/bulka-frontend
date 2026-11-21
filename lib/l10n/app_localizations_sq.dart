@@ -1213,6 +1213,9 @@ class AppLocalizationsSq extends AppLocalizations {
   String get resultsMapButtonLabel => 'Harta';
 
   @override
+  String get mapViewTitle => 'Harta';
+
+  @override
   String get resultsShowDetailsButton => 'Shfaq detajet';
 
   @override

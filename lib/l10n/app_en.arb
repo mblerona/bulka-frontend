@@ -384,6 +384,7 @@
   "resultsCountLocationPrefix": "in",
   "resultsSortLabel": "Sorted by relevance",
   "resultsMapButtonLabel": "Map",
+  "mapViewTitle": "Map",
   "resultsShowDetailsButton": "Show details",
   "resultsReservationsSuffix": "reservations",
   "resultsPricePerNightSuffix": "MKD/night",

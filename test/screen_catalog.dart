@@ -110,6 +110,7 @@ class ScreenCatalog extends StatelessWidget {
         (_) => const _SearchFiltersPreviewScreen(),
       ),
       ScreenCatalogEntry.route('Search Results · Tourist', (_) => AppRoutes.search),
+      ScreenCatalogEntry.route('Map View · Tourist', (_) => AppRoutes.map),
       ScreenCatalogEntry.widget(
         'Listing Details (newest listing) · Tourist',
         (_) => const _OpenPublicListingScreen(bookable: false),

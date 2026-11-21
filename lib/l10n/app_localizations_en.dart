@@ -1209,6 +1209,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsMapButtonLabel => 'Map';
 
   @override
+  String get mapViewTitle => 'Map';
+
+  @override
   String get resultsShowDetailsButton => 'Show details';
 
   @override

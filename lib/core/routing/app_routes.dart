@@ -39,6 +39,9 @@ abstract final class AppRoutes {
   // ── Tourist tabs ──
   static const home = '/home';
   static const search = '/search';
+
+  /// Map View, inside the Search tab (opened from Search Results' "Карта").
+  static const map = '$search/map';
   static const reservations = '/reservations';
   static const profile = '/profile';
 

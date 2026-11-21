@@ -1212,6 +1212,9 @@ class AppLocalizationsMk extends AppLocalizations {
   String get resultsMapButtonLabel => 'Карта';
 
   @override
+  String get mapViewTitle => 'Карта';
+
+  @override
   String get resultsShowDetailsButton => 'Прикажи детали';
 
   @override

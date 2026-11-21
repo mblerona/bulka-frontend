@@ -461,6 +461,7 @@ class AppStrings {
   static String get resultsCountLocationPrefix => _s.resultsCountLocationPrefix;
   static String get resultsSortLabel => _s.resultsSortLabel;
   static String get resultsMapButtonLabel => _s.resultsMapButtonLabel;
+  static String get mapViewTitle => _s.mapViewTitle;
   static String get resultsShowDetailsButton => _s.resultsShowDetailsButton;
   static String get resultsReservationsSuffix => _s.resultsReservationsSuffix;
   static String get resultsPricePerNightSuffix => _s.resultsPricePerNightSuffix;

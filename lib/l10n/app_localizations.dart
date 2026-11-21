@@ -2404,6 +2404,12 @@ abstract class AppLocalizations {
   /// **'Карта'**
   String get resultsMapButtonLabel;
 
+  /// No description provided for @mapViewTitle.
+  ///
+  /// In mk, this message translates to:
+  /// **'Карта'**
+  String get mapViewTitle;
+
   /// No description provided for @resultsShowDetailsButton.
   ///
   /// In mk, this message translates to:

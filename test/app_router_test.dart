@@ -14,6 +14,7 @@ import 'package:bulka_frontend/main.dart';
 import 'package:bulka_frontend/screens/booking_request_screen/booking_request_screen.dart';
 import 'package:bulka_frontend/screens/chat_list_screen/chat_list_screen.dart';
 import 'package:bulka_frontend/screens/listing_details_screen/listing_details_screen.dart';
+import 'package:bulka_frontend/screens/map_view_screen/map_view_screen.dart';
 import 'package:bulka_frontend/screens/register_screen/register_screen.dart';
 import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservation_confirmation_screen.dart';
 import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
@@ -72,6 +73,21 @@ void main() {
     await tapTab(tester, AppStrings.navTouristHome);
     expect(find.byType(ListingDetailsScreen), findsNothing);
     expect(find.byType(TouristHomeScreen), findsOneWidget);
+  });
+
+  testWidgets('"Карта" on Search Results opens Map View in the Search tab', (
+    tester,
+  ) async {
+    await pumpAt(tester, AppRoutes.search);
+    await tester.tap(find.text(AppStrings.resultsMapButtonLabel));
+    await tester.pumpAndSettle();
+    expect(find.byType(MapViewScreen), findsOneWidget);
+    expect(find.text(AppStrings.mapViewTitle), findsOneWidget);
+
+    // The header's back arrow returns to the results.
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchResultsScreen), findsOneWidget);
   });
 
   testWidgets('Messages tab opens the chat list full screen', (tester) async {

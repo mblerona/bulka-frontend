@@ -32,6 +32,7 @@ import 'package:bulka_frontend/screens/reservation_confirmation_screen/reservati
 import 'package:bulka_frontend/screens/reset_password_screen/reset_password_screen.dart';
 import 'package:bulka_frontend/screens/review_submitted_screen/review_submitted_screen.dart';
 import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
+import 'package:bulka_frontend/screens/map_view_screen/map_view_screen.dart';
 import 'package:bulka_frontend/screens/search_results_screen/search_results_screen.dart';
 import 'package:bulka_frontend/screens/settings_screen/settings_screen.dart';
 import 'package:bulka_frontend/screens/splash_screen/splash_screen.dart';
@@ -193,7 +194,13 @@ GoRouter createAppRouter({
               GoRoute(
                 path: AppRoutes.search,
                 builder: (context, state) => const SearchResultsScreen(),
-                routes: _listingRoutes(),
+                routes: [
+                  GoRoute(
+                    path: 'map',
+                    builder: (context, state) => const MapViewScreen(),
+                  ),
+                  ..._listingRoutes(),
+                ],
               ),
             ],
           ),
