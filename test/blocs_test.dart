@@ -770,6 +770,98 @@ void main() {
       },
     );
 
+    group('starting a conversation with a provider', () {
+      const startPath = '/api/chat/conversations';
+      const providerId = 'p-1';
+      late _FakeAdapter adapter;
+      ChatBloc startingWith((int, Object) response) {
+        adapter = _FakeAdapter({startPath: response});
+        return ChatBloc(
+          dio: Dio(BaseOptions(baseUrl: 'https://test'))
+            ..httpClientAdapter = adapter,
+        );
+      }
+
+      Matcher startIs(ChatStartStatus status, {String? conversationId}) =>
+          isA<ChatState>()
+              .having((s) => s.start.status, 'status', status)
+              .having(
+                (s) => s.start.providerProfileId,
+                'providerProfileId',
+                providerId,
+              )
+              .having(
+                (s) => s.start.conversationId,
+                'conversationId',
+                conversationId,
+              );
+
+      for (final (label, data) in [
+        ('the conversation', {'id': 'c9', 'providerDisplayName': 'Вила'}),
+        ('a conversationId', {'conversationId': 'c9'}),
+        ('a bare id', 'c9'),
+      ]) {
+        blocTest<ChatBloc, ChatState>(
+          'posts the provider and reports the id from $label',
+          build: () => startingWith((200, {'success': true, 'data': data})),
+          act: (bloc) =>
+              bloc.add(const ChatConversationStartRequested(providerId)),
+          wait: const Duration(milliseconds: 50),
+          expect: () => [
+            startIs(ChatStartStatus.starting),
+            startIs(ChatStartStatus.started, conversationId: 'c9'),
+          ],
+          verify: (_) {
+            final body =
+                adapter.requests.singleWhere((r) => r.path == startPath).data
+                    as Map<String, Object?>;
+            expect(body['providerProfileId'], providerId);
+            expect(body['initialMessage'], isNull);
+          },
+        );
+      }
+
+      blocTest<ChatBloc, ChatState>(
+        'fails when the backend refuses',
+        build: () => startingWith((500, const {'success': false})),
+        act: (bloc) =>
+            bloc.add(const ChatConversationStartRequested(providerId)),
+        wait: const Duration(milliseconds: 50),
+        expect: () => [
+          startIs(ChatStartStatus.starting),
+          startIs(ChatStartStatus.failed),
+        ],
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'fails when the reply has no conversation id',
+        build: () => startingWith((200, const {'success': true, 'data': null})),
+        act: (bloc) =>
+            bloc.add(const ChatConversationStartRequested(providerId)),
+        wait: const Duration(milliseconds: 50),
+        expect: () => [
+          startIs(ChatStartStatus.starting),
+          startIs(ChatStartStatus.failed),
+        ],
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'ignores a second tap while starting',
+        build: () => startingWith((200, const {'success': true, 'data': 'c9'})),
+        seed: () => ChatState(
+          start: const ChatStart(
+            status: ChatStartStatus.starting,
+            providerProfileId: providerId,
+          ),
+        ),
+        act: (bloc) =>
+            bloc.add(const ChatConversationStartRequested(providerId)),
+        wait: const Duration(milliseconds: 50),
+        expect: () => isEmpty,
+        verify: (_) => expect(adapter.requests, isEmpty),
+      );
+    });
+
     blocTest<ChatBloc, ChatState>(
       'opening a conversation clears its unread count',
       build: () => chatWith((500, const {})),

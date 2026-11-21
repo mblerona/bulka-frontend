@@ -273,6 +273,8 @@ class AppDimensions {
   static const double headerActionIconSize = 18;
   static const double headerActionsGap = 8;
   static const double headerActionBadgeOffset = -4;
+  static const double headerActionSpinnerSize = 16;
+  static const double headerActionSpinnerStroke = 2;
 
   /// Between the actions row and the title row under it.
   static const double headerActionsBottomGap = 6;

@@ -88,6 +88,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
+            showActions: true,
           ),
           Padding(
             padding: const EdgeInsets.only(

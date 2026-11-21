@@ -47,6 +47,12 @@ void main() {
   T bloc<T extends StateStreamableSource<Object?>>(WidgetTester tester) =>
       tester.element(find.byType(Navigator).first).read<T>();
 
+  test('the app starts on Splash', () {
+    final router = createAppRouter();
+    expect(router.routeInformationProvider.value.uri.path, AppRoutes.splash);
+    router.dispose();
+  });
+
   testWidgets('each tab keeps its own history', (tester) async {
     final router = await pumpAt(tester, AppRoutes.home);
     // From the fake backend (test_helpers.dart).

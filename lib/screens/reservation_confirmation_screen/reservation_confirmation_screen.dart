@@ -12,6 +12,7 @@ import 'package:bulka_frontend/models/reservation.dart';
 import 'package:bulka_frontend/widgets/primary_button.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
 import 'package:bulka_frontend/widgets/secondary_button.dart';
+import 'package:bulka_frontend/widgets/status_badge.dart';
 import 'package:bulka_frontend/widgets/xfile_image.dart';
 
 /// The Figma "25 – Buyer · Booking Confirmed" frame — reached only after
@@ -27,15 +28,22 @@ import 'package:bulka_frontend/widgets/xfile_image.dart';
 /// е потврдена!" (which would misrepresent a still-pending booking as
 /// provider-approved) — only the wording differs; the layout/styling below
 /// is otherwise an exact match.
+///
+/// With [isDetailsView] it is the booking's details screen, opened from My
+/// Reservations' "Прегледај детали": the booking's status replaces the
+/// "request sent" block, there are no action buttons, and back returns to
+/// My Reservations.
 class ReservationConfirmationScreen extends StatelessWidget {
   const ReservationConfirmationScreen({
     super.key,
     required this.reservation,
     required this.listing,
+    this.isDetailsView = false,
   });
 
   final Reservation reservation;
   final ProviderListing listing;
+  final bool isDetailsView;
 
   int get _nights =>
       reservation.endDate.difference(reservation.startDate).inDays;
@@ -59,8 +67,9 @@ class ReservationConfirmationScreen extends StatelessWidget {
     // destination that isn't the (already-submitted) booking form, so both
     // the system back gesture and the header's own back arrow are treated
     // like "Назад кон почетна" instead.
+    // (The details view is a normal pushed screen, so back just pops.)
     return PopScope(
-      canPop: false,
+      canPop: isDetailsView,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _backToHome(context);
@@ -74,7 +83,8 @@ class ReservationConfirmationScreen extends StatelessWidget {
               titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
               bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
               contentGap: AppDimensions.dsCompactHeaderGap,
-              onBackPressed: () => _backToHome(context),
+              onBackPressed: isDetailsView ? null : () => _backToHome(context),
+              showActions: true,
             ),
             Expanded(
               child: SafeArea(
@@ -84,7 +94,10 @@ class ReservationConfirmationScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _SuccessBlock(),
+                      if (isDetailsView)
+                        _StatusBlock(status: reservation.status)
+                      else
+                        const _SuccessBlock(),
                       _ListingCardRow(listing: listing),
                       const _SectionDivider(),
                       _TripDetailsSection(reservation: reservation),
@@ -98,10 +111,16 @@ class ReservationConfirmationScreen extends StatelessWidget {
                       ),
                       const _SectionDivider(),
                       _ReferenceSection(reservation: reservation),
-                      _ActionsSection(
-                        onViewReservations: () => _viewMyReservations(context),
-                        onBackHome: () => _backToHome(context),
-                      ),
+                      if (isDetailsView)
+                        const SizedBox(
+                          height: AppDimensions.successActionsBottomPadding,
+                        )
+                      else
+                        _ActionsSection(
+                          onViewReservations: () =>
+                              _viewMyReservations(context),
+                          onBackHome: () => _backToHome(context),
+                        ),
                     ],
                   ),
                 ),
@@ -184,6 +203,48 @@ class _SuccessBlock extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The details view's top block: the booking's status, with the same badge
+/// My Reservations' cards show.
+class _StatusBlock extends StatelessWidget {
+  const _StatusBlock({required this.status});
+
+  final ReservationStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.dsBodyHorizontalPadding,
+        AppDimensions.detailsSectionVerticalPadding,
+        AppDimensions.dsBodyHorizontalPadding,
+        0,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              AppStrings.reservationDetailsStatusLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: AppDimensions.detailsBodyFontSize,
+                color: AppColors.profileSecondaryText,
+              ),
+            ),
+          ),
+          StatusBadge(
+            label: status.touristLabel,
+            backgroundColor: AppColors.profileSoftMint,
+            textColor: AppColors.agroInk500,
+            horizontalPadding: AppDimensions.profileRoleBadgeHorizontalPadding,
+            verticalPadding: AppDimensions.profileRoleBadgeVerticalPadding,
+            fontSize: AppDimensions.profileRoleBadgeFontSize,
+          ),
+        ],
       ),
     );
   }

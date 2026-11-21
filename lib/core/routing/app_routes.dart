@@ -8,7 +8,6 @@ import 'package:bulka_frontend/models/registration_profile.dart';
 abstract final class AppRoutes {
   // ── Outside the tabs (full screen, no bottom nav) ──
   static const splash = '/';
-  static const dev = '/dev';
   static const login = '/login';
   static const forgotPassword = '/forgot-password';
   static const register = '/register';
@@ -48,6 +47,12 @@ abstract final class AppRoutes {
   static const reviewSubmitted = '$reservations/review-submitted';
   static String reservationConfirmation(String reservationId) =>
       '$reservations/$reservationId/confirmation';
+
+  /// The same screen as [reservationConfirmation], opened from My
+  /// Reservations' "Прегледај детали": shows the status instead of
+  /// "request sent", and back returns to My Reservations.
+  static String reservationDetails(String reservationId) =>
+      '$reservations/$reservationId';
   static String leaveReview(String reservationId) =>
       '$reservations/$reservationId/review';
 

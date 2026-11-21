@@ -33,6 +33,7 @@ class ReviewSubmittedScreen extends StatelessWidget {
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
             onBackPressed: () => _backToReservations(context),
+            showActions: true,
           ),
           Expanded(
             child: SafeArea(

@@ -28,6 +28,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ConversationRead>(_onConversationRead);
     on<ChatMessageSent>(_onMessageSent);
     on<ChatMessageRetried>(_onMessageRetried);
+    on<ChatConversationStartRequested>(_onStartRequested);
   }
 
   final Dio _dio;
@@ -231,6 +232,64 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ),
     );
     await _deliver(id, failed, emit);
+  }
+
+  /// Starts (or, if the backend already has one, reuses) a conversation
+  /// with the provider. Ignored while another start is in progress.
+  Future<void> _onStartRequested(
+    ChatConversationStartRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (state.start.status == ChatStartStatus.starting) return;
+    final providerId = event.providerProfileId;
+    emit(
+      state.copyWith(
+        start: ChatStart(
+          status: ChatStartStatus.starting,
+          providerProfileId: providerId,
+        ),
+      ),
+    );
+    try {
+      final data = await _postData('/api/chat/conversations', {
+        'providerProfileId': providerId,
+        'initialMessage': null,
+      });
+      final conversationId = _conversationIdFrom(data);
+      if (conversationId == null) {
+        throw const ApiException(kind: ApiErrorKind.unknown);
+      }
+      emit(
+        state.copyWith(
+          start: ChatStart(
+            status: ChatStartStatus.started,
+            providerProfileId: providerId,
+            conversationId: conversationId,
+          ),
+        ),
+      );
+    } on ApiException {
+      emit(
+        state.copyWith(
+          start: ChatStart(
+            status: ChatStartStatus.failed,
+            providerProfileId: providerId,
+          ),
+        ),
+      );
+    }
+  }
+
+  /// The new conversation's id. The response isn't documented, so this
+  /// takes the conversation itself (`id`), a `conversationId`, or a bare id.
+  static String? _conversationIdFrom(Object? data) {
+    if (data is String && data.isNotEmpty) return data;
+    if (data is! Map<String, dynamic>) return null;
+    for (final key in const ['id', 'conversationId']) {
+      final value = data[key];
+      if (value is String && value.isNotEmpty) return value;
+    }
+    return null;
   }
 
   /// Sends [message] (already shown as sending). On success the backend's

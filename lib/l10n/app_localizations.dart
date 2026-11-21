@@ -1102,6 +1102,18 @@ abstract class AppLocalizations {
   /// **'Поставки'**
   String get headerSettingsTooltip;
 
+  /// No description provided for @detailsMessageHostTooltip.
+  ///
+  /// In mk, this message translates to:
+  /// **'Пиши му на домаќинот'**
+  String get detailsMessageHostTooltip;
+
+  /// No description provided for @detailsMessageHostFailed.
+  ///
+  /// In mk, this message translates to:
+  /// **'Не успеавме да го отвориме разговорот. Обидете се повторно.'**
+  String get detailsMessageHostFailed;
+
   /// No description provided for @navProfile.
   ///
   /// In mk, this message translates to:
@@ -1491,6 +1503,12 @@ abstract class AppLocalizations {
   /// In mk, this message translates to:
   /// **'ОТКАЖАНА'**
   String get reservationStatusCancelled;
+
+  /// No description provided for @reservationDetailsStatusLabel.
+  ///
+  /// In mk, this message translates to:
+  /// **'Статус на резервацијата'**
+  String get reservationDetailsStatusLabel;
 
   /// No description provided for @reservationGuestSingular.
   ///

@@ -71,8 +71,8 @@ class BulkaApp extends StatelessWidget {
         child: BlocBuilder<LocaleBloc, LocaleState>(
           builder: (context, localeState) => MaterialApp.router(
             title: 'Bulka',
-            // Routes are in lib/core/routing/app_router.dart. Debug builds
-            // start on the dev screen launcher, release builds on Splash.
+            // Routes are in lib/core/routing/app_router.dart. The app starts
+            // on Splash.
             routerConfig: router,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,

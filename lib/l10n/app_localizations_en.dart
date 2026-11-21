@@ -544,6 +544,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get headerSettingsTooltip => 'Settings';
 
   @override
+  String get detailsMessageHostTooltip => 'Message the host';
+
+  @override
+  String get detailsMessageHostFailed =>
+      'We couldn\'t open the conversation. Please try again.';
+
+  @override
   String get navProfile => 'Profile';
 
   @override
@@ -740,6 +747,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reservationStatusCancelled => 'CANCELLED';
+
+  @override
+  String get reservationDetailsStatusLabel => 'Booking status';
 
   @override
   String get reservationGuestSingular => 'guest';

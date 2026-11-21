@@ -22,17 +22,20 @@ import 'package:bulka_frontend/models/reservation.dart';
 import 'package:bulka_frontend/screens/tourist_home_screen/search_filters_sheet.dart';
 import 'package:bulka_frontend/widgets/load_failed_message.dart';
 
-/// Debug-only screen picker. Lists every real screen and opens it through
-/// its real route (so tab screens appear inside their tab shell, as in the
-/// app) with the real app-wide blocs.
+/// Test-only list of every screen (formerly the app's Dev Screen Launcher).
+/// Each entry opens its screen through its real route (so tab screens
+/// appear inside their tab shell, as in the app) with the real app-wide
+/// blocs. `all_screens_localized_test.dart` renders each one in every
+/// language; it registers this screen at [ScreenCatalog.path].
 ///
-/// Only registered as a route in debug builds (see `app_router.dart`), so
-/// it never ships in a release build.
-///
-/// To add a newly implemented screen: give it a route in `app_router.dart`,
-/// then add one [DevScreenEntry] to the relevant section in [_sections].
-class DevLauncherScreen extends StatelessWidget {
-  const DevLauncherScreen({super.key});
+/// To cover a newly implemented screen: give it a route in
+/// `app_router.dart`, then add one [ScreenCatalogEntry] to the relevant
+/// section in [_sections].
+class ScreenCatalog extends StatelessWidget {
+  const ScreenCatalog({super.key});
+
+  /// Where the test registers this screen (not an app route).
+  static const path = '/test-screen-catalog';
 
   static const RegistrationProfile _devProfile = RegistrationProfile(
     fullName: 'Дев Тестовски',
@@ -40,11 +43,8 @@ class DevLauncherScreen extends StatelessWidget {
     phone: '070 000 000',
   );
 
-  /// Every entry this launcher opens. Also used by
-  /// test/all_screens_localized_test.dart to render each screen in every
-  /// language.
-  @visibleForTesting
-  static List<DevScreenEntry> get allEntries => [
+  /// Every entry, for all_screens_localized_test.dart.
+  static List<ScreenCatalogEntry> get allEntries => [
     for (final section in _sections) ...section.entries,
   ];
 
@@ -74,56 +74,61 @@ class DevLauncherScreen extends StatelessWidget {
     return (await created).lastCreated!.id;
   }
 
-  static final List<_DevScreenSection> _sections = [
-    _DevScreenSection('Onboarding / Auth', [
-      DevScreenEntry.route('Splash & Language', (_) => AppRoutes.splash),
-      DevScreenEntry.route('Login', (_) => AppRoutes.login),
-      DevScreenEntry.route('Forgot Password', (_) => AppRoutes.forgotPassword),
-      DevScreenEntry.route(
+  static final List<_CatalogSection> _sections = [
+    _CatalogSection('Onboarding / Auth', [
+      ScreenCatalogEntry.route('Splash & Language', (_) => AppRoutes.splash),
+      ScreenCatalogEntry.route('Login', (_) => AppRoutes.login),
+      ScreenCatalogEntry.route('Forgot Password', (_) => AppRoutes.forgotPassword),
+      ScreenCatalogEntry.route(
         'Reset Password',
         (_) => AppRoutes.resetPassword('dev@example.com'),
       ),
-      DevScreenEntry.route('Register', (_) => AppRoutes.register),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route('Register', (_) => AppRoutes.register),
+      ScreenCatalogEntry.route(
         'Terms & Privacy',
         (_) => AppRoutes.registerTerms,
         // Empty password on purpose: submitting from here is rejected by
         // the backend instead of creating a real dev@example.com account.
         extra: const SignUpData(profile: _devProfile, password: ''),
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Email Verification',
         (_) => AppRoutes.registerVerify,
       ),
     ]),
-    _DevScreenSection('Profiles', [
-      DevScreenEntry.route('Profile · Tourist', (_) => AppRoutes.profile),
-      DevScreenEntry.route(
+    _CatalogSection('Profiles', [
+      ScreenCatalogEntry.route('Profile · Tourist', (_) => AppRoutes.profile),
+      ScreenCatalogEntry.route(
         'Profile · Provider',
         (_) => AppRoutes.providerProfile,
       ),
     ]),
-    _DevScreenSection('Tourist', [
-      DevScreenEntry.route('Home · Tourist', (_) => AppRoutes.home),
-      DevScreenEntry.widget(
+    _CatalogSection('Tourist', [
+      ScreenCatalogEntry.route('Home · Tourist', (_) => AppRoutes.home),
+      ScreenCatalogEntry.widget(
         'Search Filters (Sheet) · Tourist',
         (_) => const _SearchFiltersPreviewScreen(),
       ),
-      DevScreenEntry.route('Search Results · Tourist', (_) => AppRoutes.search),
-      DevScreenEntry.widget(
+      ScreenCatalogEntry.route('Search Results · Tourist', (_) => AppRoutes.search),
+      ScreenCatalogEntry.widget(
         'Listing Details (newest listing) · Tourist',
         (_) => const _OpenPublicListingScreen(bookable: false),
       ),
-      DevScreenEntry.widget(
+      ScreenCatalogEntry.widget(
         'Booking Request (newest bookable listing) · Tourist',
         (_) => const _OpenPublicListingScreen(bookable: true),
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Reservation Confirmation (mock booking) · Tourist',
         (context) async =>
             AppRoutes.reservationConfirmation(await _seedMockBooking(context)),
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
+        'Reservation Details (mock booking) · Tourist',
+        (context) async =>
+            AppRoutes.reservationDetails(await _seedMockBooking(context)),
+      ),
+      ScreenCatalogEntry.route(
         // Only the signed-in user's bookings show, so sign in first.
         'My Reservations (seeds one booking for the signed-in user) · Tourist',
         (context) async {
@@ -131,7 +136,7 @@ class DevLauncherScreen extends StatelessWidget {
           return AppRoutes.reservations;
         },
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Leave Review (first completed reservation) · Tourist',
         (context) => AppRoutes.leaveReview(
           context
@@ -146,48 +151,48 @@ class DevLauncherScreen extends StatelessWidget {
               .id,
         ),
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Review Submitted · Tourist',
         (_) => AppRoutes.reviewSubmitted,
       ),
     ]),
-    _DevScreenSection('Provider', [
-      DevScreenEntry.route('Dashboard · Provider', (_) => AppRoutes.dashboard),
-      DevScreenEntry.route('Offers · Provider', (_) => AppRoutes.offers),
-      DevScreenEntry.route(
+    _CatalogSection('Provider', [
+      ScreenCatalogEntry.route('Dashboard · Provider', (_) => AppRoutes.dashboard),
+      ScreenCatalogEntry.route('Offers · Provider', (_) => AppRoutes.offers),
+      ScreenCatalogEntry.route(
         'Availability Calendar · Provider',
         (_) => AppRoutes.calendar,
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Create Offer Wizard · Provider',
         (_) => AppRoutes.newOffer,
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Offer Published (Success) · Provider',
         (_) => AppRoutes.offerPublished,
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Rate Guest (first completed reservation) · Provider',
         (context) => AppRoutes.rateGuest(
           context.read<ReservationsBloc>().state.completed.first.id,
         ),
       ),
-      DevScreenEntry.route(
+      ScreenCatalogEntry.route(
         'Rating Saved · Provider',
         (_) => AppRoutes.ratingSaved,
       ),
     ]),
-    _DevScreenSection('Messaging', [
-      DevScreenEntry.route('Chat List', (_) => AppRoutes.messages),
-      DevScreenEntry.widget(
+    _CatalogSection('Messaging', [
+      ScreenCatalogEntry.route('Chat List', (_) => AppRoutes.messages),
+      ScreenCatalogEntry.widget(
         'Chat Thread (first conversation)',
         (_) => const _OpenFirstConversationScreen(),
       ),
     ]),
-    _DevScreenSection('Support', [
-      DevScreenEntry.route('My Tickets', (_) => AppRoutes.tickets),
-      DevScreenEntry.route('New Support Ticket', (_) => AppRoutes.newTicket),
-      DevScreenEntry.route('Ticket Details (first ticket, or a local one)', (
+    _CatalogSection('Support', [
+      ScreenCatalogEntry.route('My Tickets', (_) => AppRoutes.tickets),
+      ScreenCatalogEntry.route('New Support Ticket', (_) => AppRoutes.newTicket),
+      ScreenCatalogEntry.route('Ticket Details (first ticket, or a local one)', (
         context,
       ) async {
         final tickets = context.read<SupportTicketsBloc>();
@@ -204,17 +209,17 @@ class DevLauncherScreen extends StatelessWidget {
         return AppRoutes.ticket(tickets.state.tickets.first.id);
       }),
     ]),
-    _DevScreenSection('Other', [
-      DevScreenEntry.route('Notifications', (_) => AppRoutes.notifications),
-      DevScreenEntry.route('Settings', (_) => AppRoutes.settings),
-      DevScreenEntry.route(
+    _CatalogSection('Other', [
+      ScreenCatalogEntry.route('Notifications', (_) => AppRoutes.notifications),
+      ScreenCatalogEntry.route('Settings', (_) => AppRoutes.settings),
+      ScreenCatalogEntry.route(
         'Unknown route (Not Found)',
         (_) => '/does-not-exist',
       ),
     ]),
   ];
 
-  Future<void> _open(BuildContext context, DevScreenEntry entry) async {
+  Future<void> _open(BuildContext context, ScreenCatalogEntry entry) async {
     final location = entry.location;
     if (location == null) {
       Navigator.of(context).push(MaterialPageRoute(builder: entry.builder!));
@@ -229,7 +234,7 @@ class DevLauncherScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dev Screen Launcher'),
+        title: const Text('Screen catalog'),
         backgroundColor: Colors.black87,
         foregroundColor: Colors.white,
       ),
@@ -261,25 +266,25 @@ class DevLauncherScreen extends StatelessWidget {
   }
 }
 
-class _DevScreenSection {
-  const _DevScreenSection(this.title, this.entries);
+class _CatalogSection {
+  const _CatalogSection(this.title, this.entries);
   final String title;
-  final List<DevScreenEntry> entries;
+  final List<ScreenCatalogEntry> entries;
 }
 
 /// One launcher row: either a route (most screens) or, for things that
 /// aren't routes (the filter sheet), a widget pushed directly.
-class DevScreenEntry {
+class ScreenCatalogEntry {
   /// [location] runs when the entry is opened, so it can seed mock data
   /// first (e.g. create a booking and return its confirmation route), using
   /// the blocs from [BuildContext].
-  const DevScreenEntry.route(
+  const ScreenCatalogEntry.route(
     this.label,
     FutureOr<String> Function(BuildContext context) this.location, {
     this.extra,
   }) : builder = null;
 
-  const DevScreenEntry.widget(this.label, WidgetBuilder this.builder)
+  const ScreenCatalogEntry.widget(this.label, WidgetBuilder this.builder)
     : location = null,
       extra = null;
 

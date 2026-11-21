@@ -223,6 +223,8 @@ class AppStrings {
   static String get headerTicketsTooltip => _s.headerTicketsTooltip;
   static String get headerNotificationsTooltip => _s.headerNotificationsTooltip;
   static String get headerSettingsTooltip => _s.headerSettingsTooltip;
+  static String get detailsMessageHostTooltip => _s.detailsMessageHostTooltip;
+  static String get detailsMessageHostFailed => _s.detailsMessageHostFailed;
   static String get navProfile => _s.navProfile;
   static String get settingsTitle => _s.settingsTitle;
   static String get settingsLanguageHeading => _s.settingsLanguageHeading;
@@ -299,6 +301,8 @@ class AppStrings {
   static String get reservationStatusRejected => _s.reservationStatusRejected;
   static String get reservationStatusCompleted => _s.reservationStatusCompleted;
   static String get reservationStatusCancelled => _s.reservationStatusCancelled;
+  static String get reservationDetailsStatusLabel =>
+      _s.reservationDetailsStatusLabel;
   static String get reservationGuestSingular => _s.reservationGuestSingular;
   static String get reservationGuestsPlural => _s.reservationGuestsPlural;
   static String get acceptReservationButton => _s.acceptReservationButton;

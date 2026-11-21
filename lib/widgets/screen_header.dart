@@ -17,13 +17,14 @@ class ScreenHeader extends StatelessWidget {
     this.subtitle,
     this.subtitleFontSize = AppDimensions.termsPrivacySubtitleFontSize,
     this.showActions = false,
+    this.trailing,
   }) : assert(
          (selectedLanguageCode == null) == (onLanguageChanged == null),
          'selectedLanguageCode and onLanguageChanged must be provided together',
        ),
        assert(
-         !showActions || selectedLanguageCode == null,
-         'The header actions and the language switch share the same spot',
+         selectedLanguageCode == null || (!showActions && trailing == null),
+         'The language switch and the header buttons share the same spot',
        );
 
   final String title;
@@ -37,8 +38,12 @@ class ScreenHeader extends StatelessWidget {
   final double subtitleFontSize;
 
   /// Shows [HeaderActions] (My Tickets, Notifications, Settings) at the right
-  /// end of the back-arrow row. For the signed-in root screens.
+  /// end of the back-arrow row. For the signed-in Buyer and Provider screens.
   final bool showActions;
+
+  /// A screen's own button(s) at the right end of the back-arrow row, e.g.
+  /// Listing Details' chat button; before [HeaderActions] if both are shown.
+  final Widget? trailing;
 
   bool get _showLanguageSwitch => selectedLanguageCode != null;
 
@@ -81,7 +86,11 @@ class ScreenHeader extends StatelessWidget {
                   onChanged: onLanguageChanged!,
                 ),
               ],
-              if (showActions) ...[const Spacer(), const HeaderActions()],
+              if (showActions || trailing != null) const Spacer(),
+              ?trailing,
+              if (showActions && trailing != null)
+                const SizedBox(width: AppDimensions.headerActionsGap),
+              if (showActions) const HeaderActions(),
             ],
           ),
           SizedBox(height: contentGap),

@@ -14,7 +14,7 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.profile});
 
   /// Null shows the signed-in user (or the sample guest when nobody is
-  /// signed in, e.g. from the dev launcher).
+  /// signed in, e.g. in tests).
   final RegistrationProfile? profile;
 
   static const RegistrationProfile _sampleProfile = RegistrationProfile(

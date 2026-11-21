@@ -42,6 +42,14 @@ final class ChatMessageSent extends ChatEvent {
   final String text;
 }
 
+/// The Buyer wants to message a provider (Listing Details' chat button):
+/// `POST /api/chat/conversations`. The result is in [ChatState.start].
+final class ChatConversationStartRequested extends ChatEvent {
+  const ChatConversationStartRequested(this.providerProfileId);
+
+  final String providerProfileId;
+}
+
 /// Sends a failed message again, with the same `clientMessageKey`.
 final class ChatMessageRetried extends ChatEvent {
   const ChatMessageRetried({

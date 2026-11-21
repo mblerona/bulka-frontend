@@ -21,20 +21,20 @@ class HeaderActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _HeaderIconButton(
+        HeaderIconButton(
           icon: Icons.confirmation_number_outlined,
           tooltip: AppStrings.headerTicketsTooltip,
           onPressed: () => context.push(AppRoutes.tickets),
         ),
         const SizedBox(width: AppDimensions.headerActionsGap),
-        _HeaderIconButton(
+        HeaderIconButton(
           icon: Icons.notifications_none_rounded,
           tooltip: AppStrings.headerNotificationsTooltip,
           badgeCount: unread,
           onPressed: () => context.push(AppRoutes.notifications),
         ),
         const SizedBox(width: AppDimensions.headerActionsGap),
-        _HeaderIconButton(
+        HeaderIconButton(
           icon: Icons.settings_outlined,
           tooltip: AppStrings.headerSettingsTooltip,
           onPressed: () => context.push(AppRoutes.settings),
@@ -44,18 +44,24 @@ class HeaderActions extends StatelessWidget {
   }
 }
 
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({
+/// A round icon button for a green header band (32px, white icon).
+class HeaderIconButton extends StatelessWidget {
+  const HeaderIconButton({
+    super.key,
     required this.icon,
     required this.tooltip,
     required this.onPressed,
     this.badgeCount = 0,
+    this.busy = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
   final int badgeCount;
+
+  /// Shows a spinner instead of the icon and ignores taps.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +72,7 @@ class _HeaderIconButton extends StatelessWidget {
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: onPressed,
+          onTap: busy ? null : onPressed,
           child: SizedBox(
             width: AppDimensions.headerActionSize,
             height: AppDimensions.headerActionSize,
@@ -74,12 +80,21 @@ class _HeaderIconButton extends StatelessWidget {
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
-                Icon(
-                  icon,
-                  size: AppDimensions.headerActionIconSize,
-                  color: AppColors.white,
-                  semanticLabel: tooltip,
-                ),
+                if (busy)
+                  const SizedBox.square(
+                    dimension: AppDimensions.headerActionSpinnerSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: AppDimensions.headerActionSpinnerStroke,
+                      color: AppColors.white,
+                    ),
+                  )
+                else
+                  Icon(
+                    icon,
+                    size: AppDimensions.headerActionIconSize,
+                    color: AppColors.white,
+                    semanticLabel: tooltip,
+                  ),
                 if (badgeCount > 0)
                   Positioned(
                     top: AppDimensions.headerActionBadgeOffset,

@@ -546,6 +546,13 @@ class AppLocalizationsMk extends AppLocalizations {
   String get headerSettingsTooltip => 'Поставки';
 
   @override
+  String get detailsMessageHostTooltip => 'Пиши му на домаќинот';
+
+  @override
+  String get detailsMessageHostFailed =>
+      'Не успеавме да го отвориме разговорот. Обидете се повторно.';
+
+  @override
   String get navProfile => 'Профил';
 
   @override
@@ -742,6 +749,9 @@ class AppLocalizationsMk extends AppLocalizations {
 
   @override
   String get reservationStatusCancelled => 'ОТКАЖАНА';
+
+  @override
+  String get reservationDetailsStatusLabel => 'Статус на резервацијата';
 
   @override
   String get reservationGuestSingular => 'гостин';

@@ -546,6 +546,13 @@ class AppLocalizationsSq extends AppLocalizations {
   String get headerSettingsTooltip => 'Cilësimet';
 
   @override
+  String get detailsMessageHostTooltip => 'Shkruaji mikpritësit';
+
+  @override
+  String get detailsMessageHostFailed =>
+      'Nuk arritëm ta hapim bisedën. Ju lutemi provoni përsëri.';
+
+  @override
   String get navProfile => 'Profili';
 
   @override
@@ -743,6 +750,9 @@ class AppLocalizationsSq extends AppLocalizations {
 
   @override
   String get reservationStatusCancelled => 'E ANULUAR';
+
+  @override
+  String get reservationDetailsStatusLabel => 'Statusi i rezervimit';
 
   @override
   String get reservationGuestSingular => 'mysafir';

@@ -26,7 +26,7 @@ class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key, this.profile});
 
   /// Null shows the signed-in user (or the sample provider when nobody is
-  /// signed in, e.g. from the dev launcher).
+  /// signed in, e.g. in tests).
   final RegistrationProfile? profile;
 
   @override

@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bulka_frontend/blocs/reservations/reservations_bloc.dart';
 import 'package:bulka_frontend/core/routing/app_routes.dart';
 import 'package:bulka_frontend/core/utils/booked_listing.dart';
-import 'package:bulka_frontend/dev/dev_launcher_screen.dart';
 import 'package:bulka_frontend/models/provider_listing.dart';
 import 'package:bulka_frontend/models/registration_profile.dart';
 import 'package:bulka_frontend/models/reservation.dart';
@@ -43,8 +41,7 @@ import 'package:bulka_frontend/screens/tourist_home_screen/tourist_home_screen.d
 import 'package:bulka_frontend/screens/tourist_my_reservations_screen/tourist_my_reservations_screen.dart';
 import 'package:bulka_frontend/widgets/app_bottom_nav.dart';
 
-/// The app's router. Debug builds start on the dev screen launcher,
-/// release builds on Splash.
+/// The app's router. The app starts on Splash.
 final GoRouter appRouter = createAppRouter();
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
@@ -63,12 +60,16 @@ void resetTabThenGo(String tabRoot, String target) {
   WidgetsBinding.instance.addPostFrameCallback((_) => appRouter.go(target));
 }
 
-/// Separate from [appRouter] so tests can start anywhere.
-GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
+/// Separate from [appRouter] so tests can start anywhere, and add their own
+/// [extraRoutes] (e.g. the test-only screen catalog).
+GoRouter createAppRouter({
+  String? initialLocation,
+  Object? initialExtra,
+  List<RouteBase> extraRoutes = const [],
+}) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation:
-        initialLocation ?? (kDebugMode ? AppRoutes.dev : AppRoutes.splash),
+    initialLocation: initialLocation ?? AppRoutes.splash,
     initialExtra: initialExtra,
     errorBuilder: (context, state) => const RouteNotFoundScreen(),
     routes: [
@@ -76,11 +77,7 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
         path: AppRoutes.splash,
         builder: (context, state) => const SplashScreen(),
       ),
-      if (kDebugMode)
-        GoRoute(
-          path: AppRoutes.dev,
-          builder: (context, state) => const DevLauncherScreen(),
-        ),
+      ...extraRoutes,
 
       // ── Sign-in / sign-up ──
       GoRoute(
@@ -221,6 +218,17 @@ GoRouter createAppRouter({String? initialLocation, Object? initialExtra}) {
                           return ReservationConfirmationScreen(
                             reservation: r,
                             listing: l,
+                          );
+                        }),
+                  ),
+                  GoRoute(
+                    path: ':reservationId',
+                    builder: (context, state) =>
+                        _withReservationAndListing(context, state, (r, l) {
+                          return ReservationConfirmationScreen(
+                            reservation: r,
+                            listing: l,
+                            isDetailsView: true,
                           );
                         }),
                   ),

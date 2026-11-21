@@ -315,10 +315,7 @@ class _UpcomingCard extends StatelessWidget {
       statusLabel: reservation.status.touristLabel,
       metaLine: _metaLine,
       actionLabel: _actionLabel,
-      // TODO: navigate to a Reservation Details screen once one exists.
-      // This already carries the exact `reservation`/`listing` such a
-      // screen would need — nothing hardcoded to resolve later.
-      onTap: () {},
+      onTap: () => context.push(AppRoutes.reservationDetails(reservation.id)),
     );
   }
 }

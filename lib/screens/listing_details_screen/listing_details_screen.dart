@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bulka_frontend/blocs/chat/chat_bloc.dart';
 import 'package:bulka_frontend/blocs/favorites/favorites_bloc.dart';
 import 'package:bulka_frontend/blocs/listing_reviews/listing_reviews_bloc.dart';
 import 'package:bulka_frontend/blocs/locale/locale_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:bulka_frontend/models/amenity.dart';
 import 'package:bulka_frontend/models/listing_review.dart';
 import 'package:bulka_frontend/models/public_listing.dart';
 import 'package:bulka_frontend/screens/route_not_found_screen/route_not_found_screen.dart';
+import 'package:bulka_frontend/widgets/header_actions.dart';
 import 'package:bulka_frontend/widgets/listing_image.dart';
 import 'package:bulka_frontend/widgets/load_failed_message.dart';
 import 'package:bulka_frontend/widgets/screen_header.dart';
@@ -72,6 +74,7 @@ class _PublicListingLoaderState extends State<PublicListingLoader> {
               titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
               bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
               contentGap: AppDimensions.dsCompactHeaderGap,
+              showActions: true,
             ),
             Expanded(
               child: Padding(
@@ -143,6 +146,10 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
+            showActions: true,
+            trailing: listing.providerId == null
+                ? null
+                : _MessageHostButton(providerId: listing.providerId!),
           ),
           Expanded(
             child: SafeArea(
@@ -193,6 +200,54 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The header's chat button (Figma "24 – Buyer · Listing Details"): starts
+/// a conversation with the listing's provider, or reuses the existing one,
+/// and opens it.
+class _MessageHostButton extends StatelessWidget {
+  const _MessageHostButton({required this.providerId});
+
+  final String providerId;
+
+  bool _isForThisProvider(ChatState state) =>
+      state.start.providerProfileId == providerId;
+
+  @override
+  Widget build(BuildContext context) {
+    final start = context.select((ChatBloc bloc) => bloc.state.start);
+    return BlocListener<ChatBloc, ChatState>(
+      listenWhen: (previous, current) =>
+          previous.start.status != current.start.status &&
+          _isForThisProvider(current),
+      listener: (context, state) {
+        // The same listing can also be open in the other (hidden) tab.
+        if (!TickerMode.valuesOf(context).enabled) return;
+        switch (state.start.status) {
+          case ChatStartStatus.started:
+            context.push(AppRoutes.chat(state.start.conversationId!));
+          case ChatStartStatus.failed:
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(content: Text(AppStrings.detailsMessageHostFailed)),
+              );
+          case ChatStartStatus.idle || ChatStartStatus.starting:
+            break;
+        }
+      },
+      child: HeaderIconButton(
+        icon: Icons.chat_bubble_outline,
+        tooltip: AppStrings.detailsMessageHostTooltip,
+        busy:
+            start.status == ChatStartStatus.starting &&
+            start.providerProfileId == providerId,
+        onPressed: () => context.read<ChatBloc>().add(
+          ChatConversationStartRequested(providerId),
+        ),
       ),
     );
   }

@@ -43,7 +43,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   Widget build(BuildContext context) {
     context.watch<GuestRatingsBloc>();
     context.watch<ListingsBloc>();
-    // The sample provider's name when nobody is signed in (dev launcher).
+    // The sample provider's name when nobody is signed in (e.g. in tests).
     final greetingName =
         context.select((AuthBloc bloc) => bloc.state.user?.fullName) ??
         AppStrings.providerExampleName;

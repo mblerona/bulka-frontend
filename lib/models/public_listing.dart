@@ -31,6 +31,7 @@ class PublicListing {
     this.hasDetails = false,
     this.description = '',
     this.providerName,
+    this.providerId,
     this.imageUrls = const [],
     this.items = const [],
   });
@@ -100,6 +101,9 @@ class PublicListing {
       providerName: provider is Map<String, dynamic>
           ? provider['businessName'] as String?
           : null,
+      providerId: provider is Map<String, dynamic>
+          ? provider['id'] as String?
+          : null,
       imageUrls: imageUrls,
       items: items,
     );
@@ -128,6 +132,10 @@ class PublicListing {
   final bool hasDetails;
   final String description;
   final String? providerName;
+
+  /// The provider's profile id (`provider.id`), used to start a chat with
+  /// them (`POST /api/chat/conversations`).
+  final String? providerId;
   final List<String> imageUrls;
   final List<ListingItem> items;
 

@@ -178,6 +178,7 @@ class _BookingRequestScreenState extends State<BookingRequestScreen> {
             titleFontSize: AppDimensions.dsCompactHeaderTitleFontSize,
             bottomPadding: AppDimensions.dsCompactHeaderBottomPadding,
             contentGap: AppDimensions.dsCompactHeaderGap,
+            showActions: true,
           ),
           Expanded(
             child: SafeArea(
