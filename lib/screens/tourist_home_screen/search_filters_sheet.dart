@@ -162,6 +162,9 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
             onPrimary: AppColors.white,
             onSurface: AppColors.agroForest950,
           ),
+          datePickerTheme: Theme.of(context).datePickerTheme.copyWith(
+            rangePickerHeaderHeadlineStyle: _rangeHeaderStyle(context),
+          ),
         ),
         child: child!,
       ),
@@ -171,6 +174,31 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
       _filter.startDate = picked.start;
       _filter.endDate = picked.end;
     });
+  }
+
+  /// Flutter's range picker header never shrinks its start label, and the
+  /// Macedonian "Датум на започнување" doesn't fit on narrow phones. Shrinks
+  /// the header text just enough for that label to fit this screen.
+  TextStyle _rangeHeaderStyle(BuildContext context) {
+    final base = Theme.of(context).textTheme.titleMedium!;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    // Width Flutter's header leaves for the dates: its left inset, plus the
+    // edit-mode button (48) and its padding (16) on the right, plus a margin.
+    final available =
+        screenWidth - (screenWidth < 360 ? 42 : 72) - 64 - 8;
+    final painter = TextPainter(
+      text: TextSpan(
+        text: '${MaterialLocalizations.of(context).dateRangeStartLabel} – ',
+        style: base,
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final needed = painter.width;
+    painter.dispose();
+    if (needed <= available) return base;
+    return base.copyWith(fontSize: base.fontSize! * available / needed);
   }
 
   /// One category at a time; tapping the selected one clears it.

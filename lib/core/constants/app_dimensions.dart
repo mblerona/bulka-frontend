@@ -43,7 +43,7 @@ class AppDimensions {
 
   // Login Screen, Forgot Password Screen, Register Screen — Header Band
   static const double dsHeaderHorizontalPadding = 24;
-  static const double dsHeaderTopPadding = 56;
+  static const double dsHeaderTopPadding = 52;
   static const double dsBackIconSize = 22;
   static const double dsHeaderTitleRowGap = 10;
   static const double dsHeaderLogoSize = 32;
@@ -62,7 +62,7 @@ class AppDimensions {
   // padding/gap/title size (the "compact" header variant; Login Screen uses
   // its own larger values below)
   static const double dsCompactHeaderBottomPadding = 24;
-  static const double dsCompactHeaderGap = 16;
+  static const double dsCompactHeaderGap = 10;
   static const double dsCompactHeaderTitleFontSize = 24;
 
   // Login Screen, Forgot Password Screen, Register Screen — Body
